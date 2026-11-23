@@ -6,3 +6,7 @@ pnpm-lock.yaml
 design/mockup
 apps/server/drizzle
 apps/server/prompts
+
+# Generati da apps/server (pnpm --filter @prisma-app/server embed)
+apps/server/src/db/migrations.generated.ts
+apps/server/src/llm/prompts.generated.ts
