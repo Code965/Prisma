@@ -101,6 +101,12 @@ jobs:
             fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
           "
 
+      # electron-builder.yml usa l'Electron di node_modules (electronDist): se lo script di
+      # installazione del pacchetto non ha scaricato il binario, lo si scarica qui.
+      - name: Binario di Electron
+        working-directory: apps/desktop
+        run: test -d node_modules/electron/dist || node node_modules/electron/install.js
+
       - name: Installer
         working-directory: apps/desktop
         run: pnpm build && pnpm exec electron-builder --win --publish never
