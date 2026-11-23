@@ -93,12 +93,20 @@ export interface ApiResponse {
   body: unknown;
 }
 
-/** Dal renderer verso l'esterno si aprono solo le autorizzazioni OAuth delle piattaforme collegate. */
+/**
+ * Dal renderer verso l'esterno si aprono solo le autorizzazioni OAuth delle piattaforme e le
+ * pagine dove si creano le app sviluppatore (guide delle Impostazioni).
+ */
 const EXTERNAL_PREFIXES = [
   'https://www.linkedin.com/oauth/',
   'https://www.instagram.com/oauth/authorize?',
   'https://accounts.google.com/o/oauth2/v2/auth?',
   'https://www.tiktok.com/v2/auth/authorize/?',
+  'https://www.linkedin.com/developers/apps',
+  'https://developers.facebook.com/apps',
+  'https://console.cloud.google.com/apis/credentials',
+  'https://developers.tiktok.com/apps',
+  'https://dash.cloudflare.com/',
 ];
 
 export const ExternalUrlSchema = z

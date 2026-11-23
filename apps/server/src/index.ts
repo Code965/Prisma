@@ -16,7 +16,21 @@ async function main(): Promise<void> {
       ? parsed.DATABASE_PATH
       : resolve(repoRoot(), parsed.DATABASE_PATH),
   };
-  const runtime = await createPrismaRuntime(env);
+  let runtime = await createPrismaRuntime(env, { onCredentialsChanged: () => scheduleReload() });
+
+  // Credenziali cambiate nelle Impostazioni: si ricostruisce il runtime (dopo aver risposto).
+  let reloading: Promise<void> | null = null;
+  function scheduleReload(): void {
+    setTimeout(() => {
+      reloading ??= (async () => {
+        await runtime.stop();
+        runtime = await createPrismaRuntime(env, { onCredentialsChanged: () => scheduleReload() });
+        await runtime.app.listen({ port: env.PORT, host: env.HOST });
+        runtime.startBackground();
+        runtime.app.log.info('Credenziali aggiornate: server riavviato');
+      })().finally(() => (reloading = null));
+    }, 200);
+  }
 
   const shutdown = async (signal: string) => {
     runtime.app.log.info({ signal }, 'Arresto in corso');

@@ -35,4 +35,5 @@ export const queryKeys = {
   revisions: (variantId: number) => ['variants', variantId, 'revisions'] as const,
   connection: ['connection'] as const,
   aiSettings: ['ai-settings'] as const,
+  appCredentials: ['app-credentials'] as const,
 };

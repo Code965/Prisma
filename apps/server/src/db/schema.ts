@@ -428,3 +428,15 @@ export const aiSettings = sqliteTable('ai_settings', {
   apiKeyEnc: bytes('api_key_enc', { length: 2048 }),
   ...timestamps,
 });
+
+// --- Credenziali delle app delle piattaforme e di R2 ------------------------------------------
+
+/**
+ * App sviluppatore dell'utente (LinkedIn, Instagram, YouTube, TikTok) e archivio R2: tutti i
+ * campi in un JSON cifrato con `tokenContext('app', key)`. Senza riga si usa il .env del server.
+ */
+export const appCredentials = sqliteTable('app_credentials', {
+  key: text('key').primaryKey(),
+  dataEnc: bytes('data_enc').notNull(),
+  ...timestamps,
+});

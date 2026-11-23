@@ -1,7 +1,9 @@
 import { app, safeStorage } from 'electron';
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer, type Server } from 'node:http';
 import { join, resolve } from 'node:path';
+import type { OAuthApp } from '@prisma-app/shared';
 import { parseEnv } from '@prisma-app/server/config';
 import { createPrismaRuntime, type PrismaRuntime } from '@prisma-app/server/runtime';
 import type { ApiRequest, ApiResponse } from './ipc-contract.js';
@@ -73,6 +75,23 @@ function devEnv(): Record<string, string> {
   return values;
 }
 
+/**
+ * Ritorno del login delle piattaforme. Google e TikTok (app «Desktop», PKCE) tornano direttamente
+ * su 127.0.0.1; LinkedIn e Instagram vogliono un indirizzo https, quindi tornano su una pagina di
+ * GitHub Pages del progetto che passa il codice a 127.0.0.1 (`docs/oauth/`). Sono gli indirizzi da
+ * registrare nelle app delle piattaforme (mostrati nelle Impostazioni).
+ */
+export const OAUTH_PORT = 47615;
+const LOCAL_CALLBACK = (platform: OAuthApp) =>
+  `http://127.0.0.1:${OAUTH_PORT}/oauth/${platform}/callback`;
+export const OAUTH_REDIRECTS: Record<OAuthApp, string> = {
+  linkedin: 'https://code965.github.io/Prisma/oauth/linkedin/',
+  instagram: 'https://code965.github.io/Prisma/oauth/instagram/',
+  youtube: LOCAL_CALLBACK('youtube'),
+  tiktok: LOCAL_CALLBACK('tiktok'),
+};
+const CALLBACK_PATH = /^\/oauth\/(linkedin|instagram|youtube|tiktok)\/callback(\?|$)/;
+
 export interface Core {
   request(request: ApiRequest): Promise<ApiResponse>;
   stop(): Promise<void>;
@@ -88,14 +107,40 @@ export async function startCore(userDataDir: string): Promise<Core> {
     API_TOKEN: apiToken,
     TOKEN_ENCRYPTION_KEY: loadOrCreateKey(userDataDir),
   });
-  const runtime: PrismaRuntime = await createPrismaRuntime(env, {
-    logger: { level: app.isPackaged ? 'warn' : 'info' },
+
+  const create = async (): Promise<PrismaRuntime> => {
+    const runtime = await createPrismaRuntime(env, {
+      logger: { level: app.isPackaged ? 'warn' : 'info' },
+      redirects: OAUTH_REDIRECTS,
+      onCredentialsChanged: () => scheduleReload(),
+    });
+    await runtime.app.ready();
+    runtime.startBackground();
+    return runtime;
+  };
+  let current = create();
+
+  // Credenziali cambiate nelle Impostazioni: il runtime si ricostruisce (dopo aver risposto);
+  // le richieste che arrivano intanto aspettano quello nuovo.
+  let reloadTimer: NodeJS.Timeout | null = null;
+  function scheduleReload(): void {
+    if (reloadTimer) return;
+    reloadTimer = setTimeout(() => {
+      reloadTimer = null;
+      current = current.then((runtime) => runtime.stop()).then(create);
+    }, 200);
+  }
+  await current;
+
+  const callbacks = startCallbackListener(async (url) => {
+    const runtime = await current;
+    const response = await runtime.app.inject({ method: 'GET', url });
+    return { status: response.statusCode, body: response.body };
   });
-  await runtime.app.ready();
-  runtime.startBackground();
 
   return {
     async request({ method, path, body }) {
+      const runtime = await current;
       const response = await runtime.app.inject({
         method,
         url: path,
@@ -109,10 +154,40 @@ export async function startCore(userDataDir: string): Promise<Core> {
       try {
         parsed = response.body ? JSON.parse(response.body) : null;
       } catch {
-        // risposta non JSON (es. pagine HTML delle callback OAuth): il testo così com'è
+        // risposta non JSON: il testo così com'è
       }
       return { status: response.statusCode, body: parsed };
     },
-    stop: () => runtime.stop(),
+    async stop() {
+      callbacks.close();
+      await (await current).stop();
+    },
   };
+}
+
+/**
+ * Piccolo server HTTP su 127.0.0.1 per il ritorno del login: risponde solo alle callback OAuth
+ * (lo `state` firmato le lega al login partito da Prisma), tutto il resto è 404. Non è
+ * raggiungibile da altri computer.
+ */
+function startCallbackListener(
+  handle: (url: string) => Promise<{ status: number; body: string }>,
+): Server {
+  const server = createServer((request, response) => {
+    const url = request.url ?? '/';
+    if (request.method !== 'GET' || !CALLBACK_PATH.test(url)) {
+      response.writeHead(404).end();
+      return;
+    }
+    handle(url)
+      .then(({ status, body }) => {
+        response.writeHead(status, { 'content-type': 'text/html; charset=utf-8' }).end(body);
+      })
+      .catch(() => response.writeHead(500).end('Errore interno di Prisma'));
+  });
+  server.on('error', (error) =>
+    console.error(`Ritorno del login non disponibile sulla porta ${OAUTH_PORT}:`, error),
+  );
+  server.listen(OAUTH_PORT, '127.0.0.1');
+  return server;
 }

@@ -44,7 +44,7 @@ export function createInstagramOAuthService(deps: {
   function requireConfig(): InstagramOAuthConfig {
     if (!deps.config) {
       throw new NotConfiguredError(
-        'Instagram non configurato: imposta INSTAGRAM_APP_ID e INSTAGRAM_APP_SECRET nel .env del server',
+        'Instagram non configurato: inserisci l’app di Instagram in Impostazioni › Account',
       );
     }
     return deps.config;

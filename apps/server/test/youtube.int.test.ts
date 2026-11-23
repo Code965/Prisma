@@ -56,6 +56,8 @@ describe.skipIf(!databaseUrl)('YouTube (MySQL, API simulate)', () => {
         const url = new URL(start.json<{ url: string }>().url);
         expect(url.origin + url.pathname).toBe('https://accounts.google.com/o/oauth2/v2/auth');
         const state = url.searchParams.get('state')!;
+        // App «Desktop» di Google: PKCE S256.
+        expect(url.searchParams.get('code_challenge_method')).toBe('S256');
         const callback = await ctx.callAnonymous({
           method: 'GET',
           url: `/oauth/youtube/callback?code=codice&state=${encodeURIComponent(state)}`,

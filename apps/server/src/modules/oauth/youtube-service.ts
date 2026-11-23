@@ -1,5 +1,6 @@
 import type { SocialAccount } from '@prisma-app/shared';
 import { createOAuthState, verifyOAuthState } from '../../auth/oauth-state.js';
+import { challengeBase64Url, createCodeVerifier, createVerifierStore } from '../../auth/pkce.js';
 import { tokenContext, type TokenCipher } from '../../crypto/token-cipher.js';
 import type { DbExecutor } from '../../db/executor.js';
 import { NotConfiguredError } from '../../http/error-handler.js';
@@ -66,19 +67,24 @@ export function createYouTubeOAuthService(deps: {
   function requireConfig(): YouTubeOAuthConfig {
     if (!deps.config) {
       throw new NotConfiguredError(
-        'YouTube non configurato: imposta YOUTUBE_CLIENT_ID e YOUTUBE_CLIENT_SECRET nel .env del server',
+        'YouTube non configurato: inserisci l’app di YouTube in Impostazioni › Account',
       );
     }
     return deps.config;
   }
+  // PKCE: il verifier resta qui, legato allo state del login.
+  const verifiers = createVerifierStore(deps.now);
 
   return {
     async start(brandId: number): Promise<{ url: string }> {
       const config = requireConfig();
       await deps.brands.ensureExists(brandId);
       const state = createOAuthState(config.stateSecret, { brandId }, deps.now());
+      const verifier = createCodeVerifier();
+      verifiers.put(state, verifier);
       return {
         url: authorizationUrl({
+          codeChallenge: challengeBase64Url(verifier),
           clientId: config.clientId,
           redirectUri: config.redirectUri,
           state,
@@ -97,12 +103,15 @@ export function createYouTubeOAuthService(deps: {
       const { brandId } = verifyOAuthState(config.stateSecret, query.state ?? '', deps.now());
       if (query.error) throw new OAuthDeniedError(query.error_description ?? query.error);
       if (!query.code) throw new OAuthDeniedError('Codice di autorizzazione mancante');
+      const codeVerifier = verifiers.take(query.state ?? '');
+      if (!codeVerifier) throw new OAuthDeniedError('Login scaduto o già usato: riprova da Prisma');
 
       const tokens = await config.client.exchangeCode({
         code: query.code,
         clientId: config.clientId,
         clientSecret: config.clientSecret,
         redirectUri: config.redirectUri,
+        codeVerifier,
       });
       if (!tokens.refreshToken) {
         throw new OAuthDeniedError(

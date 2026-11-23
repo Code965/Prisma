@@ -39,6 +39,10 @@ import {
 import { createSocialAccountService } from './modules/social-accounts/service.js';
 import { createTagService } from './modules/tags/service.js';
 import { createAiSettingsService, type AiSettingsConfig } from './modules/ai-settings/service.js';
+import {
+  createAppCredentialsService,
+  type AppCredentialsConfig,
+} from './modules/app-credentials/service.js';
 import { createVariantService } from './modules/variants/service.js';
 
 export interface ServiceOptions {
@@ -53,6 +57,8 @@ export interface ServiceOptions {
    * uso è quella delle Impostazioni e `llm` non serve; assenti → le rotte /ai/settings danno 503.
    */
   aiSettings?: AiSettingsConfig | null;
+  /** Credenziali delle app delle piattaforme e di R2 (Impostazioni › Account); assenti → 503. */
+  appCredentials?: AppCredentialsConfig | null;
   prompts?: PromptLibrary;
   /** Assente senza credenziali LinkedIn: il collegamento dell'account risponde 503. */
   linkedinOAuth?: LinkedInOAuthConfig | null;
@@ -101,6 +107,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
     variants: createVariantService(db, now),
     analytics,
     aiSettings,
+    appCredentials: createAppCredentialsService({ db, config: options.appCredentials ?? null }),
     insights: createInsightsService({
       db,
       llm,

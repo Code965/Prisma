@@ -1,4 +1,6 @@
 import {
+  AppCredentialViewSchema,
+  type AppCredentialKey,
   AiSettingsTestResultSchema,
   AiSettingsViewSchema,
   type AiSettingsInput,
@@ -170,6 +172,11 @@ export const api = {
     apiRequest('POST', '/shorts/generate', GenerateShortsResultSchema, input),
   editCarousel: (variantId: number, input: EditCarouselRequest) =>
     apiRequest('POST', `/variants/${variantId}/carousel/edit`, EditCarouselResultSchema, input),
+  appCredentials: () => apiRequest('GET', '/settings/apps', z.array(AppCredentialViewSchema)),
+  saveAppCredentials: (key: AppCredentialKey, body: unknown) =>
+    apiRequest('PUT', `/settings/apps/${key}`, AppCredentialViewSchema, body),
+  removeAppCredentials: (key: AppCredentialKey) =>
+    apiRequest('DELETE', `/settings/apps/${key}`, AppCredentialViewSchema),
   aiSettings: () => apiRequest('GET', '/ai/settings', AiSettingsViewSchema),
   saveAiSettings: (input: AiSettingsInput) =>
     apiRequest('PUT', '/ai/settings', AiSettingsViewSchema, input),

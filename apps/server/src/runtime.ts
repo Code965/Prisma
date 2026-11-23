@@ -29,7 +29,9 @@ import { createPublisherRegistry } from './publishers/types.js';
 import { createYouTubeAdapter } from './publishers/youtube/adapter.js';
 import { createYouTubeClient } from './publishers/youtube/client.js';
 import { createScheduler } from './scheduler/worker.js';
+import { applySavedCredentials, loadSavedCredentials } from './modules/app-credentials/service.js';
 import { createServices } from './services.js';
+import type { OAuthApp } from '@prisma-app/shared';
 import { createR2Storage, r2ConfigFromEnv } from './storage/r2.js';
 
 /**
@@ -38,16 +40,38 @@ import { createR2Storage, r2ConfigFromEnv } from './storage/r2.js';
  * (`index.ts`, che apre la porta) sia l'app desktop, che lo fa girare nel processo principale
  * e gli passa le richieste con `app.inject`, senza aprire porte.
  */
-export async function createPrismaRuntime(
-  env: Env,
-  options: { logger?: FastifyServerOptions['logger'] } = {},
-) {
-  const database = createDatabase(env.DATABASE_PATH);
+export interface RuntimeOptions {
+  logger?: FastifyServerOptions['logger'];
+  /**
+   * Indirizzi di ritorno del login per piattaforma (l'app desktop usa 127.0.0.1 e la pagina su
+   * GitHub Pages); assenti → quelli del .env.
+   */
+  redirects?: Partial<Record<OAuthApp, string>>;
+  /** Credenziali cambiate nelle Impostazioni: chi ospita il runtime lo ricostruisce. */
+  onCredentialsChanged?: () => void;
+}
+
+export async function createPrismaRuntime(baseEnv: Env, options: RuntimeOptions = {}) {
+  const database = createDatabase(baseEnv.DATABASE_PATH);
   applyMigrations(database.sqlite);
   const { db } = database;
   await ensureDefaults(db);
 
-  const cipher = createTokenCipher(env.TOKEN_ENCRYPTION_KEY);
+  const cipher = createTokenCipher(baseEnv.TOKEN_ENCRYPTION_KEY);
+  const redirects: Record<OAuthApp, string> = {
+    linkedin: options.redirects?.linkedin ?? baseEnv.LINKEDIN_REDIRECT_URI,
+    instagram: options.redirects?.instagram ?? baseEnv.INSTAGRAM_REDIRECT_URI,
+    youtube: options.redirects?.youtube ?? baseEnv.YOUTUBE_REDIRECT_URI,
+    tiktok: options.redirects?.tiktok ?? baseEnv.TIKTOK_REDIRECT_URI,
+  };
+  // Le credenziali salvate nelle Impostazioni vincono sul .env.
+  const env: Env = {
+    ...applySavedCredentials(baseEnv, await loadSavedCredentials(db, cipher)),
+    LINKEDIN_REDIRECT_URI: redirects.linkedin,
+    INSTAGRAM_REDIRECT_URI: redirects.instagram,
+    YOUTUBE_REDIRECT_URI: redirects.youtube,
+    TIKTOK_REDIRECT_URI: redirects.tiktok,
+  };
   const linkedinClient = createLinkedInClient({ apiVersion: env.LINKEDIN_API_VERSION });
   const instagramClient = createInstagramClient({ apiVersion: env.INSTAGRAM_API_VERSION });
   // R2 per i file da pubblicare (caroselli); senza credenziali il caricamento risponde 503.
@@ -86,6 +110,12 @@ export async function createPrismaRuntime(
 
   const services = createServices(db, {
     aiSettings: { cipher, env: envProviderConfig(env), timeoutMs: env.DEEPSEEK_TIMEOUT_MS },
+    appCredentials: {
+      cipher,
+      env: baseEnv,
+      redirects,
+      ...(options.onCredentialsChanged ? { onChanged: options.onCredentialsChanged } : {}),
+    },
     linkedinOAuth: linkedinOAuthConfig(env, linkedinClient, cipher),
     instagramOAuth: instagramOAuthConfig(env, instagramClient, cipher),
     youtubeOAuth,

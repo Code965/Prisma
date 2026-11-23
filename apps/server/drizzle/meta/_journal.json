@@ -8,6 +8,13 @@
       "when": 1795467962203,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1795469482343,
+      "tag": "0001_app_credentials",
+      "breakpoints": true
     }
   ]
 }

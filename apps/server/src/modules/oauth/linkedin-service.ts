@@ -36,7 +36,7 @@ export function createLinkedInOAuthService(deps: {
   function requireConfig(): LinkedInOAuthConfig {
     if (!deps.config) {
       throw new NotConfiguredError(
-        'LinkedIn non configurato: imposta LINKEDIN_CLIENT_ID e LINKEDIN_CLIENT_SECRET nel .env del server',
+        'LinkedIn non configurato: inserisci l’app di LinkedIn in Impostazioni › Account',
       );
     }
     return deps.config;

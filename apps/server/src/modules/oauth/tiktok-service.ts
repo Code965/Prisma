@@ -1,5 +1,6 @@
 import type { SocialAccount } from '@prisma-app/shared';
 import { createOAuthState, verifyOAuthState } from '../../auth/oauth-state.js';
+import { challengeHex, createCodeVerifier, createVerifierStore } from '../../auth/pkce.js';
 import { tokenContext, type TokenCipher } from '../../crypto/token-cipher.js';
 import type { DbExecutor } from '../../db/executor.js';
 import { NotConfiguredError } from '../../http/error-handler.js';
@@ -67,19 +68,24 @@ export function createTikTokOAuthService(deps: {
   function requireConfig(): TikTokOAuthConfig {
     if (!deps.config) {
       throw new NotConfiguredError(
-        'TikTok non configurato: imposta TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET nel .env del server',
+        'TikTok non configurato: inserisci l’app di TikTok in Impostazioni › Account',
       );
     }
     return deps.config;
   }
+  // PKCE: il verifier resta qui, legato allo state del login.
+  const verifiers = createVerifierStore(deps.now);
 
   return {
     async start(brandId: number): Promise<{ url: string }> {
       const config = requireConfig();
       await deps.brands.ensureExists(brandId);
       const state = createOAuthState(config.stateSecret, { brandId }, deps.now());
+      const verifier = createCodeVerifier();
+      verifiers.put(state, verifier);
       return {
         url: authorizationUrl({
+          codeChallenge: challengeHex(verifier),
           clientKey: config.clientKey,
           redirectUri: config.redirectUri,
           state,
@@ -98,12 +104,15 @@ export function createTikTokOAuthService(deps: {
       const { brandId } = verifyOAuthState(config.stateSecret, query.state ?? '', deps.now());
       if (query.error) throw new OAuthDeniedError(query.error_description ?? query.error);
       if (!query.code) throw new OAuthDeniedError('Codice di autorizzazione mancante');
+      const codeVerifier = verifiers.take(query.state ?? '');
+      if (!codeVerifier) throw new OAuthDeniedError('Login scaduto o già usato: riprova da Prisma');
 
       const tokens = await config.client.exchangeCode({
         code: query.code,
         clientKey: config.clientKey,
         clientSecret: config.clientSecret,
         redirectUri: config.redirectUri,
+        codeVerifier,
       });
       const profile = await config.client.getProfile(tokens.accessToken);
       const context = tokenContext('tiktok', tokens.openId);

@@ -330,6 +330,42 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   tocca. Provato sui dati veri: brand, 5 argomenti, 2 idee, 4 contenuti con bozze, revisioni, chat e 9 file esportati,
   letti poi dall'app senza server avviato.
 
+## App delle piattaforme e login dall'app (fase 5d)
+
+Verificato sulla documentazione ufficiale (novembre 2026). Ogni utente crea le sue app sviluppatore e le inserisce in
+**Impostazioni › Account** («App» accanto a ogni social) e **Archivio file** (R2).
+
+- **Salvataggio** (`modules/app-credentials/`, tabella `app_credentials`, migrazione `0001_app_credentials`): per
+  chiave (`linkedin`, `instagram`, `youtube`, `tiktok`, `r2`) un JSON cifrato con `tokenContext('app', key)`.
+  `GET /settings/apps` (identificativo pubblico, `hasSecret`, indirizzo di ritorno da registrare, dati R2),
+  `PUT/DELETE /settings/apps/:key`. Il segreto non torna mai; vuoto = tieni quello salvato, ma solo per la stessa app
+  (stesso client id). Schemi in `packages/shared/src/schemas/app-credentials.ts`.
+- **Uso**: `createPrismaRuntime` legge le credenziali salvate e le sovrappone al `.env` (`applySavedCredentials`), così
+  OAuth, adapter e R2 non cambiano. Un salvataggio chiama `onCredentialsChanged`: il core dell'app (e il server da solo)
+  ricostruisce il runtime dopo aver risposto; le richieste che arrivano intanto aspettano quello nuovo.
+- **Ritorno del login** (indirizzi in `apps/desktop/src/main/core.ts`, `OAUTH_REDIRECTS`): il core apre un piccolo
+  server HTTP su `127.0.0.1:47615` che risponde solo a `GET /oauth/<piattaforma>/callback` (lo `state` firmato lega la
+  risposta al login partito da Prisma), il resto è 404.
+  - **Google/YouTube**: client OAuth di tipo «App desktop», ritorno su `http://127.0.0.1:47615/oauth/youtube/callback`
+    (nessun indirizzo da registrare), PKCE S256 base64url.
+  - **TikTok**: Login Kit for Desktop, ritorno su `http://127.0.0.1:47615/oauth/tiktok/callback` (da registrare; sono
+    ammessi solo localhost/127.0.0.1), PKCE S256 in esadecimale come chiede la doc desktop. `video.upload` va
+    approvato da TikTok; in sandbox fino a 10 account propri (da confermare con la prima prova).
+  - **LinkedIn e Instagram**: la doc chiede un ritorno https. Si registra la pagina statica del progetto su GitHub
+    Pages (`docs/oauth/<piattaforma>/`, `https://code965.github.io/Prisma/oauth/<piattaforma>/`), che passa la query
+    così com'è a `127.0.0.1:47615` (`docs/oauth/oauth.js`, nessun'altra richiesta). Il codice da solo non serve: lo
+    scambio richiede il segreto, che sta solo sul PC.
+  - PKCE in `auth/pkce.ts`: il verifier resta sul server legato allo state per 10 minuti e si usa una volta.
+- **R2**: Account ID (32 hex), bucket, Access Key ID e Secret di un token «Object Read & Write», indirizzo pubblico del
+  bucket (Instagram scarica le immagini da lì; r2.dev è limitato e va bene per uso personale, altrimenti un dominio
+  su Cloudflare).
+- Desktop: `screens/Impostazioni/AppCredentialsForm.tsx` (guida passo passo, «Apri la pagina di …», indirizzo da
+  copiare, campi), logica e guide in `services/app-credentials.ts`. «Collega» resta spento finché l'app non è
+  configurata. L'IPC apre nel browser anche le pagine dove si creano le app (elenco in `ipc-contract.ts`).
+- Provato nell'app vera con credenziali di prova (poi tolte): runtime ricostruito, login YouTube con ritorno su
+  127.0.0.1 e PKCE, listener che rifiuta uno state falso (401) e i percorsi non di login (404). Da provare con le app
+  vere delle quattro piattaforme.
+
 ## Installazione, intro e aggiornamenti (desktop)
 
 - **Logo**: sorgenti in `design/brand/` (simbolo, icona, `prisma.ico`, LEGGIMI con colori e usi); `apps/desktop/build/`
@@ -856,7 +892,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
       personale, AGPL, cronologia nuova, release a ogni push su main, link di download fisso
 - [x] 5b. AI a scelta dell'utente (Impostazioni › AI, servizi compatibili OpenAI, chiave cifrata, ripiego sul .env)
 - [x] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
-- [ ] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
+- [x] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
 - [ ] 5e. Configurazione guidata al primo avvio
 - [ ] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
 

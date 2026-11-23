@@ -83,6 +83,8 @@ export function authorizationUrl(params: {
   clientKey: string;
   redirectUri: string;
   state: string;
+  /** PKCE di Login Kit for Desktop: SHA-256 del verifier in esadecimale. */
+  codeChallenge?: string;
 }): string {
   const url = new URL(TIKTOK_AUTHORIZE_URL);
   url.searchParams.set('client_key', params.clientKey);
@@ -90,6 +92,10 @@ export function authorizationUrl(params: {
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('redirect_uri', params.redirectUri);
   url.searchParams.set('state', params.state);
+  if (params.codeChallenge) {
+    url.searchParams.set('code_challenge', params.codeChallenge);
+    url.searchParams.set('code_challenge_method', 'S256');
+  }
   return url.toString();
 }
 
@@ -170,6 +176,7 @@ export function createTikTokClient(
       clientKey: string;
       clientSecret: string;
       redirectUri: string;
+      codeVerifier?: string;
     }): Promise<TikTokTokens> {
       return tokens(
         await send(
@@ -180,6 +187,7 @@ export function createTikTokClient(
             code: params.code,
             grant_type: 'authorization_code',
             redirect_uri: params.redirectUri,
+            ...(params.codeVerifier ? { code_verifier: params.codeVerifier } : {}),
           }),
         ),
       );

@@ -5,10 +5,19 @@ import { Page } from '../../components/Page/Page';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
 import { useBrand } from '../../hooks/brand';
 import { useConnectAccount, useSocialAccounts } from '../../hooks/useAccounts';
+import { useAppCredentials } from '../../hooks/useAppCredentials';
+import type { AppCredentialKey } from '@prisma-app/shared';
 import { useNow } from '../../hooks/useNow';
 import { accountRows, oauthPlatform } from '../../services/accounts';
+import {
+  APP_GUIDES,
+  appKeyFor,
+  appStatusLabel,
+  isAppConfigured,
+} from '../../services/app-credentials';
 import { errorMessage } from '../../services/api/client';
 import { AiSettingsSection } from './AiSettingsSection';
+import { AppCredentialsForm } from './AppCredentialsForm';
 import { BlogConnectionForm } from './BlogConnectionForm';
 import { ConnectionSection } from './ConnectionSection';
 import { UpdatesSection } from './UpdatesSection';
@@ -23,6 +32,11 @@ export function ImpostazioniScreen() {
   const now = useNow();
   const rows = accountRows(accounts.data ?? [], now);
   const [blogOpen, setBlogOpen] = useState(false);
+  const apps = useAppCredentials();
+  const [openApp, setOpenApp] = useState<AppCredentialKey | null>(null);
+  const appView = (key: AppCredentialKey | null) => apps.data?.find((view) => view.key === key);
+  const toggleApp = (key: AppCredentialKey) =>
+    setOpenApp((current) => (current === key ? null : key));
 
   return (
     <Page title="Impostazioni">
@@ -83,7 +97,22 @@ export function ImpostazioniScreen() {
                   {row.statusLabel}
                   {row.note && <span className={styles.accountNote}> · {row.note}</span>}
                 </span>
+                {appKeyFor(row.platform) && apps.data && (
+                  <span className={styles.accountStatus}>
+                    {appStatusLabel(appView(appKeyFor(row.platform)))}
+                  </span>
+                )}
               </div>
+              {appKeyFor(row.platform) && apps.data && (
+                <Button
+                  variant="secondary"
+                  size={32}
+                  aria-expanded={openApp === appKeyFor(row.platform)}
+                  onClick={() => toggleApp(appKeyFor(row.platform)!)}
+                >
+                  {openApp === appKeyFor(row.platform) ? 'Chiudi' : 'App'}
+                </Button>
+              )}
               {row.action === 'configura' && (
                 <Button
                   variant="secondary"
@@ -99,7 +128,16 @@ export function ImpostazioniScreen() {
                 <Button
                   variant="secondary"
                   size={32}
-                  disabled={connect.isPending || !brand}
+                  disabled={
+                    connect.isPending ||
+                    !brand ||
+                    (Boolean(apps.data) && !isAppConfigured(appView(appKeyFor(row.platform))))
+                  }
+                  title={
+                    apps.data && !isAppConfigured(appView(appKeyFor(row.platform)))
+                      ? 'Configura prima l’app della piattaforma'
+                      : undefined
+                  }
                   onClick={() => {
                     const platform = oauthPlatform(row.platform);
                     if (platform) connect.mutate(platform);
@@ -111,6 +149,9 @@ export function ImpostazioniScreen() {
             </div>
             {row.action === 'configura' && blogOpen && (
               <BlogConnectionForm account={row.account} onDone={() => setBlogOpen(false)} />
+            )}
+            {appKeyFor(row.platform) && openApp === appKeyFor(row.platform) && appView(openApp) && (
+              <AppCredentialsForm view={appView(openApp)!} onDone={() => setOpenApp(null)} />
             )}
           </Fragment>
         ))}
@@ -132,12 +173,51 @@ export function ImpostazioniScreen() {
             {errorMessage(connect.error)}
           </p>
         ) : null}
+        {apps.error ? (
+          <p role="alert" className={styles.error}>
+            {errorMessage(apps.error)}
+          </p>
+        ) : null}
         {accounts.error ? (
           <p role="alert" className={styles.error}>
             {errorMessage(accounts.error)}
           </p>
         ) : null}
       </section>
+      {apps.data && (
+        <section aria-labelledby="h-r2" className={`${styles.section} ${styles.accounts}`}>
+          <div className={styles.sectionHead}>
+            <h2 id="h-r2" className={styles.sectionTitle}>
+              Archivio file
+            </h2>
+            <span className={styles.sectionHint}>
+              Caroselli e video da pubblicare vanno su {APP_GUIDES.r2.label}: le piattaforme li
+              scaricano da lì
+            </span>
+          </div>
+          <div className={styles.accountRow}>
+            <div className={styles.accountText}>
+              <span className={styles.accountName}>{APP_GUIDES.r2.label}</span>
+              <span className={styles.accountStatus}>
+                {isAppConfigured(appView('r2'))
+                  ? `Bucket ${appView('r2')?.r2?.bucket ?? ''}${appView('r2')?.source === 'env' ? ' (dal file .env)' : ''}`
+                  : 'Non configurato'}
+              </span>
+            </div>
+            <Button
+              variant="secondary"
+              size={32}
+              aria-expanded={openApp === 'r2'}
+              onClick={() => toggleApp('r2')}
+            >
+              {openApp === 'r2' ? 'Chiudi' : 'Configura'}
+            </Button>
+          </div>
+          {openApp === 'r2' && appView('r2') && (
+            <AppCredentialsForm view={appView('r2')!} onDone={() => setOpenApp(null)} />
+          )}
+        </section>
+      )}
       <VideoToolsSection />
       <UpdatesSection />
     </Page>

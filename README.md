@@ -50,7 +50,9 @@ Dettagli tecnici, scelte e stato dei lavori sono in [CLAUDE.md](CLAUDE.md).
 2. Apri il file: Prisma si installa per il tuo utente, senza permessi di amministratore, e crea il
    collegamento nel menu Start e sul desktop.
 
-Al primo avvio non c’è nulla da configurare per i dati: stanno sul tuo PC. In **Impostazioni › AI** scegli il
+Al primo avvio non c’è nulla da configurare per i dati: stanno sul tuo PC. Per pubblicare, in
+**Impostazioni › Account** crei e inserisci le tue app di LinkedIn, Instagram, YouTube e TikTok (Prisma ti
+guida passo passo) e, per caroselli e video, l’archivio Cloudflare R2. In **Impostazioni › AI** scegli il
 servizio che scrive le bozze (Ollama gratis sul PC, oppure DeepSeek, OpenAI, OpenRouter… con la tua chiave).
 
 Windows potrebbe mostrare «Editore sconosciuto»: l’installer non è firmato. Scegli _Ulteriori

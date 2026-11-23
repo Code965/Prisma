@@ -105,6 +105,8 @@ export function authorizationUrl(params: {
   clientId: string;
   redirectUri: string;
   state: string;
+  /** PKCE S256 (app «Desktop» con ritorno su 127.0.0.1). */
+  codeChallenge?: string;
 }): string {
   const url = new URL(GOOGLE_AUTHORIZE_URL);
   url.searchParams.set('client_id', params.clientId);
@@ -116,6 +118,10 @@ export function authorizationUrl(params: {
   url.searchParams.set('prompt', 'consent');
   url.searchParams.set('include_granted_scopes', 'true');
   url.searchParams.set('state', params.state);
+  if (params.codeChallenge) {
+    url.searchParams.set('code_challenge', params.codeChallenge);
+    url.searchParams.set('code_challenge_method', 'S256');
+  }
   return url.toString();
 }
 
@@ -189,6 +195,7 @@ export function createYouTubeClient(
       clientId: string;
       clientSecret: string;
       redirectUri: string;
+      codeVerifier?: string;
     }): Promise<GoogleTokens> {
       return tokens(
         await send(tokenUrl, {
@@ -200,6 +207,7 @@ export function createYouTubeClient(
             client_secret: params.clientSecret,
             redirect_uri: params.redirectUri,
             grant_type: 'authorization_code',
+            ...(params.codeVerifier ? { code_verifier: params.codeVerifier } : {}),
           }),
         }),
       );
