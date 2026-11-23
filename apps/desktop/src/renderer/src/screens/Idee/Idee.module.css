@@ -1,0 +1,255 @@
+/* Misure e colori da design/mockup/schermate/V3Idee.dc.html. */
+
+/* --- Nuova idea --------------------------------------------------------------------------- */
+
+.newIdea {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inputRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line2);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mic {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mic:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tagLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tagChip {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--text2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tagChipOn {
+  border-color: var(--accent);
+  background: var(--accentSoft);
+  color: var(--text);
+}
+
+.save {
+  margin-left: auto;
+}
+
+/* --- Filtri --------------------------------------------------------------------------------- */
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filterOn {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--onPrimary);
+}
+
+.filterCount {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.metaText {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --- Lista ---------------------------------------------------------------------------------- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.cardText {
+  flex: 1 1 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tagBadge {
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.platforms {
+  display: flex;
+  gap: 4px;
+}
+
+.platformToggle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+.platformOn {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.deleteButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.deleteButton:hover:not(:disabled) {
+  color: var(--s-err);
+  border-color: var(--s-err);
+}
+
+.deleteButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- Stati ---------------------------------------------------------------------------------- */
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--s-err);
+}
+
+.cardError {
+  flex-basis: 100%;
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text2);
+}

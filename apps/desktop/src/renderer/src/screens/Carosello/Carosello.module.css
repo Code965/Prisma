@@ -1,0 +1,556 @@
+/* Editor carosello da design/mockup/schermate/V3Carosello.dc.html. */
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* --- Selettore e stato vuoto --------------------------------------------------------------- */
+
+.picker,
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pickRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.pickTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pickVariants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pickLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.pickLink:hover {
+  background: var(--hover);
+}
+
+.pickCount {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.emptyText {
+  margin: 0;
+  max-width: 560px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* --- Intestazione -------------------------------------------------------------------------- */
+
+.variantTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.templates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+}
+
+.templatesLabel {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 6px 0 8px;
+}
+
+.templateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.templateOn {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line2);
+}
+
+.exportButton {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.exportPrimary {
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+}
+
+.exportButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.exportTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.exportHint {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* --- Area di lavoro ------------------------------------------------------------------------ */
+
+.workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.slides {
+  flex: 1 1 170px;
+  max-width: 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slidesTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.thumb {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px;
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.thumbOn {
+  border-color: var(--accent);
+}
+
+.thumbNumber {
+  width: 14px;
+  padding-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.thumb > div {
+  border-radius: 4px;
+}
+
+.addSlide {
+  height: 38px;
+  border-radius: 9px;
+  border: 1px dashed var(--line2);
+  background: transparent;
+  color: var(--text2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.addSlide:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+}
+
+.canvas {
+  flex: 3 1 440px;
+  min-width: 0;
+  border-radius: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.previewShadow {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.18);
+}
+
+.canvasCaption {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.aside {
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* --- Pannelli a destra ---------------------------------------------------------------------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.slideActions {
+  display: flex;
+  gap: 4px;
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text2);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iconButton:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldHead {
+  display: flex;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.labelHint {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.counter {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.counter[data-over] {
+  color: var(--s-err);
+}
+
+.input,
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.input {
+  height: 38px;
+  padding: 0 10px;
+}
+
+.textarea {
+  padding: 8px 10px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.textarea:global(.mono) {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.input[readonly],
+.textarea[readonly] {
+  background: var(--panel2);
+}
+
+.warnings {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--s-review);
+}
+
+.saveBox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Chat ------------------------------------------------------------------------------------ */
+
+.chat {
+  flex: 1;
+  gap: 10px;
+}
+
+.chatHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chatContext {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.userMessage {
+  margin-left: auto;
+  width: fit-content;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px 12px 4px 12px;
+  background: var(--primary);
+  color: var(--onPrimary);
+  font-size: 13px;
+}
+
+.assistantMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assistantText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.proposal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel2);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.proposalText {
+  flex: 1;
+}
+
+.proposalUse {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.compose {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--bg);
+}
+
+.composeInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.send {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- File esportati ------------------------------------------------------------------------ */
+
+.exportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.exportLabel {
+  font-weight: 600;
+}
+
+.exportState {
+  font-size: 12px;
+  color: var(--s-pub);
+}
+
+.exportState[data-stale] {
+  color: var(--s-review);
+}
+
+.linkButton {
+  margin-left: auto;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}

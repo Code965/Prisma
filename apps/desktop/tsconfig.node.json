@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/main",
+    "src/preload",
+    "electron.vite.config.ts",
+    "renderer.config.ts",
+    "vite.web.config.ts"
+  ]
+}

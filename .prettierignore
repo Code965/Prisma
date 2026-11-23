@@ -1,0 +1,8 @@
+node_modules
+dist
+out
+coverage
+pnpm-lock.yaml
+design/mockup
+apps/server/drizzle
+apps/server/prompts

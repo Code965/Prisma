@@ -1,0 +1,33 @@
+# Installer Windows e pacchetti di aggiornamento (pnpm --filter @prisma-app/desktop dist).
+# Tutte le dipendenze sono nel bundle di electron-vite: nel pacchetto non serve node_modules.
+appId: com.code965.prisma
+productName: Prisma
+directories:
+  output: release/${version}
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+  - '!**/node_modules/**'
+asar: true
+# Electron già installato da pnpm: niente secondo download.
+electronDist: node_modules/electron/dist
+win:
+  target:
+    - target: nsis
+      arch: x64
+  icon: build/icon.ico
+nsis:
+  oneClick: true
+  perMachine: false
+  # Nome fisso: il link /releases/latest/download/Prisma-Setup.exe porta sempre all'ultima versione.
+  artifactName: Prisma-Setup.${ext}
+  shortcutName: Prisma
+  uninstallDisplayName: Prisma
+  deleteAppDataOnUninstall: false
+# Le release stanno in questo repository (pubblico): l'app scarica latest.yml da lì, senza token.
+# Le crea il workflow Release a ogni push su main (electron-builder gira con --publish never).
+publish:
+  provider: github
+  owner: Code965
+  repo: Prisma

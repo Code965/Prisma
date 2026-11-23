@@ -1,0 +1,48 @@
+/* Pulsanti del mockup: primario (Salva idea, Genera contenuti) e secondario (azioni negli elenchi). */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primary {
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+}
+
+.secondary {
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.size32 {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.size36 {
+  height: 36px;
+  padding: 0 14px;
+}
+
+.size40 {
+  height: 40px;
+  padding: 0 14px;
+}

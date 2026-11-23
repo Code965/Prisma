@@ -1,0 +1,88 @@
+/* Token di tema copiati da design/mockup/design/tokens.css: non modificare i valori qui senza aggiornare il mockup.
+   La classe .th-light / .th-dark va sul contenitore radice (qui <html>). */
+
+.th-light {
+  --bg: #f5f6f8;
+  --side: #fbfbfc;
+  --panel: #ffffff;
+  --panel2: #f3f4f6;
+  --hover: #ebedf1;
+  --past: #fafafb;
+  --line: #e4e7ec;
+  --line2: #d0d5dd;
+  --text: #101318;
+  --text2: #344054;
+  --muted: #5b6473;
+  --primary: #101318;
+  --onPrimary: #ffffff;
+  --accent: #4f46e5;
+  --accentSoft: #eef0ff;
+  --li: #0a66c2;
+  --liSoft: #e8f1fa;
+  --ig: #c1356f;
+  --igSoft: #fbeaf1;
+  --tt: #0a8a85;
+  --ttSoft: #e2f4f3;
+  --yt: #d92d20;
+  --ytSoft: #fdecea;
+  --s-draft: #475467;
+  --s-draftBg: #f2f4f7;
+  --s-review: #b54708;
+  --s-reviewBg: #fef4e6;
+  --s-ok: #175cd3;
+  --s-okBg: #eaf2ff;
+  --s-sched: #6941c6;
+  --s-schedBg: #f2edfe;
+  --s-pub: #067647;
+  --s-pubBg: #e7f6ec;
+  --s-err: #b42318;
+  --s-errBg: #fdecea;
+  --rec: #eef9f2;
+  --recText: #067647;
+  --now: #d92d20;
+  --code: #0f1115;
+  --codeText: #e6e8eb;
+}
+
+.th-dark {
+  --bg: #0e1013;
+  --side: #0b0d10;
+  --panel: #16191e;
+  --panel2: #1c2026;
+  --hover: #252a31;
+  --past: #12151a;
+  --line: #262a31;
+  --line2: #343a43;
+  --text: #f2f4f7;
+  --text2: #d0d5dd;
+  --muted: #9aa1ac;
+  --primary: #f2f4f7;
+  --onPrimary: #0e1013;
+  --accent: #8b85ff;
+  --accentSoft: rgba(139, 133, 255, 0.16);
+  --li: #5aa9ff;
+  --liSoft: rgba(90, 169, 255, 0.14);
+  --ig: #f27ab0;
+  --igSoft: rgba(242, 122, 176, 0.14);
+  --tt: #3dd6ce;
+  --ttSoft: rgba(61, 214, 206, 0.14);
+  --yt: #ff7a70;
+  --ytSoft: rgba(255, 122, 112, 0.14);
+  --s-draft: #c4c9d1;
+  --s-draftBg: rgba(196, 201, 209, 0.12);
+  --s-review: #f5c26b;
+  --s-reviewBg: rgba(245, 194, 107, 0.14);
+  --s-ok: #93b4ff;
+  --s-okBg: rgba(147, 180, 255, 0.14);
+  --s-sched: #c4a7ff;
+  --s-schedBg: rgba(196, 167, 255, 0.16);
+  --s-pub: #7ddc9a;
+  --s-pubBg: rgba(125, 220, 154, 0.13);
+  --s-err: #ff8a80;
+  --s-errBg: rgba(255, 138, 128, 0.15);
+  --rec: rgba(125, 220, 154, 0.08);
+  --recText: #7ddc9a;
+  --now: #ff7a70;
+  --code: #0b0d10;
+  --codeText: #e6e8eb;
+}

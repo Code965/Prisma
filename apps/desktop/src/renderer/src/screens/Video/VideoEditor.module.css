@@ -1,0 +1,754 @@
+/*
+ * Editor video da design/mockup/schermate/V3Video.dc.html. Il fondo del player e i sottotitoli
+ * usano i colori fissi del mockup: rappresentano il video esportato, non il tema dell'app.
+ */
+
+.page {
+  flex: 999 1 560px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 20px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+/* --- Intestazione --------------------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.breadcrumb a {
+  color: var(--muted);
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.action:disabled,
+.filmcraftButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.filmcraftGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.filmcraftError {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.filmcraft {
+  display: flex;
+  align-items: center;
+  border-radius: 9px;
+  border: 1px solid var(--line2);
+  overflow: hidden;
+}
+
+.filmcraftButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filmcraftStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--panel);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: var(--accentSoft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* --- Player --------------------------------------------------------------------------------- */
+
+.workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.player {
+  flex: 2 1 540px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playerBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.formats {
+  display: flex;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+}
+
+.format {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.formatOn {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.formatNote {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: #0b0d10;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.frame {
+  position: relative;
+  height: 100%;
+  max-width: 100%;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.crop {
+  position: absolute;
+  border: 2px dashed rgba(255, 255, 255, 0.85);
+  box-sizing: border-box;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 6px 9%;
+  pointer-events: auto;
+}
+
+.cropMovable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.cropMovable:active {
+  cursor: grabbing;
+}
+
+.cropLabel {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 11px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.subClean {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.subWord {
+  font-size: 19px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.subWordActive {
+  background: #facc15;
+  color: #101318;
+  padding: 0 4px;
+  border-radius: 4px;
+  text-shadow: none;
+}
+
+.subBox {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.82);
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.subBig {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  margin-bottom: 30%;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.play {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+
+.time {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.track {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--line);
+  position: relative;
+  cursor: pointer;
+}
+
+.trackFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+.subStyles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subStylesLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.subStyleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.subStyle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 9px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.subStyleOn {
+  border-color: var(--accent);
+}
+
+.sampleBox {
+  height: 34px;
+  border-radius: 5px;
+  background: #1c2026;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sampleClean,
+.sampleWord,
+.sampleDark,
+.sampleBig {
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.sampleClean {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.sampleWord {
+  font-weight: 800;
+  color: #101318;
+  background: #facc15;
+}
+
+.sampleDark {
+  font-weight: 600;
+  color: #ffffff;
+  background: #000000;
+}
+
+.sampleBig {
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.subStyleName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* --- Trascrizione --------------------------------------------------------------------------- */
+
+.aside {
+  flex: 1 1 320px;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.asideHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.asideTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.asideMeta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.segments {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 520px;
+}
+
+.segmentRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 8px;
+  border-radius: 7px;
+  color: var(--text);
+}
+
+.segmentCut {
+  background: var(--del);
+  color: var(--delText);
+}
+
+.segmentActive:not(.segmentCut) {
+  background: var(--hover);
+}
+
+.segmentAt {
+  width: 40px;
+  flex-shrink: 0;
+  padding: 2px 0 0;
+  border: 0;
+  background: none;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.segmentText {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.segmentCut .segmentText {
+  text-decoration: line-through;
+}
+
+.silencePill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px dashed var(--line2);
+}
+
+.asideFooter {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* --- Timeline ------------------------------------------------------------------------------- */
+
+.timeline {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timelineHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timelineTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tracksScroll {
+  overflow-x: auto;
+}
+
+.tracks {
+  min-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.rulerRow,
+.trackRow {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+}
+
+.rulerRow {
+  align-items: end;
+}
+
+.ruler {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trackName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.videoTrack,
+.subTrack {
+  display: flex;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.videoTrack {
+  height: 34px;
+}
+
+.subTrack {
+  height: 26px;
+}
+
+.clip {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 4px;
+  background: var(--trVideo);
+}
+
+.clipCut {
+  background: repeating-linear-gradient(135deg, var(--line2) 0 4px, transparent 4px 8px);
+}
+
+.subClip {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 4px;
+  color: var(--trText);
+  font-size: 11px;
+  line-height: 26px;
+  padding: 0 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.subClipOn {
+  background: var(--trSub);
+}
+
+.emptyTrack {
+  height: 26px;
+  border-radius: 4px;
+  border: 1px dashed var(--line2);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 24px;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.playhead {
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  width: 2px;
+  background: var(--yt);
+  pointer-events: none;
+}
+
+/* --- Video finale (passo 3d) ---------------------------------------------------------------- */
+
+.finalPanel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.finalRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.finalLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.finalProgress {
+  flex: 1 1 200px;
+  height: 8px;
+  accent-color: var(--accent);
+}
+
+.finalInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.finalState {
+  color: var(--s-pub);
+}
+
+.finalState[data-stale] {
+  color: var(--s-review);
+}
+
+.finalTarget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.select {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.linkButton {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}

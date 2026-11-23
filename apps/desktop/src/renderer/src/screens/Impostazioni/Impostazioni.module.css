@@ -1,0 +1,203 @@
+/* Sezioni, campi e righe account da design/mockup/schermate/V3Impostazioni.dc.html. */
+
+.section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sectionHint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --- Campi ---------------------------------------------------------------------------------- */
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.input {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.buttons,
+.testRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ok {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--s-pub);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+/* --- Brand ---------------------------------------------------------------------------------- */
+
+.brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 240px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brandOn {
+  border: 2px solid var(--accent);
+  background: var(--accentSoft);
+}
+
+.brandAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--panel2);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.brandAvatarOn {
+  background: var(--primary);
+  color: var(--onPrimary);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* --- Account -------------------------------------------------------------------------------- */
+
+.accounts {
+  gap: 0;
+  max-width: 640px;
+}
+
+.accounts .sectionTitle {
+  margin: 0 0 10px;
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.accountText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accountName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.accountHandle {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.accountStatus {
+  font-size: 12px;
+}
+
+.accountNote {
+  color: var(--muted);
+}
+
+.inlineLink {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.blogForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 12px 44px;
+}
+
+/* Percorso degli strumenti video: lungo, va a capo dove serve. */
+.toolPath {
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

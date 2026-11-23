@@ -1,0 +1,3 @@
+ALTER TABLE `social_accounts` MODIFY COLUMN `platform` enum('linkedin','instagram','tiktok','youtube','blog') NOT NULL;--> statement-breakpoint
+ALTER TABLE `variants` MODIFY COLUMN `platform` enum('linkedin','instagram','tiktok','youtube','blog') NOT NULL;--> statement-breakpoint
+ALTER TABLE `variants` MODIFY COLUMN `format` enum('post','carosello','reel','storia','video','short','articolo') NOT NULL;

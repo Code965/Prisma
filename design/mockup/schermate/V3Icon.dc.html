@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Icona piattaforma</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<span role="img" aria-label="{{label}}" title="{{label}}" style="display: inline-flex; align-items: center; justify-content: center; width: {{px}}; height: {{px}}; border-radius: {{radius}}; background: {{bg}}; color: {{fg}}; flex-shrink: 0; vertical-align: middle">
+  <sc-if value="{{isLi}}" hint-placeholder-val="{{ true }}">
+    <svg width="{{ipx}}" height="{{ipx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M3 13h18"></path></svg>
+  </sc-if>
+  <sc-if value="{{isIg}}" hint-placeholder-val="{{ false }}">
+    <svg width="{{ipx}}" height="{{ipx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"></rect><circle cx="12" cy="13" r="3.5"></circle><path d="M8 6l1.5-2h5L16 6"></path></svg>
+  </sc-if>
+  <sc-if value="{{isTt}}" hint-placeholder-val="{{ false }}">
+    <svg width="{{ipx}}" height="{{ipx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg>
+  </sc-if>
+  <sc-if value="{{isYt}}" hint-placeholder-val="{{ false }}">
+    <svg width="{{ipx}}" height="{{ipx}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4"></rect><path d="M10 9.5v5l4.5-2.5z"></path></svg>
+  </sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"p":{"editor":"enum","options":["li","ig","tt","yt"],"default":"li"},"size":{"editor":"int","default":24,"min":16,"max":48},"$preview":{"width":40,"height":40}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props.p ?? 'li';
+    var size = parseInt(this.props.size ?? 24, 10) || 24;
+    var M = {
+      li: { label: 'LinkedIn', bg: 'var(--liSoft, #E8F1FA)', fg: 'var(--li, #0A66C2)' },
+      ig: { label: 'Instagram', bg: 'var(--igSoft, #FBEAF1)', fg: 'var(--ig, #C1356F)' },
+      tt: { label: 'TikTok', bg: 'var(--ttSoft, #E2F4F3)', fg: 'var(--tt, #0A8A85)' },
+      yt: { label: 'YouTube', bg: 'var(--ytSoft, #FDECEA)', fg: 'var(--yt, #D92D20)' }
+    };
+    var m = M[p] || M.li;
+    return {
+      label: m.label, bg: m.bg, fg: m.fg,
+      px: size + 'px',
+      radius: Math.round(size * 0.28) + 'px',
+      ipx: Math.round(size * 0.6),
+      isLi: p === 'li', isIg: p === 'ig', isTt: p === 'tt', isYt: p === 'yt'
+    };
+  }
+}
+</script>
+</body>
+</html>

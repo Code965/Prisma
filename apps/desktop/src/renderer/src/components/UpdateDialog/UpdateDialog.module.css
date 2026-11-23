@@ -1,0 +1,139 @@
+.dialog {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.25);
+}
+
+.dialog::backdrop {
+  background: rgb(16 19 24 / 0.45);
+}
+
+.head {
+  display: flex;
+  gap: 16px;
+  padding: 24px 24px 6px;
+}
+
+.badge {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--accentSoft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.versions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  font-size: 11.5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text2);
+}
+
+.chipNew {
+  border-color: transparent;
+  background: var(--accentSoft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.arrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 24px 20px;
+}
+
+.label {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.notes {
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel2);
+  color: var(--text2);
+  user-select: text;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--panel2);
+  border-radius: 0 0 14px 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.link {
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.link:hover {
+  background: var(--hover);
+  color: var(--text);
+}

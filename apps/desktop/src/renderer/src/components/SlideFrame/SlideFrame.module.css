@@ -1,0 +1,13 @@
+.box {
+  position: relative;
+  overflow: hidden;
+  flex: none;
+}
+
+.frame {
+  position: absolute;
+  inset: 0 auto auto 0;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}

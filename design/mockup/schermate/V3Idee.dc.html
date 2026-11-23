@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Idee</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.th-light{--bg:#F5F6F8;--side:#FBFBFC;--panel:#FFFFFF;--panel2:#F3F4F6;--hover:#EBEDF1;--line:#E4E7EC;--line2:#D0D5DD;--text:#101318;--text2:#344054;--muted:#5B6473;--primary:#101318;--onPrimary:#FFFFFF;--accent:#4F46E5;--accentSoft:#EEF0FF;--li:#0A66C2;--liSoft:#E8F1FA;--ig:#C1356F;--igSoft:#FBEAF1;--tt:#0A8A85;--ttSoft:#E2F4F3;--yt:#D92D20;--ytSoft:#FDECEA;--rec:#D92D20;--recSoft:#FDECEA}
+.th-dark{--bg:#0E1013;--side:#0B0D10;--panel:#16191E;--panel2:#1C2026;--hover:#252A31;--line:#262A31;--line2:#343A43;--text:#F2F4F7;--text2:#D0D5DD;--muted:#9AA1AC;--primary:#F2F4F7;--onPrimary:#0E1013;--accent:#8B85FF;--accentSoft:rgba(139,133,255,0.16);--li:#5AA9FF;--liSoft:rgba(90,169,255,0.14);--ig:#F27AB0;--igSoft:rgba(242,122,176,0.14);--tt:#3DD6CE;--ttSoft:rgba(61,214,206,0.14);--yt:#FF7A70;--ytSoft:rgba(255,122,112,0.14);--rec:#FF7A70;--recSoft:rgba(255,122,112,0.14)}
+a{color:inherit}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif">
+
+<div style="flex: 0 0 auto; background: var(--side); border-right: 1px solid var(--line)">
+  <dc-import name="V3Sidebar" active="idee" theme="{{theme}}" on-toggle-theme="{{toggleTheme}}" hint-size="224px,900px"></dc-import>
+</div>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 16px; max-width: 1100px">
+
+  <header style="display: flex; flex-direction: column; gap: 4px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em">Idee</h1>
+    <span style="font-size: 13px; color: var(--muted)">Scrivi o detta un'idea grezza. Le bozze per ogni piattaforma arrivano dopo, quando premi «Genera contenuti».</span>
+  </header>
+
+  <section aria-label="Nuova idea" style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; gap: 10px; align-items: flex-start">
+      <label for="new-idea" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Nuova idea</label>
+      <textarea id="new-idea" rows="2" placeholder="Es. «spiegare perché uso ancora VB.NET, con esempi dal lavoro vero»" style="flex: 1; min-width: 0; resize: vertical; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--line2); background: var(--bg); color: var(--text); font: inherit; font-size: 14px; line-height: 1.5"></textarea>
+      <button type="button" aria-pressed="{{recPressed}}" aria-label="{{recLabel}}" onClick="{{toggleRec}}" style="width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; border: 1px solid {{recBorder}}; background: {{recBg}}; color: {{recFg}}; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>
+      </button>
+    </div>
+    <sc-if value="{{recording}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--recSoft); font-size: 13px">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--rec)"></span>
+        <span style="font-family: 'JetBrains Mono', monospace; color: var(--text2)">00:07</span>
+        <span>«…e poi mostrare come un progetto legacy si può migliorare un pezzo alla volta…»</span>
+        <span style="margin-left: auto; font-size: 12px; color: var(--muted)">trascrizione locale · Whisper</span>
+      </div>
+    </sc-if>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+      <span style="font-size: 12px; color: var(--muted)">Argomento</span>
+      <sc-for list="{{newTags}}" as="nt" hint-placeholder-count="5">
+        <button type="button" aria-pressed="{{nt.pressed}}" onClick="{{nt.toggle}}" style="height: 28px; padding: 0 10px; border-radius: 99px; border: 1px solid {{nt.border}}; background: {{nt.bg}}; color: {{nt.fg}}; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer">{{nt.label}}</button>
+      </sc-for>
+      <button type="button" style="margin-left: auto; height: 36px; padding: 0 14px; border-radius: 9px; border: 0; background: var(--primary); color: var(--onPrimary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Salva idea</button>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+    <div role="group" aria-label="Filtra per argomento" style="display: flex; flex-wrap: wrap; gap: 6px">
+      <sc-for list="{{filters}}" as="f" hint-placeholder-count="6">
+        <button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid {{f.border}}; background: {{f.bg}}; color: {{f.fg}}; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">{{f.label}} <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.75">{{f.n}}</span></button>
+      </sc-for>
+    </div>
+    <span style="font-size: 12px; color: var(--muted)">Ordinate per data · più recenti in alto</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{ideas}}" as="i" hint-placeholder-count="5">
+      <article style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+        <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600; line-height: 1.4">{{i.t}}</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <span style="font-size: 11px; color: var(--text2); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px">{{i.tag}}</span>
+            <span style="font-size: 12px; color: var(--muted)">{{i.meta}}</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+          <div role="group" aria-label="Piattaforme per {{i.t}}" style="display: flex; gap: 4px">
+            <sc-for list="{{i.plats}}" as="pl" hint-placeholder-count="4">
+              <button type="button" aria-pressed="{{pl.pressed}}" aria-label="{{pl.name}}" title="{{pl.name}}" onClick="{{pl.toggle}}" style="width: 40px; height: 40px; padding: 0; border-radius: 9px; border: 1.5px solid {{pl.border}}; background: var(--panel); display: flex; align-items: center; justify-content: center; opacity: {{pl.op}}; cursor: pointer">
+                <dc-import name="V3Icon" p="{{pl.p}}" size="26" hint-size="26px,26px"></dc-import>
+              </button>
+            </sc-for>
+          </div>
+          <a href="V3Studio.dc.html" style="display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border-radius: 9px; background: var(--primary); color: var(--onPrimary); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3l1.8 4.7 4.7 1.8-4.7 1.8L11 16l-1.8-4.7L4.5 9.5l4.7-1.8z"></path></svg>Genera contenuti · {{i.count}}</a>
+        </div>
+      </article>
+    </sc-for>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temaScuro":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: null, rec: false, filter: 'Tutti', newTags: { 'Carriera': true },
+      ideas: [
+        { t: 'Perché uso ancora VB.NET nel 2026, con esempi dal lavoro vero', tag: 'Carriera', meta: 'dettata a voce · oggi', sel: { li: true, ig: false, tt: true, yt: true } },
+        { t: 'Ollama in locale: cosa gira davvero su un PC normale', tag: 'AI locale', meta: 'scritta · ieri', sel: { li: false, ig: true, tt: true, yt: true } },
+        { t: 'Mappe in 10 righe di PyQGIS', tag: 'GIS', meta: 'suggerita dalle analytics · 2 giorni fa', sel: { li: true, ig: true, tt: true, yt: false } },
+        { t: 'WebForms nel 2026: manutenere senza impazzire', tag: '.NET', meta: 'scritta · 4 giorni fa', sel: { li: true, ig: false, tt: false, yt: true } },
+        { t: 'Da consulente a sviluppatore di prodotto: cosa cambia', tag: 'Carriera', meta: 'dettata a voce · 1 settimana fa', sel: { li: true, ig: true, tt: false, yt: false } },
+        { t: 'La mia postazione da sviluppatore, spiegata', tag: 'Dietro le quinte', meta: 'scritta · 2 settimane fa', sel: { li: false, ig: true, tt: true, yt: false } }
+      ]
+    };
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var dark = s.theme ? s.theme === 'dark' : !!this.props.temaScuro;
+    var N = { li: 'LinkedIn', ig: 'Instagram', tt: 'TikTok', yt: 'YouTube' };
+    var tags = ['.NET', 'GIS', 'Carriera', 'AI locale', 'Dietro le quinte'];
+    var filters = ['Tutti'].concat(tags).map(function (t) {
+      var on = t === s.filter;
+      var n = t === 'Tutti' ? s.ideas.length : s.ideas.filter(function (i) { return i.tag === t; }).length;
+      return { label: t, n: n, pressed: on ? 'true' : 'false', bg: on ? 'var(--primary)' : 'var(--panel)', fg: on ? 'var(--onPrimary)' : 'var(--text2)', border: on ? 'var(--primary)' : 'var(--line2)', pick: function () { self.setState({ filter: t }); } };
+    });
+    var newTags = tags.map(function (t) {
+      var on = !!s.newTags[t];
+      return { label: t, pressed: on ? 'true' : 'false', bg: on ? 'var(--accentSoft)' : 'transparent', fg: on ? 'var(--text)' : 'var(--text2)', border: on ? 'var(--accent)' : 'var(--line2)', toggle: function () { var o = Object.assign({}, self.state.newTags); o[t] = !o[t]; self.setState({ newTags: o }); } };
+    });
+    var ideas = s.ideas.map(function (idea, idx) { return { idea: idea, idx: idx }; }).filter(function (x) { return s.filter === 'Tutti' || x.idea.tag === s.filter; }).map(function (x) {
+      var idea = x.idea, idx = x.idx;
+      var plats = ['li', 'ig', 'tt', 'yt'].map(function (p) {
+        var on = !!idea.sel[p];
+        return { p: p, name: N[p] + (on ? ' selezionato' : ''), pressed: on ? 'true' : 'false', border: on ? 'var(--accent)' : 'var(--line)', op: on ? '1' : '0.45',
+          toggle: function () { self.setState({ ideas: self.state.ideas.map(function (it, k) { if (k !== idx) return it; var sel = Object.assign({}, it.sel); sel[p] = !sel[p]; return Object.assign({}, it, { sel: sel }); }) }); } };
+      });
+      var count = plats.filter(function (p) { return p.pressed === 'true'; }).length;
+      return { t: idea.t, tag: idea.tag, meta: idea.meta, plats: plats, count: count + (count === 1 ? ' piattaforma' : ' piattaforme') };
+    });
+    return {
+      theme: dark ? 'dark' : 'light',
+      themeClass: dark ? 'th-dark' : 'th-light',
+      toggleTheme: function () { self.setState({ theme: dark ? 'light' : 'dark' }); },
+      recording: s.rec, recPressed: s.rec ? 'true' : 'false', recLabel: s.rec ? 'Ferma registrazione' : 'Detta un’idea',
+      recBg: s.rec ? 'var(--rec)' : 'var(--panel)', recFg: s.rec ? '#FFFFFF' : 'var(--text)', recBorder: s.rec ? 'var(--rec)' : 'var(--line2)',
+      toggleRec: function () { self.setState({ rec: !self.state.rec }); },
+      filters: filters, newTags: newTags, ideas: ideas
+    };
+  }
+}
+</script>
+</body>
+</html>

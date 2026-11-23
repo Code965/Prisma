@@ -1,0 +1,18 @@
+node_modules/
+dist/
+out/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-journal
+.DS_Store
+Thumbs.db
+pipeline-v3-mockup.zip
+*.local.sql
+prisma-logo.zip
+# Installer e pacchetti di aggiornamento generati da electron-builder
+apps/desktop/release/
+CLAUDE.local.md

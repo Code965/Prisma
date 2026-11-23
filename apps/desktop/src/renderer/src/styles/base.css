@@ -1,0 +1,33 @@
+/* Stili di base ripresi dal mockup: font, colori dal tema, nessun reset aggressivo. */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+/* Font monospace per orari, codice ed etichette tecniche. */
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Testo leggibile solo dagli screen reader. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

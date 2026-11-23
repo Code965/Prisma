@@ -1,0 +1,30 @@
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 24px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--s-errBg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--s-err);
+  flex-shrink: 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.link {
+  font-weight: 600;
+  color: var(--s-err);
+  white-space: nowrap;
+}

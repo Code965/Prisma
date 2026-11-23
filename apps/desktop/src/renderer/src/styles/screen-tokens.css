@@ -1,0 +1,61 @@
+/*
+ * Token definiti localmente nelle singole schermate del mockup (blocchi <style> dei .dc.html),
+ * tenuti separati da tokens.css che resta la copia identica del file condiviso.
+ */
+
+/*
+ * Blog: piattaforma aggiunta dopo il mockup. Arancione dei feed RSS, con la stessa logica
+ * dei colori piattaforma (tinta piena + versione tenue per gli sfondi).
+ */
+.th-light {
+  --bl: #c4320a;
+  --blSoft: #fef0e7;
+}
+
+.th-dark {
+  --bl: #ff9c66;
+  --blSoft: rgba(255, 156, 102, 0.14);
+}
+
+/* V3Studio: righe rimosse e aggiunte nel diff della chat. */
+.th-light {
+  --del: #fdecea;
+  --delText: #b42318;
+  --add: #e7f6ec;
+  --addText: #067647;
+}
+
+.th-dark {
+  --del: rgba(255, 138, 128, 0.12);
+  --delText: #ff8a80;
+  --add: rgba(125, 220, 154, 0.12);
+  --addText: #7ddc9a;
+}
+
+/* V3Template: fondo dei riquadri della galleria. V3Carosello: tela dietro l'anteprima. */
+.th-light {
+  --well: #e9ebef;
+  --canvas: #e9ebef;
+}
+
+.th-dark {
+  --well: #0b0d10;
+  --canvas: #090b0e;
+}
+
+/* V3Video: tracce della timeline. */
+.th-light {
+  --trVideo: #c7d2fe;
+  --trSub: #bae6fd;
+  --trOver: #fde68a;
+  --trMusic: #bbf7d0;
+  --trText: #101318;
+}
+
+.th-dark {
+  --trVideo: #4f46e5;
+  --trSub: #0e7490;
+  --trOver: #a16207;
+  --trMusic: #15803d;
+  --trText: #ffffff;
+}

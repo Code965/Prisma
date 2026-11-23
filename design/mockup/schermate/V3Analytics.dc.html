@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Analytics</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.th-light{--bg:#F5F6F8;--side:#FBFBFC;--panel:#FFFFFF;--panel2:#F3F4F6;--hover:#EBEDF1;--line:#E4E7EC;--line2:#D0D5DD;--text:#101318;--text2:#344054;--muted:#5B6473;--primary:#101318;--onPrimary:#FFFFFF;--accent:#4F46E5;--accentSoft:#EEF0FF;--li:#0A66C2;--liSoft:#E8F1FA;--ig:#C1356F;--igSoft:#FBEAF1;--tt:#0A8A85;--ttSoft:#E2F4F3;--yt:#D92D20;--ytSoft:#FDECEA;--s-pub:#067647;--s-err:#B42318}
+.th-dark{--bg:#0E1013;--side:#0B0D10;--panel:#16191E;--panel2:#1C2026;--hover:#252A31;--line:#262A31;--line2:#343A43;--text:#F2F4F7;--text2:#D0D5DD;--muted:#9AA1AC;--primary:#F2F4F7;--onPrimary:#0E1013;--accent:#8B85FF;--accentSoft:rgba(139,133,255,0.16);--li:#5AA9FF;--liSoft:rgba(90,169,255,0.14);--ig:#F27AB0;--igSoft:rgba(242,122,176,0.14);--tt:#3DD6CE;--ttSoft:rgba(61,214,206,0.14);--yt:#FF7A70;--ytSoft:rgba(255,122,112,0.14);--s-pub:#7DDC9A;--s-err:#FF8A80}
+a{color:inherit}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif">
+
+<div style="flex: 0 0 auto; background: var(--side); border-right: 1px solid var(--line)">
+  <dc-import name="V3Sidebar" active="analytics" theme="{{theme}}" on-toggle-theme="{{toggleTheme}}" hint-size="224px,900px"></dc-import>
+</div>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 16px">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em">Analytics</h1>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px">
+      <div role="group" aria-label="Metrica" style="display: flex; padding: 3px; border-radius: 9px; background: var(--panel2); border: 1px solid var(--line)">
+        <sc-for list="{{metricTabs}}" as="m" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="height: 30px; padding: 0 12px; border-radius: 7px; border: 0; background: {{m.bg}}; color: {{m.fg}}; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">{{m.label}}</button>
+        </sc-for>
+      </div>
+      <label for="period" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Periodo</label>
+      <select id="period" style="height: 38px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); font: inherit; font-size: 13px"><option>Ultime 8 settimane</option><option>Ultimi 30 giorni</option><option>Ultimi 90 giorni</option></select>
+    </div>
+  </header>
+
+  <section aria-label="{{metricLabel}} per piattaforma" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px">
+    <sc-for list="{{plats}}" as="p" hint-placeholder-count="4">
+      <article style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <dc-import name="V3Icon" p="{{p.p}}" size="24" hint-size="24px,24px"></dc-import>
+          <h2 style="margin: 0; font-size: 13px; font-weight: 600">{{p.name}}</h2>
+          <span style="margin-left: auto; font-size: 12px; color: var(--muted)">{{metricLabel}}</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 26px; font-weight: 700; letter-spacing: -0.02em">{{p.total}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--s-pub)">{{p.delta}}</span></div>
+        <div role="img" aria-label="{{p.aria}}" style="display: flex; align-items: flex-end; gap: 4px; height: 96px; border-bottom: 1px solid var(--line2)">
+          <sc-for list="{{p.bars}}" as="b" hint-placeholder-count="8">
+            <div title="{{b.tip}}" style="flex: 1; height: {{b.h}}; min-height: 2px; border-radius: 4px 4px 0 0; background: {{p.color}}; opacity: {{b.op}}"></div>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted)"><span>28 set</span><span>16 nov</span></div>
+      </article>
+    </sc-for>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+    <section aria-labelledby="h-top" style="flex: 3 1 520px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column">
+      <h2 id="h-top" style="margin: 0 0 8px; font-size: 14px; font-weight: 600">Contenuti migliori · ultime 8 settimane</h2>
+      <div style="display: grid; grid-template-columns: 28px 30px minmax(0, 1fr) 110px 90px; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--muted)"><span>#</span><span></span><span>CONTENUTO</span><span style="text-align: right">COPERTURA</span><span style="text-align: right">INTERAZ.</span></div>
+      <sc-for list="{{top}}" as="t" hint-placeholder-count="5">
+        <div style="display: grid; grid-template-columns: 28px 30px minmax(0, 1fr) 110px 90px; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line)">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted)">{{t.n}}</span>
+          <dc-import name="V3Icon" p="{{t.p}}" size="24" hint-size="24px,24px"></dc-import>
+          <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.title}}</span><span style="font-size: 12px; color: var(--muted)">{{t.format}}</span></div>
+          <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px">{{t.reach}}</span>
+          <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px">{{t.eng}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-labelledby="h-ai" style="flex: 2 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3l1.8 4.7 4.7 1.8-4.7 1.8L11 16l-1.8-4.7L4.5 9.5l4.7-1.8z"></path></svg>
+        <h2 id="h-ai" style="margin: 0; font-size: 14px; font-weight: 600">Suggerimenti dell'AI</h2>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted)">DeepSeek · aggiornati lunedì</span>
+      </div>
+      <sc-for list="{{tips}}" as="s" hint-placeholder-count="3">
+        <article style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted)">{{s.kind}}</span>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5">{{s.text}}</p>
+          <span style="font-size: 12px; color: var(--muted)">{{s.why}}</span>
+          <a href="{{s.href}}" style="align-self: flex-start; display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); font-size: 12px; font-weight: 600; text-decoration: none">{{s.cta}}</a>
+        </article>
+      </sc-for>
+    </section>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temaScuro":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { theme: null, metric: 'reach' }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var dark = s.theme ? s.theme === 'dark' : !!this.props.temaScuro;
+    var weeks = ['28 set', '5 ott', '12 ott', '19 ott', '26 ott', '2 nov', '9 nov', '16 nov'];
+    var D = {
+      reach: { label: 'Copertura', li: [4.1, 5.3, 4.8, 6.2, 7.0, 6.4, 8.1, 9.8], ig: [2.2, 2.8, 3.1, 2.9, 3.8, 4.4, 4.1, 5.2], tt: [1.1, 2.4, 3.9, 3.2, 6.8, 8.1, 9.6, 12.4], yt: [1.4, 1.6, 1.9, 2.2, 2.0, 2.6, 2.9, 3.1], unit: 'k' },
+      foll: { label: 'Nuovi follower', li: [18, 22, 19, 31, 35, 28, 39, 42], ig: [9, 12, 15, 11, 18, 21, 19, 25], tt: [4, 11, 19, 14, 33, 41, 52, 61], yt: [6, 7, 9, 11, 8, 12, 15, 18], unit: '' },
+      eng: { label: 'Interazioni', li: [210, 260, 240, 330, 380, 350, 420, 510], ig: [180, 220, 260, 240, 310, 360, 330, 420], tt: [90, 180, 300, 260, 520, 610, 740, 930], yt: [70, 80, 95, 110, 100, 130, 140, 160], unit: '' }
+    };
+    var d = D[s.metric];
+    var meta = [['li', 'LinkedIn', 'var(--li)'], ['ig', 'Instagram', 'var(--ig)'], ['tt', 'TikTok', 'var(--tt)'], ['yt', 'YouTube', 'var(--yt)']];
+    function fmt(v) { return d.unit === 'k' ? String(v).replace('.', ',') + 'k' : String(v); }
+    var plats = meta.map(function (m) {
+      var vals = d[m[0]], max = Math.max.apply(null, vals);
+      var total = vals.reduce(function (a, b) { return a + b; }, 0);
+      var last = vals[vals.length - 1], prev = vals[vals.length - 2];
+      var pct = Math.round((last - prev) / prev * 100);
+      return {
+        p: m[0], name: m[1], color: m[2],
+        total: d.unit === 'k' ? (Math.round(total * 10) / 10 + 'k').replace('.', ',') : total.toLocaleString('it-IT'),
+        delta: (pct >= 0 ? '+' : '') + pct + '% sett.',
+        aria: m[1] + ', ' + d.label.toLowerCase() + ' per settimana: ' + vals.map(fmt).join(', '),
+        bars: vals.map(function (v, i) { return { h: Math.round(v / max * 100) + '%', tip: 'sett. ' + weeks[i] + ': ' + fmt(v), op: i === vals.length - 1 ? '1' : '0.55' }; })
+      };
+    });
+    var metricTabs = [['reach', 'Copertura'], ['foll', 'Follower'], ['eng', 'Interazioni']].map(function (x) {
+      var on = x[0] === s.metric;
+      return { label: x[1], pressed: on ? 'true' : 'false', bg: on ? 'var(--panel)' : 'transparent', fg: on ? 'var(--text)' : 'var(--muted)', pick: function () { self.setState({ metric: x[0] }); } };
+    });
+    return {
+      theme: dark ? 'dark' : 'light',
+      themeClass: dark ? 'th-dark' : 'th-light',
+      toggleTheme: function () { self.setState({ theme: dark ? 'light' : 'dark' }); },
+      metricTabs: metricTabs, metricLabel: d.label, plats: plats,
+      top: [
+        { n: 1, p: 'tt', title: 'Clean Code: dare nomi alle variabili', format: 'Video 0:41', reach: '18,2k', eng: '1.240' },
+        { n: 2, p: 'li', title: 'Perché un ingegnere apre un canale', format: 'Post testuale', reach: '9,1k', eng: '412' },
+        { n: 3, p: 'ig', title: '7 scorciatoie di Visual Studio', format: 'Carosello 8 slide', reach: '6,4k', eng: '538' },
+        { n: 4, p: 'yt', title: 'PyQGIS vs ArcPy: confronto pratico', format: 'Video 14:20', reach: '2,9k', eng: '187' },
+        { n: 5, p: 'li', title: '5 lezioni dalla migrazione ArcPy', format: 'Post + PDF', reach: '4,7k', eng: '203' }
+      ],
+      tips: [
+        { kind: 'ARGOMENTI CHE FUNZIONANO', text: 'I contenuti su codice legacy e migrazioni hanno il doppio delle interazioni della media.', why: 'Basato sui 24 contenuti delle ultime 8 settimane', cta: 'Crea un’idea su questo', href: 'V3Idee.dc.html' },
+        { kind: 'ORARI MIGLIORI', text: 'LinkedIn: mar–gio alle 8:00. TikTok: 20:00–21:30. Instagram: 13:00.', why: 'Già evidenziati come slot consigliati nel calendario', cta: 'Apri il calendario', href: 'V3Calendario.dc.html' },
+        { kind: 'FORMATI DA REPLICARE', text: 'Video verticali sotto i 45 secondi con codice a schermo nei primi 3 secondi.', why: 'Trattengono di più su TikTok e Reel', cta: 'Apri editor video', href: 'V3Video.dc.html' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

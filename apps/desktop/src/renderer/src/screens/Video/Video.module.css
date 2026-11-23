@@ -1,0 +1,245 @@
+/* Libreria video (passo 3a). L'editor del mockup V3Video arriva con il passo 3c. */
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.banner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--s-reviewBg);
+  color: var(--s-review);
+  font-size: 13px;
+}
+
+.banner a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.list {
+  flex: 1 1 240px;
+  max-width: 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.itemOn {
+  border-color: var(--accent);
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.itemMeta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.preview {
+  flex: 3 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+.player {
+  flex: 2 1 360px;
+  min-width: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video {
+  width: 100%;
+  max-height: 480px;
+  display: block;
+  background: #000;
+}
+
+.details {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.detailsTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 12px;
+}
+
+.meta dt {
+  color: var(--muted);
+}
+
+.meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* --- Trascrizione (passo 3b) ---------------------------------------------------------------- */
+
+.transcript {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.transcriptHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.transcriptTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.transcribeRow,
+.progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.languageField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select {
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.progressBar {
+  flex: 1 1 160px;
+  height: 8px;
+  accent-color: var(--accent);
+}
+
+.summary {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.segments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.segment {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.segmentTime {
+  flex: none;
+  width: 44px;
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 2px;
+}
+
+.silence {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.uncertain {
+  text-decoration: underline dotted var(--s-review);
+  text-underline-offset: 3px;
+}

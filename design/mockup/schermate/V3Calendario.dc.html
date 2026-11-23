@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Calendario e pianificazione</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.th-light{--bg:#F5F6F8;--side:#FBFBFC;--panel:#FFFFFF;--panel2:#F3F4F6;--hover:#EBEDF1;--past:#FAFAFB;--line:#E4E7EC;--line2:#D0D5DD;--text:#101318;--text2:#344054;--muted:#5B6473;--primary:#101318;--onPrimary:#FFFFFF;--accent:#4F46E5;--accentSoft:#EEF0FF;--li:#0A66C2;--liSoft:#E8F1FA;--ig:#C1356F;--igSoft:#FBEAF1;--tt:#0A8A85;--ttSoft:#E2F4F3;--yt:#D92D20;--ytSoft:#FDECEA;--s-draft:#475467;--s-draftBg:#F2F4F7;--s-review:#B54708;--s-reviewBg:#FEF4E6;--s-ok:#175CD3;--s-okBg:#EAF2FF;--s-sched:#6941C6;--s-schedBg:#F2EDFE;--s-pub:#067647;--s-pubBg:#E7F6EC;--s-err:#B42318;--s-errBg:#FDECEA;--rec:#EEF9F2;--recText:#067647;--now:#D92D20;--code:#0F1115;--codeText:#E6E8EB}
+.th-dark{--bg:#0E1013;--side:#0B0D10;--panel:#16191E;--panel2:#1C2026;--hover:#252A31;--past:#12151A;--line:#262A31;--line2:#343A43;--text:#F2F4F7;--text2:#D0D5DD;--muted:#9AA1AC;--primary:#F2F4F7;--onPrimary:#0E1013;--accent:#8B85FF;--accentSoft:rgba(139,133,255,0.16);--li:#5AA9FF;--liSoft:rgba(90,169,255,0.14);--ig:#F27AB0;--igSoft:rgba(242,122,176,0.14);--tt:#3DD6CE;--ttSoft:rgba(61,214,206,0.14);--yt:#FF7A70;--ytSoft:rgba(255,122,112,0.14);--s-draft:#C4C9D1;--s-draftBg:rgba(196,201,209,0.12);--s-review:#F5C26B;--s-reviewBg:rgba(245,194,107,0.14);--s-ok:#93B4FF;--s-okBg:rgba(147,180,255,0.14);--s-sched:#C4A7FF;--s-schedBg:rgba(196,167,255,0.16);--s-pub:#7DDC9A;--s-pubBg:rgba(125,220,154,0.13);--s-err:#FF8A80;--s-errBg:rgba(255,138,128,0.15);--rec:rgba(125,220,154,0.08);--recText:#7DDC9A;--now:#FF7A70;--code:#0B0D10;--codeText:#E6E8EB}
+a{color:inherit}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif">
+
+<div style="flex: 0 0 auto; background: var(--side); border-right: 1px solid var(--line)">
+  <dc-import name="V3Sidebar" active="calendario" theme="{{theme}}" on-toggle-theme="{{toggleTheme}}" hint-size="224px,900px"></dc-import>
+</div>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 16px">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em">Calendario</h1>
+      <div style="display: flex; align-items: center; gap: 4px">
+        <button type="button" aria-label="Periodo precedente" style="width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text2); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+        <button type="button" aria-label="Periodo successivo" style="width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text2); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+        <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text2); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">Oggi</button>
+      </div>
+      <span style="font-size: 15px; font-weight: 600; color: var(--text2)">{{rangeLabel}}</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+      <div role="group" aria-label="Vista" style="display: flex; padding: 3px; border-radius: 9px; background: var(--panel2); border: 1px solid var(--line)">
+        <button type="button" aria-pressed="{{vMonth.pressed}}" onClick="{{vMonth.pick}}" style="height: 30px; padding: 0 14px; border-radius: 7px; border: 0; background: {{vMonth.bg}}; color: {{vMonth.fg}}; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Mese</button>
+        <button type="button" aria-pressed="{{vWeek.pressed}}" onClick="{{vWeek.pick}}" style="height: 30px; padding: 0 14px; border-radius: 7px; border: 0; background: {{vWeek.bg}}; color: {{vWeek.fg}}; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Settimana</button>
+      </div>
+      <a href="V3Studio.dc.html" style="display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 9px; background: var(--primary); color: var(--onPrimary); font-size: 13px; font-weight: 600; text-decoration: none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Pianifica contenuto</a>
+    </div>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+    <div role="group" aria-label="Filtra per piattaforma" style="display: flex; flex-wrap: wrap; gap: 6px">
+      <sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+        <button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.toggle}}" style="display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px 0 6px; border-radius: 99px; border: 1px solid {{f.border}}; background: {{f.bg}}; color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; opacity: {{f.op}}">
+          <dc-import name="V3Icon" p="{{f.p}}" size="22" hint-size="22px,22px"></dc-import>{{f.name}}</button>
+      </sc-for>
+    </div>
+    <div aria-label="Legenda stati" style="display: flex; flex-wrap: wrap; gap: 6px">
+      <sc-for list="{{legend}}" as="l" hint-placeholder-count="6">
+        <span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 99px; background: {{l.bg}}; color: {{l.fg}}; font-size: 11px; font-weight: 600"><span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"></span>{{l.label}}</span>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+
+    <section aria-label="{{rangeLabel}}" style="flex: 3 1 640px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden">
+      <div role="region" aria-label="Griglia del calendario" tabindex="0" style="overflow-x: auto">
+
+        <sc-if value="{{isWeek}}" hint-placeholder-val="{{ true }}">
+          <div style="min-width: 860px">
+            <div style="display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--line)">
+              <div></div>
+              <sc-for list="{{weekDays}}" as="wd" hint-placeholder-count="7">
+                <div style="padding: 10px 8px; border-left: 1px solid var(--line); display: flex; align-items: baseline; gap: 6px">
+                  <span style="font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em">{{wd.n}}</span>
+                  <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: {{wd.bg}}; color: {{wd.fg}}; font-size: 14px; font-weight: 700">{{wd.d}}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-for list="{{hours}}" as="hr" hint-placeholder-count="14">
+              <div style="display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr))">
+                <div style="padding: 4px 8px 0 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line)">{{hr.label}}</div>
+                <sc-for list="{{hr.cells}}" as="c" hint-placeholder-count="7">
+                  <div onDragOver="{{c.over}}" onDrop="{{c.drop}}" style="position: relative; min-height: 56px; box-sizing: border-box; padding: 3px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); background: {{c.bg}}; display: flex; flex-direction: column; gap: 3px">
+                    <sc-if value="{{c.now}}" hint-placeholder-val="{{ false }}">
+                      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--now); z-index: 2"><span style="position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--now)"></span></div>
+                    </sc-if>
+                    <sc-if value="{{c.showRec}}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap">
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--recText)">consigliato</span>
+                        <sc-for list="{{c.recIcons}}" as="ri" hint-placeholder-count="1">
+                          <dc-import name="V3Icon" p="{{ri.p}}" size="16" hint-size="16px,16px"></dc-import>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-for list="{{c.posts}}" as="p" hint-placeholder-count="0">
+                      <button type="button" draggable="true" onDragStart="{{p.dragStart}}" onDragEnd="{{dragEnd}}" onClick="{{p.select}}" aria-pressed="{{p.pressed}}" style="width: 100%; display: flex; flex-direction: column; gap: 3px; padding: 5px 6px; box-sizing: border-box; border-radius: 7px; border: 1.5px solid {{p.border}}; background: {{p.bg}}; color: var(--text); font: inherit; text-align: left; cursor: grab; opacity: {{p.op}}; z-index: 1">
+                        <span style="display: flex; align-items: center; gap: 4px; width: 100%">
+                          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2)">{{p.time}}</span>
+                          <span style="margin-left: auto; display: inline-flex; gap: 3px">
+                            <sc-for list="{{p.icons}}" as="ic" hint-placeholder-count="1">
+                              <dc-import name="V3Icon" p="{{ic.p}}" size="16" hint-size="16px,16px"></dc-import>
+                            </sc-for>
+                          </span>
+                        </span>
+                        <span style="font-size: 12px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{p.title}}</span>
+                        <span style="font-size: 11px; font-weight: 600; color: {{p.stFg}}">{{p.stLabel}}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{isMonth}}" hint-placeholder-val="{{ false }}">
+          <div style="min-width: 860px">
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--line)">
+              <sc-for list="{{monthHead}}" as="mh" hint-placeholder-count="7">
+                <div style="padding: 10px; font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em">{{mh}}</div>
+              </sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))">
+              <sc-for list="{{monthCells}}" as="mc" hint-placeholder-count="35">
+                <div style="min-height: 132px; box-sizing: border-box; padding: 6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: {{mc.bg}}; display: flex; flex-direction: column; gap: 4px">
+                  <span style="align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: {{mc.numBg}}; color: {{mc.numFg}}; font-size: 12px; font-weight: 600">{{mc.num}}</span>
+                  <sc-for list="{{mc.pills}}" as="pl" hint-placeholder-count="1">
+                    <span style="display: flex; align-items: center; gap: 5px; padding: 3px 5px; border-radius: 6px; background: {{pl.bg}}; font-size: 11px">
+                      <dc-import name="V3Icon" p="{{pl.p}}" size="16" hint-size="16px,16px"></dc-import>
+                      <span style="font-family: 'JetBrains Mono', monospace; color: var(--text2)">{{pl.t}}</span>
+                      <span style="margin-left: auto; font-weight: 600; color: {{pl.fg}}">{{pl.short}}</span>
+                    </span>
+                  </sc-for>
+                  <sc-if value="{{mc.hasMore}}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 11px; color: var(--muted); padding-left: 4px">{{mc.more}}</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted)">
+        <span>Trascina un post per spostarlo. Gli slot «consigliato» vengono dalle analytics degli ultimi 90 giorni.</span>
+      </div>
+    </section>
+
+    <aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+      <section aria-labelledby="h-multi" style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted)">PIANIFICAZIONE MULTIPIATTAFORMA</span>
+          <h2 id="h-multi" style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.35">{{group.title}}</h2>
+          <span style="font-size: 12px; color: var(--muted)">Un contenuto, {{group.count}} uscite con orari diversi</span>
+        </div>
+        <div style="display: flex; flex-direction: column">
+          <sc-for list="{{group.rows}}" as="gr" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line)">
+              <dc-import name="V3Icon" p="{{gr.p}}" size="28" hint-size="28px,28px"></dc-import>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 13px; font-weight: 600">{{gr.name}}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2)">{{gr.when}}</span>
+                <span style="font-size: 11px; color: var(--recText)">{{gr.rec}}</span>
+              </div>
+              <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 99px; background: {{gr.stBg}}; color: {{gr.stFg}}; font-size: 11px; font-weight: 600; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"></span>{{gr.stLabel}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" onClick="{{applyRec}}" style="flex: 1; height: 38px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">Usa orari consigliati</button>
+          <a href="V3Coda.dc.html" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 12px; border-radius: 9px; background: var(--primary); color: var(--onPrimary); font-size: 13px; font-weight: 600; text-decoration: none">Approva e programma</a>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-da" style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <h2 id="h-da" style="margin: 0; font-size: 14px; font-weight: 600">Da pianificare</h2>
+          <span style="font-size: 12px; color: var(--muted)">trascina nel calendario</span>
+        </div>
+        <sc-for list="{{unscheduled}}" as="u" hint-placeholder-count="2">
+          <button type="button" draggable="true" onDragStart="{{u.dragStart}}" onDragEnd="{{dragEnd}}" onClick="{{u.select}}" style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 9px; border: 1px dashed var(--line2); background: var(--panel2); color: var(--text); font: inherit; text-align: left; cursor: grab; opacity: {{u.op}}">
+            <span style="display: flex; align-items: center; gap: 4px; width: 100%">
+              <sc-for list="{{u.icons}}" as="ic" hint-placeholder-count="1">
+                <dc-import name="V3Icon" p="{{ic.p}}" size="18" hint-size="18px,18px"></dc-import>
+              </sc-for>
+              <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: {{u.stFg}}">{{u.stLabel}}</span>
+            </span>
+            <span style="font-size: 13px; font-weight: 600">{{u.title}}</span>
+          </button>
+        </sc-for>
+      </section>
+    </aside>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temaScuro":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: null, view: 'week', sel: 'p10', drag: null,
+      filter: { li: true, ig: true, tt: true, yt: true },
+      posts: [
+        { id: 'p1', g: 'g5', title: 'Perché un ingegnere apre un canale', plats: ['li'], d: 0, h: 8, st: 'pub' },
+        { id: 'p2', g: 'g6', title: 'Il mio stack di lavoro, spiegato', plats: ['ig'], d: 0, h: 13, st: 'pub' },
+        { id: 'p3', g: 'g7', title: 'Clean Code: dare nomi alle variabili', plats: ['tt', 'ig'], d: 1, h: 19, st: 'pub' },
+        { id: 'p4', g: 'g8', title: 'PyQGIS vs ArcPy: confronto pratico', plats: ['yt'], d: 2, h: 18, st: 'pub' },
+        { id: 'p5', g: 'g9', title: '5 lezioni dalla migrazione ArcPy', plats: ['li'], d: 3, h: 8, st: 'pub' },
+        { id: 'p6', g: 'g10', title: 'La mia postazione da sviluppatore', plats: ['tt'], d: 3, h: 20, st: 'err' },
+        { id: 'p7', g: 'g11', title: '7 scorciatoie di Visual Studio', plats: ['ig'], d: 4, h: 13, st: 'pub' },
+        { id: 'p8', g: 'g0', title: 'Un bug in VB.NET da 2 ore', plats: ['ig'], d: 5, h: 18, st: 'sched' },
+        { id: 'p9', g: 'g0', title: 'Un bug in VB.NET da 2 ore', plats: ['tt'], d: 5, h: 21, st: 'ok' },
+        { id: 'p11', g: 'g12', title: 'Sondaggio: che IDE usi?', plats: ['ig'], d: 6, h: 11, st: 'review' },
+        { id: 'p10', g: 'g1', title: 'Client database in .NET + Avalonia', plats: ['yt'], d: 6, h: 17, st: 'sched' },
+        { id: 'p12', g: 'g13', title: 'Ollama in locale: cosa gira davvero', plats: ['tt'], d: 6, h: 20, st: 'draft' },
+        { id: 'u1', g: 'g14', title: 'Mappe in 10 righe di PyQGIS', plats: ['ig', 'tt'], d: null, h: null, st: 'draft' },
+        { id: 'u2', g: 'g15', title: 'Git per chi sviluppa da solo', plats: ['li'], d: null, h: null, st: 'ok' }
+      ]
+    };
+  }
+  movePost(id, d, h) {
+    if (!id) return;
+    this.setState({
+      drag: null, sel: id,
+      posts: this.state.posts.map(function (p) { return p.id === id ? Object.assign({}, p, { d: d, h: h }) : p; })
+    });
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var dark = s.theme ? s.theme === 'dark' : !!this.props.temaScuro;
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    var ST = {
+      draft: { label: 'Bozza', short: 'bozza', fg: 'var(--s-draft)', bg: 'var(--s-draftBg)' },
+      review: { label: 'Da approvare', short: 'da appr.', fg: 'var(--s-review)', bg: 'var(--s-reviewBg)' },
+      ok: { label: 'Approvato', short: 'appr.', fg: 'var(--s-ok)', bg: 'var(--s-okBg)' },
+      sched: { label: 'Programmato', short: 'progr.', fg: 'var(--s-sched)', bg: 'var(--s-schedBg)' },
+      pub: { label: 'Pubblicato', short: 'pubbl.', fg: 'var(--s-pub)', bg: 'var(--s-pubBg)' },
+      err: { label: 'Errore', short: 'errore', fg: 'var(--s-err)', bg: 'var(--s-errBg)' }
+    };
+    var PN = { li: 'LinkedIn', ig: 'Instagram', tt: 'TikTok', yt: 'YouTube' };
+    var REC = { li: 8, ig: 13, tt: 21, yt: 18 };
+    var days = [{ n: 'lun', d: 16 }, { n: 'mar', d: 17 }, { n: 'mer', d: 18 }, { n: 'gio', d: 19 }, { n: 'ven', d: 20 }, { n: 'sab', d: 21 }, { n: 'dom', d: 22 }];
+    var vis = function (p) { return p.plats.some(function (x) { return s.filter[x]; }); };
+    var recs = [[1, 8, 'li'], [2, 8, 'li'], [3, 8, 'li'], [0, 13, 'ig'], [2, 13, 'ig'], [4, 13, 'ig'], [4, 21, 'tt'], [5, 21, 'tt'], [6, 20, 'tt'], [3, 18, 'yt'], [5, 17, 'yt'], [6, 17, 'yt']];
+
+    function decorate(p) {
+      var st = ST[p.st];
+      var on = p.id === s.sel;
+      return Object.assign({}, p, {
+        time: p.h === null ? '' : pad(p.h) + ':00',
+        stLabel: st.label, stFg: st.fg, bg: st.bg,
+        border: on ? 'var(--accent)' : 'transparent',
+        pressed: on ? 'true' : 'false',
+        op: s.drag === p.id ? '0.4' : '1',
+        icons: p.plats.map(function (x) { return { p: x }; }),
+        select: function () { self.setState({ sel: p.id }); },
+        dragStart: function (e) {
+          try { e.dataTransfer.setData('text/plain', p.id); e.dataTransfer.effectAllowed = 'move'; } catch (err) {}
+          self.setState({ drag: p.id, sel: p.id });
+        }
+      });
+    }
+
+    var hours = [];
+    for (var h = 8; h <= 21; h++) {
+      (function (h) {
+        var cells = days.map(function (dd, di) {
+          var ps = s.posts.filter(function (p) { return p.d === di && p.h === h && vis(p); }).map(decorate);
+          var rc = recs.filter(function (r) { return r[0] === di && r[1] === h && s.filter[r[2]]; });
+          var past = di < 5 || (di === 5 && h < 17);
+          return {
+            posts: ps,
+            showRec: rc.length > 0 && ps.length === 0,
+            recIcons: rc.map(function (r) { return { p: r[2] }; }),
+            bg: rc.length ? 'var(--rec)' : (past ? 'var(--past)' : 'transparent'),
+            now: di === 5 && h === 17,
+            over: function (e) { e.preventDefault(); },
+            drop: function (e) {
+              e.preventDefault();
+              var id = self.state.drag;
+              try { id = e.dataTransfer.getData('text/plain') || id; } catch (err) {}
+              self.movePost(id, di, h);
+            }
+          };
+        });
+        hours.push({ label: pad(h) + ':00', cells: cells });
+      })(h);
+    }
+
+    var weekDays = days.map(function (dd, i) {
+      var today = i === 5;
+      return { n: dd.n, d: dd.d, bg: today ? 'var(--accent)' : 'transparent', fg: today ? '#FFFFFF' : 'var(--text)' };
+    });
+
+    var selPost = s.posts.filter(function (p) { return p.id === s.sel; })[0] || s.posts[0];
+    var rows = [];
+    s.posts.filter(function (p) { return p.g === selPost.g; }).forEach(function (p) {
+      p.plats.forEach(function (x) {
+        var st = ST[p.st];
+        rows.push({
+          p: x, name: PN[x],
+          when: p.d === null ? 'da pianificare' : days[p.d].n + ' ' + days[p.d].d + ' nov · ' + pad(p.h) + ':00',
+          rec: p.h === REC[x] ? 'orario consigliato' : 'consigliato: ' + pad(REC[x]) + ':00',
+          stLabel: st.label, stFg: st.fg, stBg: st.bg
+        });
+      });
+    });
+    if (selPost.g === 'g1') {
+      [['li', 'mar 24 nov · 08:00', 'ok', 8], ['ig', 'gio 26 nov · 13:00', 'review', 13], ['tt', 'ven 27 nov · 20:00', 'draft', 20]].forEach(function (x) {
+        var st = ST[x[2]];
+        rows.push({ p: x[0], name: PN[x[0]], when: x[1], rec: x[3] === REC[x[0]] ? 'orario consigliato' : 'consigliato: ' + pad(REC[x[0]]) + ':00', stLabel: st.label, stFg: st.fg, stBg: st.bg });
+      });
+    }
+    var group = { title: selPost.title, count: rows.length, rows: rows };
+    var applyRec = function () {
+      self.setState({
+        posts: self.state.posts.map(function (p) {
+          return (p.g === selPost.g && p.d !== null) ? Object.assign({}, p, { h: REC[p.plats[0]] }) : p;
+        })
+      });
+    };
+
+    var unscheduled = s.posts.filter(function (p) { return p.d === null; }).map(decorate);
+
+    var monthMap = {
+      2: [['li', '08:00', 'pub']], 4: [['yt', '18:00', 'pub']], 5: [['ig', '13:00', 'pub']], 6: [['tt', '20:00', 'pub']],
+      9: [['li', '08:00', 'pub'], ['ig', '13:00', 'pub']], 11: [['yt', '18:00', 'pub']], 12: [['tt', '21:00', 'pub']], 13: [['ig', '13:00', 'pub']],
+      24: [['li', '08:00', 'ok']], 25: [['tt', '21:00', 'draft']], 26: [['ig', '13:00', 'review'], ['yt', '18:00', 'draft']], 27: [['tt', '20:00', 'draft']], 28: [['ig', '13:00', 'draft']], 30: [['li', '08:00', 'draft']]
+    };
+    var monthCells = [];
+    for (var i = 0; i < 42; i++) {
+      var num, inMonth;
+      if (i < 6) { num = 26 + i; inMonth = false; } else if (i < 36) { num = i - 5; inMonth = true; } else { num = i - 35; inMonth = false; }
+      var pills = [];
+      if (inMonth && num >= 16 && num <= 22) {
+        s.posts.filter(function (p) { return p.d === num - 16; }).sort(function (a, b) { return a.h - b.h; }).forEach(function (p) {
+          p.plats.forEach(function (x) { if (s.filter[x]) pills.push([x, pad(p.h) + ':00', p.st]); });
+        });
+      } else if (inMonth && monthMap[num]) {
+        pills = monthMap[num].filter(function (x) { return s.filter[x[0]]; });
+      }
+      var shown = pills.slice(0, 3).map(function (x) { var st = ST[x[2]]; return { p: x[0], t: x[1], short: st.short, fg: st.fg, bg: st.bg }; });
+      var today = inMonth && num === 21;
+      monthCells.push({
+        num: num, pills: shown,
+        hasMore: pills.length > 3, more: '+' + (pills.length - 3) + ' altri',
+        bg: inMonth ? 'transparent' : 'var(--past)',
+        numBg: today ? 'var(--accent)' : 'transparent',
+        numFg: today ? '#FFFFFF' : (inMonth ? 'var(--text)' : 'var(--muted)')
+      });
+    }
+
+    var filters = ['li', 'ig', 'tt', 'yt'].map(function (x) {
+      var on = s.filter[x];
+      return {
+        p: x, name: PN[x], pressed: on ? 'true' : 'false',
+        bg: on ? 'var(--panel)' : 'transparent', border: on ? 'var(--line2)' : 'var(--line)', op: on ? '1' : '0.55',
+        toggle: function () { var f = Object.assign({}, self.state.filter); f[x] = !f[x]; self.setState({ filter: f }); }
+      };
+    });
+    var legend = ['draft', 'review', 'ok', 'sched', 'pub', 'err'].map(function (k) { return ST[k]; });
+    var isWeek = s.view === 'week';
+    function seg(on, v) { return { pressed: on ? 'true' : 'false', bg: on ? 'var(--panel)' : 'transparent', fg: on ? 'var(--text)' : 'var(--muted)', pick: function () { self.setState({ view: v }); } }; }
+
+    return {
+      theme: dark ? 'dark' : 'light',
+      themeClass: dark ? 'th-dark' : 'th-light',
+      toggleTheme: function () { self.setState({ theme: dark ? 'light' : 'dark' }); },
+      dragEnd: function () { self.setState({ drag: null }); },
+      isWeek: isWeek, isMonth: !isWeek,
+      vWeek: seg(isWeek, 'week'), vMonth: seg(!isWeek, 'month'),
+      rangeLabel: isWeek ? '16 – 22 novembre 2026' : 'Novembre 2026',
+      filters: filters, legend: legend, weekDays: weekDays, hours: hours,
+      group: group, applyRec: applyRec, unscheduled: unscheduled,
+      monthHead: ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'], monthCells: monthCells
+    };
+  }
+}
+</script>
+</body>
+</html>

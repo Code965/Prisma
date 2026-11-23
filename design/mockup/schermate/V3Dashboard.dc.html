@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.th-light{--bg:#F5F6F8;--side:#FBFBFC;--panel:#FFFFFF;--panel2:#F3F4F6;--hover:#EBEDF1;--past:#FAFAFB;--line:#E4E7EC;--line2:#D0D5DD;--text:#101318;--text2:#344054;--muted:#5B6473;--primary:#101318;--onPrimary:#FFFFFF;--accent:#4F46E5;--accentSoft:#EEF0FF;--li:#0A66C2;--liSoft:#E8F1FA;--ig:#C1356F;--igSoft:#FBEAF1;--tt:#0A8A85;--ttSoft:#E2F4F3;--yt:#D92D20;--ytSoft:#FDECEA;--s-draft:#475467;--s-draftBg:#F2F4F7;--s-review:#B54708;--s-reviewBg:#FEF4E6;--s-ok:#175CD3;--s-okBg:#EAF2FF;--s-sched:#6941C6;--s-schedBg:#F2EDFE;--s-pub:#067647;--s-pubBg:#E7F6EC;--s-err:#B42318;--s-errBg:#FDECEA}
+.th-dark{--bg:#0E1013;--side:#0B0D10;--panel:#16191E;--panel2:#1C2026;--hover:#252A31;--past:#12151A;--line:#262A31;--line2:#343A43;--text:#F2F4F7;--text2:#D0D5DD;--muted:#9AA1AC;--primary:#F2F4F7;--onPrimary:#0E1013;--accent:#8B85FF;--accentSoft:rgba(139,133,255,0.16);--li:#5AA9FF;--liSoft:rgba(90,169,255,0.14);--ig:#F27AB0;--igSoft:rgba(242,122,176,0.14);--tt:#3DD6CE;--ttSoft:rgba(61,214,206,0.14);--yt:#FF7A70;--ytSoft:rgba(255,122,112,0.14);--s-draft:#C4C9D1;--s-draftBg:rgba(196,201,209,0.12);--s-review:#F5C26B;--s-reviewBg:rgba(245,194,107,0.14);--s-ok:#93B4FF;--s-okBg:rgba(147,180,255,0.14);--s-sched:#C4A7FF;--s-schedBg:rgba(196,167,255,0.16);--s-pub:#7DDC9A;--s-pubBg:rgba(125,220,154,0.13);--s-err:#FF8A80;--s-errBg:rgba(255,138,128,0.15)}
+a{color:inherit}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif">
+
+<div style="flex: 0 0 auto; background: var(--side); border-right: 1px solid var(--line)">
+  <dc-import name="V3Sidebar" active="dashboard" theme="{{theme}}" on-toggle-theme="{{toggleTheme}}" hint-size="224px,900px"></dc-import>
+</div>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 16px">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 12px; color: var(--muted)">sabato 21 novembre</span>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em">Buongiorno, Marta</h1>
+    </div>
+    <a href="V3Idee.dc.html" style="display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 9px; background: var(--primary); color: var(--onPrimary); font-size: 13px; font-weight: 600; text-decoration: none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Nuova idea</a>
+  </header>
+
+  <section aria-labelledby="h-sett" style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 id="h-sett" style="margin: 0; font-size: 14px; font-weight: 600">Settimana in corso · 16 – 22 novembre</h2>
+      <a href="V3Calendario.dc.html" style="font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none">Apri calendario</a>
+    </div>
+    <div role="region" aria-label="Post della settimana" tabindex="0" style="overflow-x: auto">
+      <div style="min-width: 760px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{week}}" as="w" hint-placeholder-count="7">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 9px; background: {{w.bg}}; border: 1px solid {{w.border}}; min-height: 128px">
+            <span style="font-size: 12px; font-weight: 600; color: {{w.fg}}">{{w.label}}</span>
+            <sc-for list="{{w.posts}}" as="p" hint-placeholder-count="1">
+              <span style="display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; background: {{p.bg}}">
+                <dc-import name="V3Icon" p="{{p.p}}" size="16" hint-size="16px,16px"></dc-import>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2)">{{p.t}}</span>
+                <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: {{p.fg}}">{{p.short}}</span>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px">
+    <section aria-labelledby="h-next" style="flex: 3 1 480px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px">
+        <h2 id="h-next" style="margin: 0; font-size: 14px; font-weight: 600">Prossime pubblicazioni</h2>
+        <a href="V3Coda.dc.html" style="font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none">Coda</a>
+      </div>
+      <sc-for list="{{next}}" as="n" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line)">
+          <dc-import name="V3Icon" p="{{n.p}}" size="28" hint-size="28px,28px"></dc-import>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{n.title}}</span>
+            <span style="font-size: 12px; color: var(--muted)">{{n.when}}</span>
+          </div>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2)">{{n.cd}}</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 99px; background: {{n.bg}}; color: {{n.fg}}; font-size: 11px; font-weight: 600; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"></span>{{n.label}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-labelledby="h-acc" style="flex: 2 1 300px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px">
+        <h2 id="h-acc" style="margin: 0; font-size: 14px; font-weight: 600">Account collegati</h2>
+        <a href="V3Impostazioni.dc.html" style="font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none">Gestisci</a>
+      </div>
+      <sc-for list="{{accounts}}" as="a" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line)">
+          <dc-import name="V3Icon" p="{{a.p}}" size="28" hint-size="28px,28px"></dc-import>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 13px; font-weight: 600">{{a.name}}</span>
+            <span style="font-size: 12px; color: var(--muted)">{{a.detail}}</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 600; color: {{a.fg}}">{{a.status}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px">
+    <section aria-labelledby="h-met" style="flex: 3 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 id="h-met" style="margin: 0; font-size: 14px; font-weight: 600">Ultimi 7 giorni</h2>
+        <a href="V3Analytics.dc.html" style="font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none">Analytics</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px">
+        <sc-for list="{{metrics}}" as="m" hint-placeholder-count="4">
+          <div style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: center; gap: 8px"><dc-import name="V3Icon" p="{{m.p}}" size="22" hint-size="22px,22px"></dc-import><span style="font-size: 12px; color: var(--muted)">{{m.what}}</span></div>
+            <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 24px; font-weight: 700; letter-spacing: -0.02em">{{m.val}}</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--s-pub)">{{m.delta}}</span></div>
+            <span style="font-size: 12px; color: var(--text2)">{{m.sub}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-ideas" style="flex: 2 1 300px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px">
+        <h2 id="h-ideas" style="margin: 0; font-size: 14px; font-weight: 600">Idee in coda · 12</h2>
+        <a href="V3Idee.dc.html" style="display: inline-flex; align-items: center; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line2); font-size: 12px; font-weight: 600; text-decoration: none">+ Nuova idea</a>
+      </div>
+      <sc-for list="{{ideas}}" as="i" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line)">
+          <span style="flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{i.t}}</span>
+          <span style="font-size: 11px; color: var(--text2); background: var(--panel2); border-radius: 6px; padding: 2px 7px">{{i.tag}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temaScuro":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1020}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { theme: null }; }
+  renderVals() {
+    var self = this, s = this.state;
+    var dark = s.theme ? s.theme === 'dark' : !!this.props.temaScuro;
+    var ST = {
+      draft: { label: 'Bozza', short: 'bozza', fg: 'var(--s-draft)', bg: 'var(--s-draftBg)' },
+      review: { label: 'Da approvare', short: 'da appr.', fg: 'var(--s-review)', bg: 'var(--s-reviewBg)' },
+      ok: { label: 'Approvato', short: 'appr.', fg: 'var(--s-ok)', bg: 'var(--s-okBg)' },
+      sched: { label: 'Programmato', short: 'progr.', fg: 'var(--s-sched)', bg: 'var(--s-schedBg)' },
+      pub: { label: 'Pubblicato', short: 'pubbl.', fg: 'var(--s-pub)', bg: 'var(--s-pubBg)' },
+      err: { label: 'Errore', short: 'errore', fg: 'var(--s-err)', bg: 'var(--s-errBg)' }
+    };
+    function pill(p, t, st) { return { p: p, t: t, short: ST[st].short, fg: ST[st].fg, bg: ST[st].bg }; }
+    var W = [
+      ['lun 16', [pill('li', '08:00', 'pub'), pill('ig', '13:00', 'pub')]],
+      ['mar 17', [pill('tt', '19:00', 'pub'), pill('ig', '19:00', 'pub')]],
+      ['mer 18', [pill('yt', '18:00', 'pub')]],
+      ['gio 19', [pill('li', '08:00', 'pub'), pill('tt', '20:00', 'err')]],
+      ['ven 20', [pill('ig', '13:00', 'pub')]],
+      ['oggi', [pill('ig', '18:00', 'sched'), pill('tt', '21:00', 'ok')]],
+      ['dom 22', [pill('ig', '11:00', 'review'), pill('yt', '17:00', 'sched'), pill('tt', '20:00', 'draft')]]
+    ];
+    var week = W.map(function (w, i) { var today = i === 5; return { label: w[0], posts: w[1], bg: today ? 'var(--accentSoft)' : 'var(--panel2)', border: today ? 'var(--accent)' : 'transparent', fg: today ? 'var(--text)' : 'var(--text2)' }; });
+    function nx(p, title, when, cd, st) { return Object.assign({ p: p, title: title, when: when, cd: cd }, ST[st]); }
+    var next = [
+      nx('ig', 'Un bug in VB.NET che mi è costato 2 ore', 'Reel · oggi 18:00', 'tra 0:42', 'sched'),
+      nx('tt', 'Un bug in VB.NET che mi è costato 2 ore', 'Video 9:16 · oggi 21:00', 'tra 3:42', 'ok'),
+      nx('ig', 'Sondaggio: che IDE usi?', 'Storia · dom 11:00', 'tra 17:42', 'review'),
+      nx('yt', 'Ho costruito un client database da zero', 'Video 16:40 · dom 17:00', 'tra 23:42', 'sched'),
+      nx('tt', 'Ollama in locale: cosa gira davvero', 'Video 9:16 · dom 20:00', 'tra 26:42', 'draft')
+    ];
+    var accounts = [
+      { p: 'li', name: 'LinkedIn', detail: 'Profilo personale', status: 'Collegato', fg: 'var(--s-pub)' },
+      { p: 'ig', name: 'Instagram', detail: 'Account Creator · token tra 9 giorni', status: 'Da rinnovare', fg: 'var(--s-review)' },
+      { p: 'tt', name: 'TikTok', detail: 'Ultimo invio fallito giovedì', status: 'Errore', fg: 'var(--s-err)' },
+      { p: 'yt', name: 'YouTube', detail: 'Canale · quota giornaliera ok', status: 'Collegato', fg: 'var(--s-pub)' }
+    ];
+    var metrics = [
+      { p: 'li', what: 'Follower', val: '1.284', delta: '+42', sub: '9,8k impression' },
+      { p: 'ig', what: 'Follower', val: '637', delta: '+25', sub: '5,2k account raggiunti' },
+      { p: 'tt', what: 'Follower', val: '418', delta: '+61', sub: '12,4k visualizzazioni' },
+      { p: 'yt', what: 'Iscritti', val: '412', delta: '+18', sub: '3,1k visualizzazioni' }
+    ];
+    var ideas = [
+      { t: 'Ollama in locale: cosa gira su un PC normale', tag: 'AI locale' },
+      { t: 'Mappe in 10 righe di PyQGIS', tag: 'GIS' },
+      { t: 'WebForms nel 2026: manutenere senza impazzire', tag: '.NET' },
+      { t: 'Da consulente a sviluppatore di prodotto', tag: 'Carriera' }
+    ];
+    return {
+      theme: dark ? 'dark' : 'light',
+      themeClass: dark ? 'th-dark' : 'th-light',
+      toggleTheme: function () { self.setState({ theme: dark ? 'light' : 'dark' }); },
+      week: week, next: next, accounts: accounts, metrics: metrics, ideas: ideas
+    };
+  }
+}
+</script>
+</body>
+</html>

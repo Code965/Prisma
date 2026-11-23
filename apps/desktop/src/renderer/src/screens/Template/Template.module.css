@@ -1,0 +1,545 @@
+/*
+ * Template e brand kit da design/mockup/schermate/V3Template.dc.html.
+ * Le miniature della galleria usano i colori del brand kit (--k-*), impostati sulla sezione:
+ * rappresentano le grafiche esportate, quindi non cambiano con il tema dell'app.
+ */
+
+.h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.ok {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--s-pub);
+}
+
+/* --- Galleria ------------------------------------------------------------------------------ */
+
+.gallerySection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.well {
+  height: 180px;
+  background: var(--well);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cardText {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cardSize {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.thumb {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+}
+
+.tTitle {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.tCarousel {
+  height: 140px;
+  aspect-ratio: 4 / 5;
+  padding: 10px;
+  justify-content: space-between;
+  background: var(--k-ink);
+  color: var(--k-paper);
+}
+
+.tKicker {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--k-paper) 60%, var(--k-ink));
+}
+
+.tStrip {
+  height: 124px;
+  width: 16px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--k-ink) 88%, var(--k-paper));
+}
+
+.tPost {
+  height: 140px;
+  aspect-ratio: 4 / 5;
+  padding: 12px;
+  justify-content: center;
+  gap: 6px;
+  background: var(--k-paper);
+  color: var(--k-ink);
+  border: 1px solid color-mix(in srgb, var(--k-ink) 12%, var(--k-paper));
+}
+
+.tPost .tTitle {
+  font-size: 14px;
+}
+
+.tBlock {
+  height: 36px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-paper));
+}
+
+.tQuote {
+  height: 130px;
+  aspect-ratio: 1;
+  padding: 14px;
+  justify-content: center;
+  gap: 8px;
+  background: var(--k-accent);
+  color: var(--k-paper);
+}
+
+.tQuoteMark {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 0.6;
+}
+
+.tQuoteText {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tQuoteAuthor {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.tCode {
+  height: 140px;
+  aspect-ratio: 4 / 5;
+  padding: 10px;
+  gap: 6px;
+  background: var(--k-ink);
+}
+
+.tCodeTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--k-paper);
+}
+
+.tCodeBox {
+  flex: 1;
+  border-radius: 3px;
+  padding: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--k-ink) 70%, black);
+  color: var(--k-code);
+}
+
+.tYouTube {
+  width: 170px;
+  aspect-ratio: 16 / 9;
+  padding: 10px;
+  justify-content: flex-end;
+  background: var(--k-ink);
+  color: var(--k-paper);
+}
+
+.tYouTubeTitle {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tVertical {
+  height: 150px;
+  aspect-ratio: 9 / 16;
+  padding: 8px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--k-ink);
+  color: var(--k-paper);
+}
+
+.tVerticalTitle {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+/* --- Pannelli ------------------------------------------------------------------------------ */
+
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.panel {
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kitPanel {
+  flex: 1 1 380px;
+  gap: 16px;
+}
+
+.voicePanel {
+  flex: 1 1 420px;
+  gap: 12px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.color {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.swatch {
+  position: relative;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  overflow: hidden;
+}
+
+.color:focus-within .swatch {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Il selettore nativo copre il campione, invisibile: si clicca sul colore. */
+.colorInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.colorName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.colorHex {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.fontRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--panel2);
+}
+
+.fontSans {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fontMono {
+  font-size: 18px;
+}
+
+.logoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoTile {
+  width: 56px;
+  height: 56px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid var(--line2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+}
+
+.logoImg {
+  max-width: 70%;
+  max-height: 70%;
+  object-fit: contain;
+}
+
+.dashed {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px dashed var(--line2);
+  background: transparent;
+  color: var(--text2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.linkButton {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.handle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.handleAt {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.input,
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.input {
+  height: 38px;
+  padding: 0 10px;
+}
+
+.textarea {
+  padding: 8px 10px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.saveRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Voce ---------------------------------------------------------------------------------- */
+
+.voiceHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 99px;
+  background: var(--panel2);
+  color: var(--text2);
+}
+
+.ruleRemove {
+  border: 0;
+  padding: 0 4px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ruleInput {
+  width: 150px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 99px;
+  border: 1px dashed var(--line2);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.example {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+}
+
+.exampleText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exampleBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.exampleMeta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.iconButton {
+  align-self: flex-start;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--hover);
+}
+
+.addExample {
+  align-self: flex-start;
+}
+
+.exampleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 9px;
+  background: var(--panel2);
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grow {
+  flex: 1 1 200px;
+}

@@ -1,0 +1,116 @@
+# Pubblicazione automatica: a ogni push su main (escluse le modifiche alla sola documentazione)
+# si controlla il codice, si costruisce l'installer Windows e si pubblica una nuova release.
+#
+# Versione: la prima è quella di apps/desktop/package.json; poi la patch sale da sola
+# (0.1.0 → 0.1.1 → 0.1.2…). Per una minor o una major si alza la versione nel package.json
+# (scripts/release.ps1 0.2.0) e il push successivo parte da lì.
+# Note di rilascio: i messaggi dei commit dalla versione precedente.
+#
+# Da Actions › Release › «Run workflow» si pubblica a mano l'ultimo commit di main.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'design/mockup/**'
+      - 'LICENSE'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Lint, tipi e test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Senza DATABASE_URL i test di integrazione con MySQL vengono saltati.
+      - run: pnpm test
+
+  release:
+    name: Installer e release
+    needs: check
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Versione e note di rilascio
+        id: meta
+        run: |
+          BASE=$(node -p "require('./apps/desktop/package.json').version")
+          LAST=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n 1)
+          if [ -z "$LAST" ]; then
+            VERSION="$BASE"
+            RANGE="HEAD"
+          else
+            PREV="${LAST#v}"
+            HIGHEST=$(printf '%s\n%s\n' "$BASE" "$PREV" | sort -V | tail -n 1)
+            if [ "$HIGHEST" = "$BASE" ] && [ "$BASE" != "$PREV" ]; then
+              VERSION="$BASE"
+            else
+              IFS=. read -r MAJOR MINOR PATCH <<< "$PREV"
+              VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+            fi
+            RANGE="$LAST..HEAD"
+          fi
+          git log "$RANGE" --no-merges --format='- %s' > notes.md
+          test -s notes.md || echo "- Miglioramenti e correzioni" > notes.md
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Versione $VERSION (precedente: ${LAST:-nessuna})"
+          cat notes.md
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Versione nell'app
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = 'apps/desktop/package.json';
+            const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            pkg.version = '${{ steps.meta.outputs.version }}';
+            fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Installer
+        working-directory: apps/desktop
+        run: pnpm build && pnpm exec electron-builder --win --publish never
+
+      - name: Pubblicazione
+        run: |
+          VERSION='${{ steps.meta.outputs.version }}'
+          OUT="apps/desktop/release/$VERSION"
+          gh release create "v$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "Prisma $VERSION" \
+            --notes-file notes.md \
+            --latest \
+            "$OUT/Prisma-Setup.exe" "$OUT/Prisma-Setup.exe.blockmap" "$OUT/latest.yml"

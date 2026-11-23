@@ -1,0 +1,178 @@
+/* Pannello chat a destra dello Studio, da V3Studio.dc.html. */
+
+.chat {
+  flex: 1 1 320px;
+  max-width: 400px;
+  box-sizing: border-box;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.user {
+  margin-left: auto;
+  width: fit-content;
+  max-width: 85%;
+  padding: 9px 12px;
+  border-radius: 12px 12px 4px 12px;
+  background: var(--primary);
+  color: var(--onPrimary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.assistant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assistantText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.diff {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.del {
+  padding: 6px 8px;
+  background: var(--del);
+  color: var(--delText);
+  white-space: pre-wrap;
+}
+
+.add {
+  padding: 6px 8px;
+  background: var(--add);
+  color: var(--addText);
+  white-space: pre-wrap;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.undo {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pending {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quickButton {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.quickButton:disabled,
+.send:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: var(--bg);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.send {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 0;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

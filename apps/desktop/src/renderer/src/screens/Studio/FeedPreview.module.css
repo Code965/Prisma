@@ -1,0 +1,324 @@
+/*
+ * Anteprime nel feed da V3Studio.dc.html. I riquadri scuri dei media usano i colori fissi del
+ * mockup (#101318, #F2F4F7…): rappresentano immagini, quindi non cambiano con il tema.
+ */
+
+.preview {
+  flex: 1 1 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+}
+
+.label {
+  align-self: flex-start;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* --- LinkedIn ----------------------------------------------------------------------------- */
+
+.linkedin {
+  max-width: 460px;
+}
+
+.liHead {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.liAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.liWho {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.liName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.liText {
+  margin: 0;
+  padding: 0 14px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.liActions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.liActions span {
+  padding: 12px 0;
+}
+
+/* --- Instagram ---------------------------------------------------------------------------- */
+
+.instagram {
+  max-width: 380px;
+}
+
+.igHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.igAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.igName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.igVisual {
+  aspect-ratio: 4 / 5;
+  background: #101318;
+  color: #f2f4f7;
+  padding: 26px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.igCounter {
+  align-self: flex-end;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.igHeadline {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.igHint {
+  font-size: 12px;
+  color: #a5b4fc;
+}
+
+.igIcons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  color: var(--text);
+}
+
+.igSpacer {
+  flex: 1;
+}
+
+.igCaption {
+  margin: 0;
+  padding: 0 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* --- TikTok ------------------------------------------------------------------------------- */
+
+.tiktok {
+  width: 270px;
+  aspect-ratio: 9 / 16;
+  border-radius: 22px;
+  background: #0b0d10;
+  color: #f2f4f7;
+  border: 6px solid #1c2026;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px;
+}
+
+.ttHeadline {
+  position: absolute;
+  top: 44%;
+  left: 14px;
+  right: 56px;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.ttSide {
+  position: absolute;
+  right: 10px;
+  bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.ttAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2a2f37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ttCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 48px;
+}
+
+.ttName {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ttText {
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ttAudio {
+  font-size: 11px;
+  color: #c4c9d1;
+}
+
+/* --- YouTube ------------------------------------------------------------------------------ */
+
+.youtube {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ytThumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: #101318;
+  color: #f2f4f7;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ytKicker {
+  font-size: 12px;
+  color: #a5b4fc;
+}
+
+.ytThumbTitle {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.ytMeta {
+  display: flex;
+  gap: 10px;
+}
+
+.ytAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ytText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+
+.ytTitle {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}

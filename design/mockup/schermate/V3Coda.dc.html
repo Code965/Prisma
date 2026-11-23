@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Coda di pubblicazione</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.th-light{--bg:#F5F6F8;--side:#FBFBFC;--panel:#FFFFFF;--panel2:#F3F4F6;--hover:#EBEDF1;--line:#E4E7EC;--line2:#D0D5DD;--text:#101318;--text2:#344054;--muted:#5B6473;--primary:#101318;--onPrimary:#FFFFFF;--accent:#4F46E5;--accentSoft:#EEF0FF;--li:#0A66C2;--liSoft:#E8F1FA;--ig:#C1356F;--igSoft:#FBEAF1;--tt:#0A8A85;--ttSoft:#E2F4F3;--yt:#D92D20;--ytSoft:#FDECEA;--s-draft:#475467;--s-draftBg:#F2F4F7;--s-review:#B54708;--s-reviewBg:#FEF4E6;--s-ok:#175CD3;--s-okBg:#EAF2FF;--s-sched:#6941C6;--s-schedBg:#F2EDFE;--s-pub:#067647;--s-pubBg:#E7F6EC;--s-err:#B42318;--s-errBg:#FDECEA}
+.th-dark{--bg:#0E1013;--side:#0B0D10;--panel:#16191E;--panel2:#1C2026;--hover:#252A31;--line:#262A31;--line2:#343A43;--text:#F2F4F7;--text2:#D0D5DD;--muted:#9AA1AC;--primary:#F2F4F7;--onPrimary:#0E1013;--accent:#8B85FF;--accentSoft:rgba(139,133,255,0.16);--li:#5AA9FF;--liSoft:rgba(90,169,255,0.14);--ig:#F27AB0;--igSoft:rgba(242,122,176,0.14);--tt:#3DD6CE;--ttSoft:rgba(61,214,206,0.14);--yt:#FF7A70;--ytSoft:rgba(255,122,112,0.14);--s-draft:#C4C9D1;--s-draftBg:rgba(196,201,209,0.12);--s-review:#F5C26B;--s-reviewBg:rgba(245,194,107,0.14);--s-ok:#93B4FF;--s-okBg:rgba(147,180,255,0.14);--s-sched:#C4A7FF;--s-schedBg:rgba(196,167,255,0.16);--s-pub:#7DDC9A;--s-pubBg:rgba(125,220,154,0.13);--s-err:#FF8A80;--s-errBg:rgba(255,138,128,0.15)}
+a{color:inherit}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif">
+
+<div style="flex: 0 0 auto; background: var(--side); border-right: 1px solid var(--line)">
+  <dc-import name="V3Sidebar" active="coda" theme="{{theme}}" on-toggle-theme="{{toggleTheme}}" hint-size="224px,900px"></dc-import>
+</div>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 16px">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em">Coda di pubblicazione</h1>
+      <span style="font-size: 13px; color: var(--muted)">{{queueCount}} post approvati in uscita · 1 bozza resta fuori finché non la approvi</span>
+    </div>
+    <a href="V3Calendario.dc.html" style="display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line2); background: var(--panel); font-size: 13px; font-weight: 600; text-decoration: none">Vai al calendario</a>
+  </header>
+
+  <section aria-label="Post in uscita" style="display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{queue}}" as="q" hint-placeholder-count="4">
+      <article style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+          <dc-import name="V3Icon" p="{{q.p}}" size="32" hint-size="32px,32px"></dc-import>
+          <div style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-size: 14px; font-weight: 600">{{q.title}}</h2>
+            <span style="font-size: 12px; color: var(--muted)">{{q.format}} · {{q.when}}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 110px">
+            <span style="font-size: 11px; color: var(--muted)">esce tra</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums">{{q.cd}}</span>
+          </div>
+          <div style="display: flex; gap: 6px">
+            <button type="button" onClick="{{q.now}}" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--primary); color: var(--onPrimary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Pubblica ora</button>
+            <a href="V3Calendario.dc.html" style="display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); font-size: 12px; font-weight: 600; text-decoration: none">Sposta</a>
+            <button type="button" onClick="{{q.cancel}}" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); color: var(--s-err); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Annulla</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{q.checks}}" as="c" hint-placeholder-count="4">
+            <span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 7px; background: {{c.bg}}; color: {{c.fg}}; font-size: 12px; font-weight: 500">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600">{{c.mark}}</span>{{c.t}}</span>
+          </sc-for>
+        </div>
+      </article>
+    </sc-for>
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+      <p style="margin: 0; padding: 24px; text-align: center; border-radius: 12px; border: 1px dashed var(--line2); color: var(--muted); font-size: 14px">Coda vuota. Approva un contenuto per vederlo qui.</p>
+    </sc-if>
+  </section>
+
+  <section aria-labelledby="h-log" style="background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column">
+    <h2 id="h-log" style="margin: 0 0 8px; font-size: 14px; font-weight: 600">Log delle pubblicazioni</h2>
+    <sc-for list="{{log}}" as="l" hint-placeholder-count="5">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line)">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); width: 104px">{{l.when}}</span>
+        <dc-import name="V3Icon" p="{{l.p}}" size="22" hint-size="22px,22px"></dc-import>
+        <div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 13px; font-weight: 600">{{l.title}}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {{l.detailFg}}">{{l.detail}}</span>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 99px; background: {{l.bg}}; color: {{l.fg}}; font-size: 11px; font-weight: 600"><span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"></span>{{l.label}}</span>
+        <sc-if value="{{l.isErr}}" hint-placeholder-val="{{ false }}">
+          <button type="button" onClick="{{l.retry}}" style="height: 30px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--primary); color: var(--onPrimary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Riprova</button>
+        </sc-if>
+        <sc-if value="{{l.isPub}}" hint-placeholder-val="{{ true }}">
+          <button type="button" style="height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Apri post</button>
+        </sc-if>
+      </div>
+    </sc-for>
+  </section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temaScuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: null, tick: 0,
+      queue: [
+        { id: 'q1', p: 'ig', title: 'Un bug in VB.NET che mi è costato 2 ore', format: 'Reel 0:48', when: 'oggi 18:00', secs: 2520, checks: [['ok', 'Formato 9:16'], ['ok', 'Durata 0:48'], ['ok', 'File 38 MB'], ['ok', 'Caption 412 / 2.200']] },
+        { id: 'q2', p: 'tt', title: 'Un bug in VB.NET che mi è costato 2 ore', format: 'Video 9:16', when: 'oggi 21:00', secs: 13320, checks: [['ok', 'Formato 9:16'], ['ok', 'Durata 0:48'], ['ok', 'File 38 MB'], ['ok', 'Caption 96 / 4.000'], ['warn', 'Musica di sottofondo: verifica i diritti']] },
+        { id: 'q3', p: 'ig', title: 'Sondaggio: che IDE usi?', format: 'Storia', when: 'dom 11:00', secs: 63720, checks: [['ok', 'Formato 9:16'], ['ok', 'Immagine 1080×1920'], ['warn', 'Lo sticker sondaggio non si può pubblicare via API: verrà aggiunto a mano']] },
+        { id: 'q4', p: 'yt', title: 'Ho costruito un client database da zero', format: 'Video 16:40', when: 'dom 17:00', secs: 84120, checks: [['ok', 'Formato 16:9'], ['ok', 'Pre-caricato 2,1 GB'], ['ok', 'Titolo 49 / 100'], ['ok', 'Descrizione e capitoli'], ['warn', 'Miniatura: testo piccolo su telefono']] }
+      ],
+      log: [
+        { p: 'ig', title: '7 scorciatoie di Visual Studio', when: 'ven 20 · 13:00', st: 'pub', detail: 'instagram.com/p/… · 214 salvataggi' },
+        { p: 'tt', title: 'La mia postazione da sviluppatore', when: 'gio 19 · 20:00', st: 'err', detail: 'Upload interrotto: timeout dopo 3 tentativi' },
+        { p: 'li', title: '5 lezioni dalla migrazione ArcPy', when: 'gio 19 · 08:00', st: 'pub', detail: 'linkedin.com/feed/update/… · link nel primo commento' },
+        { p: 'yt', title: 'PyQGIS vs ArcPy: confronto pratico', when: 'mer 18 · 18:00', st: 'pub', detail: 'youtube.com/watch?v=… · pubblico alle 18:00' }
+      ]
+    };
+  }
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () { self.setState({ tick: self.state.tick + 1 }); }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  renderVals() {
+    var self = this, s = this.state;
+    var dark = s.theme ? s.theme === 'dark' : (this.props.temaScuro ?? true);
+    var ST = {
+      pub: { label: 'Pubblicato', fg: 'var(--s-pub)', bg: 'var(--s-pubBg)' },
+      err: { label: 'Errore', fg: 'var(--s-err)', bg: 'var(--s-errBg)' },
+      sched: { label: 'Programmato', fg: 'var(--s-sched)', bg: 'var(--s-schedBg)' },
+      cancel: { label: 'Annullato', fg: 'var(--s-draft)', bg: 'var(--s-draftBg)' }
+    };
+    function cd(sec) { sec = Math.max(0, sec); var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60; return h + ':' + (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x; }
+    function toLog(q, st, detail) {
+      self.setState({
+        queue: self.state.queue.filter(function (x) { return x.id !== q.id; }),
+        log: [{ p: q.p, title: q.title, when: 'adesso', st: st, detail: detail }].concat(self.state.log)
+      });
+    }
+    var queue = s.queue.map(function (q) {
+      return {
+        p: q.p, title: q.title, format: q.format, when: q.when, cd: cd(q.secs - s.tick),
+        checks: q.checks.map(function (c) { var ok = c[0] === 'ok'; return { t: c[1], mark: ok ? 'OK' : '!', fg: ok ? 'var(--s-pub)' : 'var(--s-review)', bg: ok ? 'var(--s-pubBg)' : 'var(--s-reviewBg)' }; }),
+        now: function () { toLog(q, 'pub', 'pubblicato manualmente · link disponibile tra pochi secondi'); },
+        cancel: function () { toLog(q, 'cancel', 'tolto dalla coda · torna tra le bozze approvate'); }
+      };
+    });
+    var log = s.log.map(function (l, i) {
+      var st = ST[l.st];
+      return Object.assign({}, l, st, {
+        isErr: l.st === 'err', isPub: l.st === 'pub',
+        detailFg: l.st === 'err' ? 'var(--s-err)' : 'var(--muted)',
+        retry: function () { self.setState({ log: self.state.log.map(function (x, k) { return k === i ? Object.assign({}, x, { st: 'pub', detail: 'nuovo tentativo riuscito · tiktok.com/@…' }) : x; }) }); }
+      });
+    });
+    return {
+      theme: dark ? 'dark' : 'light',
+      themeClass: dark ? 'th-dark' : 'th-light',
+      toggleTheme: function () { self.setState({ theme: dark ? 'light' : 'dark' }); },
+      queue: queue, log: log, queueCount: queue.length, empty: queue.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

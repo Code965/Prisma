@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Sidebar di navigazione</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<nav aria-label="Navigazione principale" style="width: {{w}}; box-sizing: border-box; padding: 14px {{padX}} 16px; display: flex; flex-direction: column; gap: 18px; font-family: Inter, system-ui, sans-serif; color: var(--text, #101318); transition: width 160ms ease">
+
+  <div style="display: flex; flex-direction: {{headDir}}; align-items: center; gap: 8px">
+    <button type="button" aria-label="Cambia brand: Marta Rossi" title="Marta Rossi · Brand personale" style="display: flex; align-items: center; gap: 10px; flex: 1; width: 100%; min-width: 0; min-height: 44px; padding: 5px 6px; border-radius: 10px; border: 1px solid {{brandBorder}}; background: {{brandBg}}; color: inherit; font: inherit; text-align: left; cursor: pointer">
+      <span style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: var(--primary, #101318); color: var(--onPrimary, #FFFFFF); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500">MR</span>
+      <span style="display: {{ld}}; flex-direction: column; min-width: 0; flex: 1">
+        <span style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Marta Rossi</span>
+        <span style="font-size: 11px; color: var(--muted, #5B6473)">Brand personale</span>
+      </span>
+    </button>
+    <button type="button" onClick="{{toggleOpen}}" aria-expanded="{{expanded}}" aria-label="{{toggleLabel}}" title="{{toggleLabel}}" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; border: 1px solid var(--line, #E4E7EC); background: var(--panel, #FFFFFF); color: var(--text2, #344054); display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path><path d="{{chev}}"></path></svg>
+    </button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <span style="display: {{ld}}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--muted, #5B6473); padding: 0 10px 4px">LAVORO</span>
+    <a href="V3Dashboard.dc.html" aria-label="Dashboard" title="Dashboard" aria-current="{{a.dashboard.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.dashboard.bg}}; color: {{a.dashboard.fg}}; font-size: 13px; font-weight: {{a.dashboard.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg><span style="display: {{ld}}">Dashboard</span></a>
+    <a href="V3Idee.dc.html" aria-label="Idee, 12" title="Idee" aria-current="{{a.idee.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.idee.bg}}; color: {{a.idee.fg}}; font-size: 13px; font-weight: {{a.idee.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path></svg><span style="display: {{ld}}">Idee</span><span style="display: {{ld}}; margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted, #5B6473)">12</span></a>
+    <a href="V3Studio.dc.html" aria-label="Studio contenuto" title="Studio contenuto" aria-current="{{a.studio.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.studio.bg}}; color: {{a.studio.fg}}; font-size: 13px; font-weight: {{a.studio.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg><span style="display: {{ld}}">Studio contenuto</span></a>
+    <a href="V3Calendario.dc.html" aria-label="Calendario" title="Calendario" aria-current="{{a.calendario.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.calendario.bg}}; color: {{a.calendario.fg}}; font-size: 13px; font-weight: {{a.calendario.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg><span style="display: {{ld}}">Calendario</span></a>
+    <a href="V3Coda.dc.html" aria-label="Coda di pubblicazione, 5" title="Coda di pubblicazione" aria-current="{{a.coda.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.coda.bg}}; color: {{a.coda.fg}}; font-size: 13px; font-weight: {{a.coda.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4z"></path></svg><span style="display: {{ld}}">Coda di pubblicazione</span><span style="display: {{ld}}; margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted, #5B6473)">5</span></a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <span style="display: {{ld}}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--muted, #5B6473); padding: 0 10px 4px">CREA</span>
+    <a href="V3Carosello.dc.html" aria-label="Editor carosello" title="Editor carosello" aria-current="{{a.carosello.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.carosello.bg}}; color: {{a.carosello.fg}}; font-size: 13px; font-weight: {{a.carosello.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="6" y="4" width="12" height="16" rx="2"></rect><path d="M3 7v10"></path><path d="M21 7v10"></path></svg><span style="display: {{ld}}">Editor carosello</span></a>
+    <a href="V3Video.dc.html" aria-label="Editor video" title="Editor video" aria-current="{{a.video.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.video.bg}}; color: {{a.video.fg}}; font-size: 13px; font-weight: {{a.video.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="2" y="5" width="15" height="14" rx="2"></rect><path d="M17 10l5-3v10l-5-3"></path></svg><span style="display: {{ld}}">Editor video</span></a>
+    <a href="V3Template.dc.html" aria-label="Template e brand kit" title="Template e brand kit" aria-current="{{a.template.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.template.bg}}; color: {{a.template.fg}}; font-size: 13px; font-weight: {{a.template.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg><span style="display: {{ld}}">Template e brand kit</span></a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <span style="display: {{ld}}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--muted, #5B6473); padding: 0 10px 4px">MISURA</span>
+    <a href="V3Analytics.dc.html" aria-label="Analytics" title="Analytics" aria-current="{{a.analytics.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.analytics.bg}}; color: {{a.analytics.fg}}; font-size: 13px; font-weight: {{a.analytics.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 20V11"></path><path d="M10 20V4"></path><path d="M16 20v-6"></path><path d="M21 20H3"></path></svg><span style="display: {{ld}}">Analytics</span></a>
+    <a href="V3Impostazioni.dc.html" aria-label="Impostazioni" title="Impostazioni" aria-current="{{a.impostazioni.cur}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; background: {{a.impostazioni.bg}}; color: {{a.impostazioni.fg}}; font-size: 13px; font-weight: {{a.impostazioni.fw}}; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M1 14h6"></path><path d="M9 8h6"></path><path d="M17 16h6"></path></svg><span style="display: {{ld}}">Impostazioni</span></a>
+  </div>
+
+  <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line, #E4E7EC)">
+    <div title="Nulla viene pubblicato senza la tua approvazione" style="display: flex; align-items: flex-start; justify-content: {{jc}}; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--panel2, #F3F4F6); font-size: 11px; line-height: 1.4; color: var(--text2, #344054)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Approvazione obbligatoria attiva" style="flex-shrink: 0; margin-top: 1px"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>
+      <span style="display: {{ld}}">Nulla viene pubblicato senza la tua approvazione</span>
+    </div>
+    <button type="button" onClick="{{toggleTheme}}" aria-label="{{themeLabel}}" title="{{themeLabel}}" style="display: flex; align-items: center; justify-content: {{jc}}; gap: 10px; min-height: 38px; padding: 0 10px; border-radius: 8px; border: 0; background: transparent; color: var(--text2, #344054); font: inherit; font-size: 13px; cursor: pointer">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{ false }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.9 4.9l1.4 1.4"></path><path d="M17.7 17.7l1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.9 19.1l1.4-1.4"></path><path d="M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{ true }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </sc-if>
+      <span style="display: {{ld}}">{{themeLabel}}</span>
+    </button>
+  </div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["dashboard","idee","studio","calendario","coda","carosello","video","template","analytics","impostazioni"],"default":"dashboard"},"theme":{"editor":null,"default":"light"},"onToggleTheme":{"editor":null},"$preview":{"width":224,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: true };
+  }
+  componentDidMount() {
+    try {
+      if (window.localStorage.getItem('pipeline.sidebar.chiusa') === '1') this.setState({ open: false });
+    } catch (e) {}
+  }
+  renderVals() {
+    var self = this;
+    var open = this.state.open;
+    var active = this.props.active ?? 'dashboard';
+    var ids = ['dashboard', 'idee', 'studio', 'calendario', 'coda', 'carosello', 'video', 'template', 'analytics', 'impostazioni'];
+    var a = {};
+    ids.forEach(function (id) {
+      var on = id === active;
+      a[id] = {
+        cur: on ? 'page' : 'false',
+        bg: on ? 'var(--hover, #EBEDF1)' : 'transparent',
+        fg: on ? 'var(--text, #101318)' : 'var(--text2, #344054)',
+        fw: on ? '600' : '500'
+      };
+    });
+    var dark = (this.props.theme ?? 'light') === 'dark';
+    return {
+      a: a,
+      w: open ? '224px' : '64px',
+      padX: open ? '12px' : '10px',
+      ld: open ? 'flex' : 'none',
+      jc: open ? 'flex-start' : 'center',
+      headDir: open ? 'row' : 'column',
+      brandBorder: open ? 'var(--line, #E4E7EC)' : 'transparent',
+      brandBg: open ? 'var(--panel, #FFFFFF)' : 'transparent',
+      expanded: open ? 'true' : 'false',
+      toggleLabel: open ? 'Comprimi menu' : 'Espandi menu',
+      chev: open ? 'M16 10l-2 2 2 2' : 'M14 10l2 2-2 2',
+      toggleOpen: function () {
+        var next = !self.state.open;
+        try { window.localStorage.setItem('pipeline.sidebar.chiusa', next ? '0' : '1'); } catch (e) {}
+        self.setState({ open: next });
+      },
+      isDark: dark,
+      isLight: !dark,
+      themeLabel: dark ? 'Tema chiaro' : 'Tema scuro',
+      toggleTheme: function () { if (self.props.onToggleTheme) self.props.onToggleTheme(); }
+    };
+  }
+}
+</script>
+</body>
+</html>
