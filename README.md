@@ -36,7 +36,7 @@ Come la luce in un prisma: un’idea entra al centro ed esce divisa in quattro f
 ## Come è fatto
 
 - **App desktop** (Windows): Electron + React. Lavora in locale su video e file, con FFmpeg, whisper.cpp e FilmCraft installati sul PC.
-- **Server** (VPS): Fastify + MySQL. Tiene i token delle piattaforme (cifrati), chiama l’LLM (DeepSeek) e fa girare lo scheduler.
+- **Server** (VPS): Fastify + MySQL. Tiene i token delle piattaforme (cifrati), chiama l’AI che scegli tu (Ollama o LM Studio gratis sul tuo PC, oppure DeepSeek, OpenAI, OpenRouter… con la tua chiave) e fa girare lo scheduler.
 - **Piattaforme**: API ufficiali di LinkedIn, Instagram, YouTube e TikTok, più la [Blog API](docs/blog-api.md) per pubblicare sul tuo blog personale. File da pubblicare su Cloudflare R2.
 
 Dettagli tecnici, scelte e stato dei lavori sono in [CLAUDE.md](CLAUDE.md).

@@ -11,6 +11,7 @@ import {
   type VariantMetadata,
   METRIC_SOURCES,
   type InsightTip,
+  AI_PRESETS,
 } from '@prisma-app/shared';
 import { sql } from 'drizzle-orm';
 import {
@@ -405,3 +406,18 @@ export const accountMetricSnapshots = mysqlTable(
     uniqueIndex('account_metric_snapshots_acc_day').on(t.socialAccountId, t.day),
   ],
 );
+
+// --- Impostazioni dell'AI ---------------------------------------------------------------------
+
+/**
+ * Servizio AI scelto dall'utente (una sola riga, id = 1). La chiave è cifrata come i token delle
+ * piattaforme; senza riga si usa il ripiego del .env.
+ */
+export const aiSettings = mysqlTable('ai_settings', {
+  id: smallint('id', { unsigned: true }).primaryKey(),
+  preset: mysqlEnum('preset', AI_PRESETS).notNull(),
+  baseUrl: varchar('base_url', { length: 500 }).notNull(),
+  model: varchar('model', { length: 200 }).notNull(),
+  apiKeyEnc: bytes('api_key_enc', { length: 2048 }),
+  ...timestamps,
+});

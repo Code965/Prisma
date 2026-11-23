@@ -13,7 +13,7 @@ import { toIso, type DbExecutor } from '../../db/executor.js';
 import { analyticsInsights } from '../../db/schema.js';
 import { BusinessRuleError } from '../../http/error-handler.js';
 import type { PromptLibrary } from '../../llm/prompts.js';
-import { LlmNotConfiguredError, type LlmProvider } from '../../llm/types.js';
+import { LlmNotConfiguredError, type LlmSource } from '../../llm/types.js';
 import type { BrandService } from '../brands/service.js';
 import { addDays, postReach, romeDay, type PostRow } from './aggregate.js';
 import { romeSlot } from './slots.js';
@@ -127,7 +127,7 @@ export function formatSlots(slots: readonly PlatformSlots[]): string {
 
 interface InsightsDeps {
   db: DbExecutor;
-  llm: LlmProvider | null;
+  llm: LlmSource;
   prompts: PromptLibrary;
   brands: BrandService;
   now: () => Date;
@@ -166,8 +166,8 @@ export function createInsightsService(deps: InsightsDeps) {
       : null;
   }
 
-  function blockedReason(measured: number): string | null {
-    if (!deps.llm) return 'LLM non configurato: imposta DEEPSEEK_API_KEY nel .env del server';
+  function blockedReason(measured: number, configured: boolean): string | null {
+    if (!configured) return 'AI non configurata: scegli il servizio in Impostazioni › AI';
     if (measured < INSIGHTS_MIN_POSTS) {
       return `Servono almeno ${INSIGHTS_MIN_POSTS} contenuti con metriche nelle ultime 8 settimane (ora ${measured})`;
     }
@@ -178,12 +178,10 @@ export function createInsightsService(deps: InsightsDeps) {
     const brand = await brands.get(brandId);
     const { report, posts, slots } = await deps.data(brandId);
     const measured = posts.filter((p) => p.metrics).length;
-    const blocked = blockedReason(measured);
-    if (blocked) {
-      if (!deps.llm) throw new LlmNotConfiguredError();
-      throw new BusinessRuleError(blocked);
-    }
-    const llm = deps.llm!;
+    const llm = await deps.llm.current();
+    if (!llm) throw new LlmNotConfiguredError();
+    const blocked = blockedReason(measured, true);
+    if (blocked) throw new BusinessRuleError(blocked);
     const weekStart = weekStartOf(now());
     const generated = await llm.completeJson({
       schema: GeneratedInsightsSchema,
@@ -231,7 +229,10 @@ export function createInsightsService(deps: InsightsDeps) {
       const { posts } = await deps.data(brandId);
       return {
         insights: await latest(brandId),
-        blocked: blockedReason(posts.filter((p) => p.metrics).length),
+        blocked: blockedReason(
+          posts.filter((p) => p.metrics).length,
+          (await deps.llm.current()) !== null,
+        ),
       };
     },
 
@@ -242,7 +243,7 @@ export function createInsightsService(deps: InsightsDeps) {
      * li genera. Un errore su un brand non ferma gli altri.
      */
     async refreshDue(log?: (brandId: number, error: unknown) => void): Promise<number> {
-      if (!deps.llm) return 0;
+      if (!(await deps.llm.current())) return 0;
       const week = weekStartOf(now());
       let generated = 0;
       for (const brand of await brands.list()) {
@@ -250,7 +251,7 @@ export function createInsightsService(deps: InsightsDeps) {
         if (current && current.weekStart >= week) continue;
         try {
           const { posts } = await deps.data(brand.id);
-          if (blockedReason(posts.filter((p) => p.metrics).length)) continue;
+          if (blockedReason(posts.filter((p) => p.metrics).length, true)) continue;
           await generate(brand.id);
           generated++;
         } catch (error) {

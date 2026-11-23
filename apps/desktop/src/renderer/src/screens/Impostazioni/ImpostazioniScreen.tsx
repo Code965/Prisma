@@ -8,6 +8,7 @@ import { useConnectAccount, useSocialAccounts } from '../../hooks/useAccounts';
 import { useNow } from '../../hooks/useNow';
 import { accountRows, oauthPlatform } from '../../services/accounts';
 import { errorMessage } from '../../services/api/client';
+import { AiSettingsSection } from './AiSettingsSection';
 import { BlogConnectionForm } from './BlogConnectionForm';
 import { ConnectionSection } from './ConnectionSection';
 import { UpdatesSection } from './UpdatesSection';
@@ -26,6 +27,7 @@ export function ImpostazioniScreen() {
   return (
     <Page title="Impostazioni">
       <ConnectionSection />
+      <AiSettingsSection />
 
       <section aria-labelledby="h-brand" className={styles.section}>
         <div className={styles.sectionHead}>

@@ -23,6 +23,7 @@ export * from './schemas/content.js';
 export * from './schemas/publication.js';
 export * from './schemas/social-account.js';
 export * from './schemas/ai.js';
+export * from './schemas/ai-settings.js';
 export * from './schemas/shorts.js';
 export * from './schemas/metrics.js';
 export * from './schemas/analytics.js';

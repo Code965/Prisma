@@ -1,6 +1,18 @@
 import type { ZodType } from 'zod';
 import { LlmError, type LlmMessage } from './types.js';
 
+/**
+ * Senza JSON mode alcuni modelli racchiudono il JSON in un blocco ```json o lo fanno precedere da
+ * una frase: si prende il blocco, altrimenti il testo tra la prima «{» e l'ultima «}».
+ */
+export function extractJson(raw: string): string {
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(raw);
+  if (fenced?.[1]?.trim()) return fenced[1].trim();
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  return start >= 0 && end > start ? raw.slice(start, end + 1) : raw;
+}
+
 /** Una singola chiamata al modello che restituisce il testo grezzo della risposta. */
 export type RawCompletion = (messages: LlmMessage[]) => Promise<string>;
 
@@ -28,7 +40,7 @@ export async function completeValidatedJson<T>(
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(extractJson(raw));
     } catch {
       lastProblem = 'risposta non in formato JSON';
       continue;

@@ -7,7 +7,7 @@ import { createPublisherRegistry } from './publishers/types.js';
 import { createScheduler } from './scheduler/worker.js';
 import { createMetricsCollector } from './modules/analytics/collector.js';
 import { createServices } from './services.js';
-import { createLlmProvider } from './llm/factory.js';
+import { envProviderConfig } from './llm/factory.js';
 import { createBlogAdapter } from './publishers/blog/adapter.js';
 import { createBlogClient } from './publishers/blog/client.js';
 import { createLinkedInAdapter } from './publishers/linkedin/adapter.js';
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   ]);
 
   const services = createServices(db, {
-    llm: createLlmProvider(env),
+    aiSettings: { cipher, env: envProviderConfig(env), timeoutMs: env.DEEPSEEK_TIMEOUT_MS },
     linkedinOAuth: linkedinOAuthConfig(env, linkedinClient, cipher),
     instagramOAuth: instagramOAuthConfig(env, instagramClient, cipher),
     youtubeOAuth,

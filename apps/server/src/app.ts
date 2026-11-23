@@ -13,6 +13,7 @@ import { variantRoutes } from './modules/variants/routes.js';
 import { aiRoutes } from './modules/ai/routes.js';
 import { analyticsRoutes } from './modules/analytics/routes.js';
 import { blogConnectionRoutes } from './modules/blog-connection/routes.js';
+import { aiSettingsRoutes } from './modules/ai-settings/routes.js';
 import { OAUTH_CALLBACK_PATHS, oauthRoutes } from './modules/oauth/routes.js';
 import type { Services } from './services.js';
 
@@ -71,4 +72,5 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
     tiktok: services.tiktokOAuth,
   });
   blogConnectionRoutes(app, services.blogConnection);
+  aiSettingsRoutes(app, services.aiSettings);
 }

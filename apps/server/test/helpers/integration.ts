@@ -1,3 +1,4 @@
+import type { AiSettingsConfig } from '../../src/modules/ai-settings/service.js';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
 import type { Platform } from '@prisma-app/shared';
 import { buildApp } from '../../src/app.js';
@@ -74,6 +75,7 @@ export async function withRollback(
     youtubeOAuth?: YouTubeOAuthConfig;
     tiktokOAuth?: TikTokOAuthConfig;
     accessToken?: AccessTokenResolver;
+    aiSettings?: AiSettingsConfig;
   } = {},
 ): Promise<void> {
   const now = options.now ?? NOW;
@@ -93,6 +95,7 @@ export async function withRollback(
           youtubeOAuth: options.youtubeOAuth ?? null,
           tiktokOAuth: options.tiktokOAuth ?? null,
           accessToken: options.accessToken ?? null,
+          aiSettings: options.aiSettings ?? null,
         }),
       });
       try {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createDeepSeekProvider, type ChatCompletionsClient } from './deepseek.js';
+import { extractJson } from './json-completion.js';
+import { createOpenAiCompatibleProvider, type ChatCompletionsClient } from './openai-compatible.js';
 import { LlmError } from './types.js';
 
 type CreateParams = Parameters<ChatCompletionsClient['create']>[0];
@@ -23,7 +24,8 @@ const schema = z.object({ answer: z.string() });
 const messages = [{ role: 'user' as const, content: 'Rispondi in json' }];
 
 function provider(client: ChatCompletionsClient) {
-  return createDeepSeekProvider({
+  return createOpenAiCompatibleProvider({
+    label: 'DeepSeek',
     apiKey: 'k',
     baseURL: 'https://api.deepseek.com',
     model: 'deepseek-flash',
@@ -32,7 +34,7 @@ function provider(client: ChatCompletionsClient) {
   });
 }
 
-describe('provider DeepSeek', () => {
+describe('provider compatibile OpenAI', () => {
   it('chiede JSON mode e restituisce la risposta validata', async () => {
     const { client, requests } = fakeClient(['{"answer":"ok"}']);
     await expect(provider(client).completeJson({ messages, schema })).resolves.toEqual({
@@ -72,5 +74,25 @@ describe('provider DeepSeek', () => {
     const promise = provider(client).completeJson({ messages, schema });
     await expect(promise).rejects.toBeInstanceOf(LlmError);
     await expect(promise).rejects.toThrow(/401/);
+  });
+
+  it('senza JSON mode supportato lo toglie e continua', async () => {
+    const { client, requests } = fakeClient([
+      new Error("400 'response_format.type' must be 'json_schema' or 'text'"),
+      '```json\n{"answer":"ok"}\n```',
+    ]);
+    await expect(provider(client).completeJson({ messages, schema })).resolves.toEqual({
+      answer: 'ok',
+    });
+    expect(requests[0]).toHaveProperty('response_format');
+    expect(requests[1]).not.toHaveProperty('response_format');
+  });
+});
+
+describe('estrazione del JSON', () => {
+  it('prende il blocco ```json o il testo tra le graffe', () => {
+    expect(extractJson('Ecco:\n```json\n{"a":1}\n```')).toBe('{"a":1}');
+    expect(extractJson('Certo! {"a":{"b":2}} Fine.')).toBe('{"a":{"b":2}}');
+    expect(extractJson('{"a":1}')).toBe('{"a":1}');
   });
 });

@@ -18,7 +18,7 @@ import {
 } from '../../http/error-handler.js';
 import type { PromptLibrary } from '../../llm/prompts.js';
 import { EditedCarouselSchema, GeneratedCarouselSchema } from '../../llm/schemas.js';
-import { LlmNotConfiguredError, type LlmProvider } from '../../llm/types.js';
+import { LlmNotConfiguredError, type LlmProvider, type LlmSource } from '../../llm/types.js';
 import type { BrandService } from '../brands/service.js';
 import { findContentRow } from '../contents/repository.js';
 import {
@@ -31,7 +31,7 @@ import { applyVariantTransition } from '../variants/transitions.js';
 
 interface CarouselAiDeps {
   db: DbExecutor;
-  llm: LlmProvider | null;
+  llm: LlmSource;
   prompts: PromptLibrary;
   now: () => Date;
   brands: BrandService;
@@ -47,9 +47,10 @@ type VariantRow = NonNullable<Awaited<ReturnType<typeof findVariantRow>>>;
 export function createCarouselAiService(deps: CarouselAiDeps) {
   const { db, prompts, now, brands, voice } = deps;
 
-  function requireLlm(): LlmProvider {
-    if (!deps.llm) throw new LlmNotConfiguredError();
-    return deps.llm;
+  async function requireLlm(): Promise<LlmProvider> {
+    const llm = await deps.llm.current();
+    if (!llm) throw new LlmNotConfiguredError();
+    return llm;
   }
 
   /** Controlli prima di chiamare il modello, per non pagare risposte che non si possono salvare. */
@@ -95,7 +96,7 @@ export function createCarouselAiService(deps: CarouselAiDeps) {
   }
 
   async function generate(variantId: number, input: GenerateCarouselRequest): Promise<Variant> {
-    const llm = requireLlm();
+    const llm = await requireLlm();
     const ctx = await loadEditable(variantId, input.expectedVersion);
     if (!ctx.row.body.trim()) {
       throw new BusinessRuleError('Scrivi prima il testo del post: le slide si ricavano da lì');
@@ -130,7 +131,7 @@ export function createCarouselAiService(deps: CarouselAiDeps) {
   }
 
   async function edit(variantId: number, input: EditCarouselRequest): Promise<EditCarouselResult> {
-    const llm = requireLlm();
+    const llm = await requireLlm();
     const ctx = await loadEditable(variantId, input.expectedVersion);
     const current = ctx.row.metadata.carousel;
     if (!current) throw new BusinessRuleError('La variant non ha ancora un carosello');

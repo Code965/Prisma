@@ -23,7 +23,12 @@ import {
   toMetadata,
   type GeneratedContent,
 } from '../../llm/schemas.js';
-import { LlmError, LlmNotConfiguredError, type LlmProvider } from '../../llm/types.js';
+import {
+  LlmError,
+  LlmNotConfiguredError,
+  type LlmProvider,
+  type LlmSource,
+} from '../../llm/types.js';
 import type { BrandService } from '../brands/service.js';
 import { findContentRow, insertContent } from '../contents/repository.js';
 import type { ContentService } from '../contents/service.js';
@@ -47,7 +52,7 @@ interface BrandVoice {
 
 interface AiServiceDeps {
   db: DbExecutor;
-  llm: LlmProvider | null;
+  llm: LlmSource;
   prompts: PromptLibrary;
   now: () => Date;
   brands: BrandService;
@@ -60,9 +65,10 @@ interface AiServiceDeps {
 export function createAiService(deps: AiServiceDeps) {
   const { db, prompts, now, brands, ideas, contents, voice } = deps;
 
-  function requireLlm(): LlmProvider {
-    if (!deps.llm) throw new LlmNotConfiguredError();
-    return deps.llm;
+  async function requireLlm(): Promise<LlmProvider> {
+    const llm = await deps.llm.current();
+    if (!llm) throw new LlmNotConfiguredError();
+    return llm;
   }
 
   function guidelines(platforms: readonly Platform[]): string {
@@ -139,7 +145,7 @@ export function createAiService(deps: AiServiceDeps) {
    * l'articolo del blog; poi un'unica transazione. Se una chiamata fallisce non si salva nulla.
    */
   async function generate(input: GenerateContent): Promise<Content> {
-    const llm = requireLlm();
+    const llm = await requireLlm();
     const idea = await ideas.get(input.ideaId);
     const brand = await brands.get(idea.brandId);
     const writer: BrandVoice = { name: brand.name, voice: await voice(brand.id) };
@@ -177,7 +183,7 @@ export function createAiService(deps: AiServiceDeps) {
 
   /** Modifica "scrivendo": il modello riscrive la bozza, che torna `bozza` e finisce nello storico. */
   async function edit(variantId: number, input: EditVariantRequest): Promise<EditVariantResult> {
-    const llm = requireLlm();
+    const llm = await requireLlm();
     const row = await findVariantRow(db, variantId);
     if (!row) throw new NotFoundError('Variant', variantId);
     if (row.version !== input.expectedVersion) throw new VersionConflictError('Variant', variantId);

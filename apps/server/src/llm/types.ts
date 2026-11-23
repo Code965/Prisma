@@ -18,6 +18,22 @@ export interface LlmProvider {
   completeJson<T>(request: JsonCompletionRequest<T>): Promise<T>;
 }
 
+/**
+ * Da dove arriva il provider: le impostazioni dell'AI scelte dall'utente possono cambiare mentre
+ * il server gira, quindi i servizi lo chiedono a ogni operazione. null = AI non configurata.
+ */
+export interface LlmSource {
+  current(): Promise<LlmProvider | null>;
+}
+
+export function staticLlmSource(provider: LlmProvider | null): LlmSource {
+  return { current: async () => provider };
+}
+
+export function isLlmSource(value: LlmProvider | LlmSource): value is LlmSource {
+  return typeof (value as LlmSource).current === 'function';
+}
+
 /** Il provider ha risposto male o non ha risposto: l'operazione si può ripetere. */
 export class LlmError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
@@ -29,7 +45,7 @@ export class LlmError extends Error {
 /** Manca la configurazione (es. chiave API): le funzioni AI non sono disponibili. */
 export class LlmNotConfiguredError extends Error {
   constructor() {
-    super('Provider LLM non configurato: imposta DEEPSEEK_API_KEY nel .env del server');
+    super('AI non configurata: scegli il servizio e la chiave in Impostazioni › AI');
     this.name = 'LlmNotConfiguredError';
   }
 }

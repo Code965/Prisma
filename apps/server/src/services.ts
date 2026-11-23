@@ -1,7 +1,7 @@
 import type { DbExecutor } from './db/executor.js';
 import type { PublisherRegistry } from './publishers/types.js';
 import { createPromptLibrary, type PromptLibrary } from './llm/prompts.js';
-import type { LlmProvider } from './llm/types.js';
+import { isLlmSource, staticLlmSource, type LlmProvider, type LlmSource } from './llm/types.js';
 import { createCarouselAiService } from './modules/ai/carousel.js';
 import { createAiService } from './modules/ai/service.js';
 import { createShortsAiService } from './modules/ai/shorts.js';
@@ -38,12 +38,21 @@ import {
 } from './modules/oauth/tiktok-service.js';
 import { createSocialAccountService } from './modules/social-accounts/service.js';
 import { createTagService } from './modules/tags/service.js';
+import { createAiSettingsService, type AiSettingsConfig } from './modules/ai-settings/service.js';
 import { createVariantService } from './modules/variants/service.js';
 
 export interface ServiceOptions {
   now?: () => Date;
-  /** Assente quando la chiave API non è configurata: le rotte AI rispondono 503. */
-  llm?: LlmProvider | null;
+  /**
+   * Provider dell'AI: fisso (test) o letto dalle impostazioni a ogni operazione. Senza provider
+   * le rotte AI rispondono 503.
+   */
+  llm?: LlmProvider | LlmSource | null;
+  /**
+   * Impostazioni dell'AI scelte dall'utente (cifratura e ripiego del .env). Se ci sono, l'AI in
+   * uso è quella delle Impostazioni e `llm` non serve; assenti → le rotte /ai/settings danno 503.
+   */
+  aiSettings?: AiSettingsConfig | null;
   prompts?: PromptLibrary;
   /** Assente senza credenziali LinkedIn: il collegamento dell'account risponde 503. */
   linkedinOAuth?: LinkedInOAuthConfig | null;
@@ -73,7 +82,12 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
   const ideas = createIdeaService(db, brands, tags);
   const accounts = createSocialAccountService(db, brands, now);
   const contents = createContentService(db, brands, ideas);
-  const llm = options.llm ?? null;
+  const aiSettings = createAiSettingsService({ db, config: options.aiSettings ?? null });
+  const llm: LlmSource = options.aiSettings
+    ? aiSettings.source
+    : options.llm && isLlmSource(options.llm)
+      ? options.llm
+      : staticLlmSource(options.llm ?? null);
   const prompts = options.prompts ?? createPromptLibrary();
   const analytics = createAnalyticsService(db, brands, now);
   return {
@@ -86,6 +100,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
     contents,
     variants: createVariantService(db, now),
     analytics,
+    aiSettings,
     insights: createInsightsService({
       db,
       llm,

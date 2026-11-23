@@ -12,7 +12,7 @@ import { z } from 'zod';
 import type { DbExecutor } from '../../db/executor.js';
 import type { PromptLibrary } from '../../llm/prompts.js';
 import { hashtags, optionalText, toMetadata } from '../../llm/schemas.js';
-import { LlmNotConfiguredError, type LlmProvider } from '../../llm/types.js';
+import { LlmNotConfiguredError, type LlmSource } from '../../llm/types.js';
 import type { BrandService } from '../brands/service.js';
 import { insertContent } from '../contents/repository.js';
 import type { ContentService } from '../contents/service.js';
@@ -87,7 +87,7 @@ export function generatedShortsSchema(
 
 interface ShortsAiDeps {
   db: DbExecutor;
-  llm: LlmProvider | null;
+  llm: LlmSource;
   prompts: PromptLibrary;
   brands: BrandService;
   contents: ContentService;
@@ -109,11 +109,12 @@ export function createShortsAiService(deps: ShortsAiDeps) {
    * un'unica transazione crea un contenuto in bozza per momento. Il video lo taglia il desktop.
    */
   async function generate(input: GenerateShortsRequest): Promise<GenerateShortsResult> {
-    if (!deps.llm) throw new LlmNotConfiguredError();
+    const llm = await deps.llm.current();
+    if (!llm) throw new LlmNotConfiguredError();
     const brand = await brands.get(input.brandId);
     const count = input.count ?? SHORT_LIMITS.maxCount;
     const { segments, platforms } = input;
-    const generated = await deps.llm.completeJson({
+    const generated = await llm.completeJson({
       schema: generatedShortsSchema(segments, platforms, count),
       maxTokens: 8192,
       messages: [

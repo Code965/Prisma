@@ -1,4 +1,7 @@
 import {
+  AiSettingsTestResultSchema,
+  AiSettingsViewSchema,
+  type AiSettingsInput,
   BrandSchema,
   ChatMessageSchema,
   ContentSchema,
@@ -167,6 +170,13 @@ export const api = {
     apiRequest('POST', '/shorts/generate', GenerateShortsResultSchema, input),
   editCarousel: (variantId: number, input: EditCarouselRequest) =>
     apiRequest('POST', `/variants/${variantId}/carousel/edit`, EditCarouselResultSchema, input),
+  aiSettings: () => apiRequest('GET', '/ai/settings', AiSettingsViewSchema),
+  saveAiSettings: (input: AiSettingsInput) =>
+    apiRequest('PUT', '/ai/settings', AiSettingsViewSchema, input),
+  removeAiSettings: () => apiRequest('DELETE', '/ai/settings', AiSettingsViewSchema),
+  /** Con `input` prova quel servizio prima di salvarlo; senza, quello in uso. */
+  testAiSettings: (input?: AiSettingsInput) =>
+    apiRequest('POST', '/ai/settings/test', AiSettingsTestResultSchema, input),
   /** URL di autorizzazione OAuth (LinkedIn, Instagram) da aprire nel browser di sistema. */
   authorizationUrl: (platform: OAuthPlatform, brandId: number) =>
     apiRequest('GET', `/oauth/${platform}/start?brandId=${brandId}`, z.object({ url: z.url() })),

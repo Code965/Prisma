@@ -719,11 +719,22 @@ subscribersLost`, `dimensions=day` (gli ultimi giorni arrivano in ritardo). Ness
 - `LlmProvider.completeJson({ messages, schema })`: unico punto di contatto con il modello. `completeValidatedJson`
   ritenta fino a 3 volte su risposta vuota (DeepSeek svuota il JSON non riconosciuto), non JSON o non conforme
   allo schema Zod; in quest'ultimo caso rimanda al modello gli errori da correggere.
-- DeepSeek via SDK `openai`, base URL `https://api.deepseek.com`, `response_format: json_object`.
-  Modelli verificati sulla documentazione ufficiale (novembre 2026): `deepseek-flash` (default) e `deepseek-v4-pro`;
-  `deepseek-chat`/`deepseek-reasoner` non sono più elencati. Il JSON mode richiede la parola "json" e un esempio nel prompt.
-- Senza `DEEPSEEK_API_KEY` il provider è `null`: il server parte e le rotte AI rispondono 503 `llm_non_configurato`;
-  `LlmError` → 502 `errore_llm`.
+- **AI a scelta dell'utente** (fase 5b): un solo provider generico, `createOpenAiCompatibleProvider`
+  (`llm/openai-compatible.ts`, SDK `openai` con base URL a piacere) per DeepSeek, Ollama, LM Studio, OpenAI, OpenRouter o
+  qualsiasi servizio compatibile. Chiede `response_format: json_object`; se il servizio lo rifiuta (es. LM Studio) lo
+  toglie e continua; `extractJson` accetta il JSON in un blocco ```json o tra testo. Preset in
+  `packages/shared/src/schemas/ai-settings.ts` (`AI_PRESET_INFO`: indirizzo, modello proposto solo per DeepSeek, chiave
+  sì/no, locale). DeepSeek verificato (novembre 2026): `deepseek-flash` (default) e `deepseek-v4-pro`.
+- **Impostazioni › AI** (`modules/ai-settings/`, tabella `ai_settings` con una riga, migrazione `0007_ai_settings`):
+  `GET/PUT/DELETE /ai/settings`, `POST /ai/settings/test` (con corpo prova quel servizio, senza quello in uso: domanda
+  minima `{"ok": true}`, errore → 422 con il motivo). Chiave cifrata con `tokenContext('ai', 'settings')`, mai restituita
+  (`hasKey`); `apiKey` assente = tieni la salvata, `""` = toglila; i preset con chiave obbligatoria senza chiave → 422.
+- **Provider per operazione**: i servizi ricevono un `LlmSource` (`current()`): le Impostazioni se ci sono, altrimenti il
+  ripiego `DEEPSEEK_*` del `.env` (`envProviderConfig`), altrimenti null → 503 `llm_non_configurato` («Impostazioni ›
+  AI»). Un cambio vale subito; il provider si ricrea solo se cambia la configurazione. Nei test `llm` resta un provider
+  fisso (`staticLlmSource`). `LlmError` → 502 `errore_llm`.
+- Desktop: `Impostazioni/AiSettingsSection.tsx` (servizi locali per primi, «Prova», «Salva», «Togli»), logica in
+  `services/ai-settings.ts`. Il JSON mode richiede la parola "json" e un esempio nel prompt.
 - Prompt in `apps/server/prompts/` (esclusi da Prettier): `generate-variants.{system,user}.md`,
   `edit-variant.{system,user}.md`, `platforms/<piattaforma>.md` con le linee guida. Segnaposto `{{nome}}`:
   una variabile mancante è un errore. Un test verifica che i prompt reali e le variabili del codice coincidano.
@@ -804,6 +815,19 @@ Scelte (proposte e confermate): LinkedIn con inserimento a mano, YouTube con la 
 
 Fase 4 completata. Da provare con i dati veri: servono gli account collegati e qualche settimana di metriche
 (slot dai dati con almeno 8 post per piattaforma, suggerimenti con almeno 3 contenuti misurati).
+
+### Fase 5 — Open source e local-first
+
+Scelte (proposte e confermate): Prisma diventa multiutente senza costi per chi la mantiene. Ognuno la usa sul proprio
+PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubblico con release automatiche.
+
+- [x] 5a. Pulizia e pubblicazione: Blog API generica (`docs/blog-api.md`), anteprima neutra, nessun riferimento
+      personale, AGPL, cronologia nuova, release a ogni push su main, link di download fisso
+- [x] 5b. AI a scelta dell'utente (Impostazioni › AI, servizi compatibili OpenAI, chiave cifrata, ripiego sul .env)
+- [ ] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
+- [ ] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
+- [ ] 5e. Configurazione guidata al primo avvio
+- [ ] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 
