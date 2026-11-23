@@ -314,7 +314,8 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   ignorata da git). Tutte le dipendenze del desktop sono `devDependencies` incluse nel bundle di electron-vite, così il
   pacchetto non ha `node_modules`; `electronDist` usa l'Electron già installato. Installer non firmato.
 - **Release automatiche** (`.github/workflows/release.yml`): a ogni push su `main` (escluse le modifiche solo a
-  Markdown, `docs/`, mockup e licenza) un job Ubuntu fa lint, typecheck e test, poi un job windows-latest calcola la
+  Markdown, `docs/`, mockup e licenza) un job windows-latest fa lint, typecheck e test (alcuni test del desktop
+  usano percorsi Windows), poi un job windows-latest calcola la
   versione (la prima è quella di `apps/desktop/package.json`; poi patch dell'ultimo tag + 1, salvo che il
   package.json sia più alto), scrive la versione nell'app, crea l'installer (`--publish never`) e
   `gh release create v<versione> --target <commit>` con installer, `.blockmap` e `latest.yml`. Note = messaggi dei

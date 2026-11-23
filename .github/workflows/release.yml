@@ -30,7 +30,8 @@ concurrency:
 jobs:
   check:
     name: Lint, tipi e test
-    runs-on: ubuntu-latest
+    # Prisma è un'app Windows: alcuni test usano percorsi Windows (C:\…, file:///C:/…).
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
