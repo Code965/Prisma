@@ -58,6 +58,12 @@ servizio che scrive le bozze (Ollama gratis sul PC, oppure DeepSeek, OpenAI, Ope
 Windows potrebbe mostrare «Editore sconosciuto»: l’installer non è firmato. Scegli _Ulteriori
 informazioni › Esegui comunque_.
 
+## Pubblicare a finestra chiusa
+
+Le uscite programmate partono mentre Prisma è attiva: chiudendo la finestra resta nell’area di
+notifica e continua a pubblicare. In **Impostazioni › In background** puoi farla avviare con Windows.
+Per pubblicare anche a PC spento c’è il server in Docker: [docs/server-docker.md](docs/server-docker.md).
+
 ## Aggiornamenti
 
 A ogni avvio Prisma controlla le release su GitHub. Se c’è una versione nuova la scarica in

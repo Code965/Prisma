@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/out
+apps/desktop/release
+data
+.env
+.env.*
+!.env.example
+.git
+.github
+design
+docs
+*.zip
+*.log

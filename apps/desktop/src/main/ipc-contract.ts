@@ -45,6 +45,8 @@ export const IPC = {
   updateSkip: 'updates:skip',
   updateInstall: 'updates:install',
   restartApp: 'app:restart',
+  backgroundGet: 'background:get',
+  backgroundSet: 'background:set',
 } as const;
 
 /** Evento dal main al renderer quando cambia lo stato degli aggiornamenti. */
@@ -52,6 +54,19 @@ export const UPDATE_STATE_EVENT = 'updates:changed';
 
 /** Evento dal main al renderer con l'avanzamento dei lavori sui video. */
 export const VIDEO_PROGRESS_EVENT = 'video:progress';
+
+/** Prisma in background: resta nell'area di notifica, avvio con Windows. */
+export const BackgroundSettingsSchema = z
+  .object({ keepRunning: z.boolean(), openAtLogin: z.boolean() })
+  .partial();
+export interface BackgroundSettings {
+  keepRunning: boolean;
+  openAtLogin: boolean;
+  /** Solo con i dati sul computer (con un server remoto pubblica lui). */
+  available: boolean;
+  /** L'avvio con Windows vale solo per l'app installata. */
+  canOpenAtLogin: boolean;
+}
 
 /** Dove stanno i dati: dentro l'app (predefinito) o su un server Prisma separato. */
 export const CONNECTION_MODES = ['locale', 'remoto'] as const;

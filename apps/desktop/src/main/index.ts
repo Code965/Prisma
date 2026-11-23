@@ -7,6 +7,7 @@ import { embeddedFontFaceCss } from './export/fonts.js';
 import { SPLASH_BACKGROUND, SPLASH_MIN_MS, SPLASH_SIZE, splashDataUrl } from './splash.js';
 import { registerUpdates } from './updates.js';
 import { startCore, type Core } from './core.js';
+import { setupBackground, startedHidden } from './background.js';
 import { registerIpcHandlers, setCore } from './ipc.js';
 import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
@@ -29,6 +30,8 @@ const dataDir = customDataDir
   ? { userData: customDataDir, outcome: 'nuova' as const, error: undefined }
   : resolveDataDir(app.getPath('appData'));
 app.setPath('userData', dataDir.userData);
+// Una sola Prisma per cartella dei dati: un secondo avvio riapre la finestra di quella attiva.
+if (!app.requestSingleInstanceLock()) app.exit(0);
 if (dataDir.outcome === 'spostata') console.info(`Dati spostati in ${dataDir.userData}`);
 if (dataDir.outcome === 'unita')
   console.info(`Dati della vecchia cartella uniti in ${dataDir.userData}`);
@@ -118,10 +121,14 @@ registerMediaScheme();
 
 void app.whenReady().then(async () => {
   const startedAt = Date.now();
-  const splash = await showSplash().catch((error: unknown) => {
-    console.error('Intro non disponibile:', error);
-    return null;
-  });
+  // Avvio con Windows: niente intro e niente finestra, solo l'icona nell'area di notifica.
+  const hidden = startedHidden();
+  const splash = hidden
+    ? null
+    : await showSplash().catch((error: unknown) => {
+        console.error('Intro non disponibile:', error);
+        return null;
+      });
   const userDataDir = app.getPath('userData');
   // Dati sul computer (predefinito): il server di Prisma parte qui dentro, mentre c'è l'intro.
   let core: Promise<Core> | null = null;
@@ -175,7 +182,7 @@ void app.whenReady().then(async () => {
   const reveal = () => {
     if (revealed) return;
     revealed = true;
-    if (!main.isDestroyed()) main.show();
+    if (!hidden && !main.isDestroyed()) main.show();
     if (splash && !splash.isDestroyed()) splash.destroy();
     updates.checkOnStartup();
   };
@@ -184,6 +191,12 @@ void app.whenReady().then(async () => {
   );
   // Se il caricamento si blocca, l'intro non resta aperta per sempre.
   setTimeout(reveal, 20_000);
+  setupBackground({
+    userDataDir,
+    enabled: startupMode() === 'locale',
+    getWindow: () => main,
+    ...(devIcon ? { icon: devIcon } : {}),
+  }).attach(main);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

@@ -2,6 +2,7 @@ import { Page } from '../../components/Page/Page';
 import { useBrand } from '../../hooks/brand';
 import { AccountsSection } from './AccountsSection';
 import { AiSettingsSection } from './AiSettingsSection';
+import { BackgroundSection } from './BackgroundSection';
 import { ConnectionSection } from './ConnectionSection';
 import { UpdatesSection } from './UpdatesSection';
 import { VideoToolsSection } from './VideoToolsSection';
@@ -53,6 +54,7 @@ export function ImpostazioniScreen() {
 
       <AccountsSection />
       <VideoToolsSection />
+      <BackgroundSection />
       <UpdatesSection />
     </Page>
   );

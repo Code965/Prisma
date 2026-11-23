@@ -380,6 +380,27 @@ Verificato sulla documentazione ufficiale (novembre 2026). Ogni utente crea le s
   configurazione guidata senza toccare i dati veri. Provata così con il percorso completo (brand «Marta Rossi / MR»,
   arrivo alle Idee).
 
+## Prisma in background e server sempre acceso (fase 5f)
+
+- `src/main/background.ts` (solo con i dati sul computer): icona nell'area di notifica (menu «Apri Prisma»,
+  «Avvia con Windows», «Esci da Prisma»; clic = apri). Chiudere la finestra la nasconde (evento `close` con
+  `preventDefault`): scheduler, metriche e suggerimenti continuano; la prima volta una notifica lo spiega. «Esci da
+  Prisma» o un aggiornamento chiudono davvero (`before-quit`).
+- **Avvio con Windows** (`app.setLoginItemSettings`, solo nell'app installata) con l'argomento `--nascosta`: niente
+  intro e finestra nascosta. Preferenze in `userData/background.json` (`keepRunning` predefinito sì, `openAtLogin`
+  predefinito no), IPC `background:get/set`, sezione **In background** delle Impostazioni.
+- **Una sola istanza** per cartella dei dati (`requestSingleInstanceLock` dopo aver impostato `userData`): un secondo
+  avvio esce e riporta in primo piano la finestra del primo.
+- `window.close()` dal renderer non passa dall'evento `close`: le prove si fanno con `WM_CLOSE` (come la X).
+  Verificato nell'app vera su una cartella dei dati a parte: X → finestra nascosta e processo attivo, notifica una
+  volta; `--nascosta` → nessuna finestra; secondo avvio → codice 0 e finestra visibile.
+- **Server sempre acceso** (facoltativo, `docs/server-docker.md`): `Dockerfile` alla radice (build con pnpm, poi
+  `node:24-slim` con il solo `dist/index.js` di tsup: tutte le dipendenze nel bundle, `removeNodeProtocol: false`
+  perché `node:sqlite` esiste solo con il prefisso), database nel volume `/data`, utente `node`.
+  `compose.example.yaml` lo espone solo su 127.0.0.1. Il workflow Release pubblica l'immagine
+  `ghcr.io/code965/prisma-server` con il tag della versione e `latest`. Il bundle è provato da solo (health, 401
+  senza token, dati iniziali); l'immagine la costruisce la CI (Docker non è installato su questo PC).
+
 ## Installazione, intro e aggiornamenti (desktop)
 
 - **Logo**: sorgenti in `design/brand/` (simbolo, icona, `prisma.ico`, LEGGIMI con colori e usi); `apps/desktop/build/`
@@ -908,7 +929,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
 - [x] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
 - [x] 5e. Configurazione guidata al primo avvio
-- [ ] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
+- [x] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 

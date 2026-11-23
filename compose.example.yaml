@@ -1,0 +1,14 @@
+# Esempio per il server di Prisma sempre acceso (vedi docs/server-docker.md).
+# Copialo come compose.yaml accanto a un file .env con API_TOKEN e TOKEN_ENCRYPTION_KEY.
+services:
+  prisma:
+    image: ghcr.io/code965/prisma-server:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '127.0.0.1:4000:4000'
+    volumes:
+      - prisma-data:/data
+
+volumes:
+  prisma-data:

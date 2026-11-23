@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   ApiRequest,
+  BackgroundSettings,
   ApiResponse,
   ConnectionSettingsInput,
   ConnectionSettingsView,
@@ -54,6 +55,8 @@ const CHANNELS = {
   updateInstall: 'updates:install',
   updateChanged: 'updates:changed',
   restartApp: 'app:restart',
+  backgroundGet: 'background:get',
+  backgroundSet: 'background:set',
 } as const;
 
 /**
@@ -70,6 +73,12 @@ const api = {
   request: (request: ApiRequest): Promise<ApiResponse> =>
     ipcRenderer.invoke(CHANNELS.apiRequest, request),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke(CHANNELS.openExternal, url),
+  background: {
+    get: (): Promise<BackgroundSettings> => ipcRenderer.invoke(CHANNELS.backgroundGet),
+    set: (
+      input: Partial<Pick<BackgroundSettings, 'keepRunning' | 'openAtLogin'>>,
+    ): Promise<BackgroundSettings> => ipcRenderer.invoke(CHANNELS.backgroundSet, input),
+  },
   /** Riavvia Prisma (cambio tra dati sul computer e server remoto). */
   restart: (): Promise<void> => ipcRenderer.invoke(CHANNELS.restartApp),
   exportCarousel: (request: ExportCarouselRequest): Promise<ExportCarouselResult> =>

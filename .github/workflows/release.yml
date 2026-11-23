@@ -49,6 +49,8 @@ jobs:
     name: Installer e release
     needs: check
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     defaults:
       run:
         shell: bash
@@ -121,3 +123,23 @@ jobs:
             --notes-file notes.md \
             --latest \
             "$OUT/Prisma-Setup.exe" "$OUT/Prisma-Setup.exe.blockmap" "$OUT/latest.yml"
+
+  docker:
+    name: Immagine Docker del server
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Accesso a GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build e pubblicazione
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          IMAGE=ghcr.io/code965/prisma-server
+          docker build --label "org.opencontainers.image.version=$VERSION" -t "$IMAGE:$VERSION" -t "$IMAGE:latest" .
+          docker push "$IMAGE:$VERSION"
+          docker push "$IMAGE:latest"
