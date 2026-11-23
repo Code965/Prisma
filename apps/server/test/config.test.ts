@@ -7,7 +7,6 @@ import { parseEnv } from '../src/config/env.js';
 import { NotFoundError, VersionConflictError, toErrorResponse } from '../src/http/error-handler.js';
 
 const validEnv = {
-  DATABASE_URL: 'mysql://prisma:secret@localhost:3306/prisma',
   API_TOKEN: 'x'.repeat(64),
   TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
 };
@@ -16,6 +15,7 @@ describe('configurazione', () => {
   it('applica i default', () => {
     const env = parseEnv(validEnv);
     expect(env.PORT).toBe(4000);
+    expect(env.DATABASE_PATH).toBe('data/prisma.db');
     expect(env.DEEPSEEK_BASE_URL).toBe('https://api.deepseek.com');
   });
 
@@ -27,7 +27,7 @@ describe('configurazione', () => {
 
   it('elenca tutti i problemi insieme', () => {
     expect(() => parseEnv({ API_TOKEN: 'corto', TOKEN_ENCRYPTION_KEY: 'abc' })).toThrow(
-      /DATABASE_URL[\s\S]*API_TOKEN[\s\S]*TOKEN_ENCRYPTION_KEY/,
+      /API_TOKEN[\s\S]*TOKEN_ENCRYPTION_KEY/,
     );
   });
 

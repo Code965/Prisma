@@ -25,13 +25,15 @@ Monorepo pnpm, TypeScript ovunque (Node ≥ 22).
 | `packages/templates` | Template HTML/CSS per caroselli: `renderSlideHtml` (funzione pura, 1080×1350)                                    |
 | `design/mockup`      | Mockup grafico di riferimento (sorgenti `.dc.html` + `tokens.css`)                                               |
 
-- **DB**: MySQL 8 + Drizzle ORM, migrazioni versionate in `apps/server/drizzle`. Date sempre in UTC (`DATETIME(3)`), UI in `Europe/Rome`.
+- **DB**: SQLite (`node:sqlite`, integrato in Node 24 ed Electron: niente moduli nativi) + Drizzle ORM con il driver
+  `sqlite-proxy` (`apps/server/src/db/client.ts`). Migrazioni in `apps/server/drizzle`, copiate nel codice e applicate
+  all'avvio. Date in millisecondi UTC, UI in `Europe/Rome`. Fino alla 0.1.1 era MySQL (vedi «Local-first»).
 - **Desktop**: SQLite solo per lo stato locale (progetti video, percorsi file).
 - **Storage**: Cloudflare R2 (S3) solo per i file finali da pubblicare (fase 2).
 - **Auth desktop↔server**: token API personale (`Authorization: Bearer`), single user.
 - **LLM**: chiamato dal server (chiave solo nel `.env` della VPS). Interfaccia `LlmProvider`, prima implementazione DeepSeek via SDK OpenAI con base URL custom. Prompt in `apps/server/prompts/*.md`, risposte JSON validate con Zod.
 - **Piattaforme**: `PublisherAdapter` con `validate(variant)`, `publish()`, `fetchMetrics()`. Prima di ogni adapter verificare sulla documentazione ufficiale attuale scope, limiti e revisione dell'app.
-- **Scheduler**: worker con polling DB, `SELECT … FOR UPDATE SKIP LOCKED`, retry con backoff esponenziale, `idempotency_key` univoca per pubblicazione.
+- **Scheduler**: worker con polling DB, claim in transazione (con SQLite una alla volta), retry con backoff esponenziale, `idempotency_key` univoca per pubblicazione.
 - **Sicurezza**: token OAuth cifrati AES-256-GCM, chiave da `TOKEN_ENCRYPTION_KEY`. Segreti solo in `.env`.
 
 ### Stati
@@ -300,6 +302,34 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
 - Nota sul token `--rec`: in `tokens.css` è lo sfondo verde degli slot consigliati; nel mockup Idee lo stesso nome
   è il rosso della registrazione vocale. Per la registrazione servirà un token distinto.
 
+## Local-first: il server dentro l'app (fase 5c)
+
+- **Dati sul computer** (predefinito, `Impostazioni › Dati`): all'avvio, durante l'intro, `src/main/core.ts` avvia
+  `createPrismaRuntime` di `@prisma-app/server` (export `./runtime` e `./config`, incluso nel bundle del main) con
+  il database `userData/contenuti.db` (diverso da `prisma.db` dei progetti video). Nessuna porta: `ipc.ts` passa le
+  richieste del renderer a `app.inject` con un token interno casuale. Scheduler, metriche e suggerimenti girano
+  mentre l'app è aperta (in background con la 5f).
+- **Chiave di cifratura** di token e chiavi API: 32 byte casuali al primo avvio, salvati cifrati con `safeStorage`
+  in `userData/chiave-dati.json`. Se c'è `chiave-importata.txt` (lasciato da `db:import-mysql`) la si adotta e il
+  file in chiaro si cancella.
+- In sviluppo il core legge dal `.env` del progetto le variabili facoltative (credenziali delle piattaforme, R2,
+  ripiego `DEEPSEEK_*`), mai database, token, chiave e porta. Nell'app installata nessun `.env`.
+- **Server remoto** (opzione): indirizzo e token come prima; `settings.json` ha `mode` (`locale`/`remoto`, assente =
+  `locale`). Il cambio vale dal riavvio («Riavvia ora», IPC `app:restart`). Nel browser (`dev:web`) il proxy di Vite
+  continua a usare il server da solo.
+- **Driver SQLite**: una connessione `node:sqlite` (WAL, `foreign_keys`, `busy_timeout`), istruzioni preparate con
+  `setReturnArrays(true)` come vuole `sqlite-proxy`. Una coda (`Mutex`) fa passare una transazione alla volta;
+  `AsyncLocalStorage` riconosce le query dentro la transazione in corso (che vanno dirette) e una transazione
+  chiesta dentro un'altra si unisce a quella. `affectedRows` = `changes`; chiave duplicata = `SQLITE_CONSTRAINT_UNIQUE`.
+- **Copie nel codice**: migrazioni (`db/migrations.generated.ts`, tabella `__prisma_migrations`) e prompt
+  (`llm/prompts.generated.ts`; il server da solo legge i file se ci sono). `pnpm --filter @prisma-app/server embed`
+  le rigenera (lo fa la build del desktop); un test controlla che coincidano con i file.
+- **Dal vecchio MySQL** (`db/import-mysql.ts`, una volta): copia tutte le tabelle con gli stessi id (date in ms, JSON
+  in testo) in `%APPDATA%/Prisma/contenuti.db` o in `--to`; rifiuta un database con dati senza `--replace` (che ne
+  tiene una copia `.bak`); controlla le chiavi esterne; per l'app lascia la chiave del vecchio server. Il MySQL non si
+  tocca. Provato sui dati veri: brand, 5 argomenti, 2 idee, 4 contenuti con bozze, revisioni, chat e 9 file esportati,
+  letti poi dall'app senza server avviato.
+
 ## Installazione, intro e aggiornamenti (desktop)
 
 - **Logo**: sorgenti in `design/brand/` (simbolo, icona, `prisma.ico`, LEGGIMI con colori e usi); `apps/desktop/build/`
@@ -341,23 +371,22 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
 - Funzioni piccole, nomi chiari, tipi da `@prisma-app/shared` (che esporta i sorgenti TS direttamente).
 - Import ESM con estensione `.js`; `import type` per i tipi.
 - Test con Vitest accanto al codice (`*.test.ts`) o in `test/`. Mock delle API esterne negli adapter.
-- Test di integrazione (`*.int.test.ts`): usano il MySQL del `.env` dentro `withRollback`
-  (`test/helpers/integration.ts`), una transazione sempre annullata, con orologio fisso `NOW`.
-  Senza `DATABASE_URL` vengono saltati.
+- Test di integrazione (`*.int.test.ts`): un database SQLite in memoria per file, con le migrazioni vere, dentro
+  `withRollback` (`test/helpers/integration.ts`), una transazione sempre annullata, con orologio fisso `NOW`. Girano
+  sempre, anche nella CI.
 
 ## Comandi
 
 ```
 pnpm install
 pnpm lint | pnpm typecheck | pnpm test | pnpm format
-pnpm dev              # server in watch (tsx), legge il .env alla radice
+pnpm dev              # server da solo in watch (tsx), .env alla radice, database data/prisma.db
 pnpm --filter @prisma-app/desktop dev       # app Electron in sviluppo
 pnpm --filter @prisma-app/desktop dev:web   # solo il renderer nel browser (http://localhost:5174)
 pnpm --filter @prisma-app/desktop build     # build di main, preload e renderer in apps/desktop/out
-pnpm db:generate      # nuova migrazione dopo una modifica a apps/server/src/db/schema.ts
-pnpm db:migrate       # applica le migrazioni
-pnpm db:seed          # brand e tag iniziali (idempotente)
-pnpm db:up            # MySQL in Docker, alternativa al MySQL locale
+pnpm db:generate      # nuova migrazione dopo una modifica a schema.ts (e copia nel codice)
+pnpm --filter @prisma-app/server embed            # ricopia prompt e migrazioni nel codice
+pnpm --filter @prisma-app/server db:import-mysql  # una volta: dati dal vecchio MySQL all'app
 ```
 
 ## Server
@@ -367,12 +396,14 @@ pnpm db:up            # MySQL in Docker, alternativa al MySQL locale
 - Auth: hook `onRequest` con bearer token confrontato a tempo costante; pubblico solo `/health`.
 - Errori: `ZodError` → 400, `NotFoundError` → 404, `InvalidTransitionError`/`VersionConflictError`/`ConflictError`/chiave duplicata → 409, `BusinessRuleError` → 422, il resto → 500 senza dettagli.
 - Gli stati cambiano solo tramite `applyVariantTransition` e `applyPublicationTransition`
-  (`modules/*/transitions.ts`): bloccano la riga (`FOR UPDATE`), validano con la macchina a stati
+  (`modules/*/transitions.ts`): leggono la riga nella transazione, validano con la macchina a stati
   condivisa e aggiornano pubblicazione e variant nella stessa transazione. Lo scheduler userà le stesse funzioni.
 - `idempotency_key` = sha256(variant:account:versione approvata): la stessa versione non si programma due volte.
-- UTC: `mysql2` con `timezone: 'Z'` e `SET time_zone = '+00:00'` su ogni connessione (il MySQL locale è in CET,
-  senza la seconda i `CURRENT_TIMESTAMP` dei default sarebbero un'ora avanti).
-- Token cifrati in colonne `bytes` (VARBINARY letto come `Buffer`).
+- Date come `integer` `timestamp_ms` (UTC), `created_at`/`updated_at` impostati da Drizzle; JSON come testo; enum
+  come testo con valori chiusi; token cifrati in colonne `bytes` (BLOB letto come `Buffer`).
+- `runtime.ts` (`createPrismaRuntime(env)`): database con migrazioni e dati iniziali (`seed.ts`: brand «Il mio brand»
+  e 5 argomenti solo a database vuoto), servizi, Fastify, scheduler e metriche. Lo usano `index.ts` (server da solo,
+  apre la porta) e l'app desktop (`core.ts`, senza porta).
 
 ### Brand kit e voce (`modules/brand-kit/`)
 
@@ -510,7 +541,7 @@ Ciclo `runOnce()` ogni `SCHEDULER_POLL_MS` (disattivabile con `SCHEDULER_ENABLED
 
 1. **Recupero**: le pubblicazioni `in_pubblicazione` da più di 30 minuti vanno in `errore` con un messaggio che
    chiede di controllare la piattaforma. Non si ripubblica mai alla cieca: il post potrebbe essere già online.
-2. **Claim**: in una transazione `SELECT … FOR UPDATE SKIP LOCKED` delle pubblicazioni `programmato` con
+2. **Claim**: in una transazione (con SQLite una alla volta: due worker non prendono la stessa riga) delle pubblicazioni `programmato` con
    `next_attempt_at <= now`, poi transizione `start`, `attempts + 1`, `locked_by` e riga in `publication_attempts`.
 3. **Invio** (fuori dalla transazione, in sequenza): se `external_id` è già valorizzato si registra il successo
    senza reinviare; altrimenti adapter, `validate()`, decifratura del token e `publish()` con l'`idempotencyKey`.
@@ -754,10 +785,10 @@ subscribersLost`, `dimensions=day` (gli ultimi giorni arrivano in ritardo). Ness
 
 - pnpm installato globalmente con npm (corepack non ha i permessi su `C:\Program Files\nodejs`).
 - In PowerShell gli script non firmati sono bloccati: usare `pnpm.cmd` (es. `pnpm.cmd dev`).
-- MySQL 8.0 locale (servizio Windows `MySQL80`), Docker non installato.
+- Nessun database da installare: SQLite. Il vecchio MySQL locale (servizio `MySQL80`) serve solo a `db:import-mysql`.
 - Electron: il binario si scarica con lo script di installazione, autorizzato in `pnpm.onlyBuiltDependencies`.
   Se manca `apps/desktop/node_modules/electron/dist`, lanciare `node node_modules/electron/install.js` da `apps/desktop`.
-- `.env` e `db-setup.local.sql` (creazione DB e utente `prisma`) sono generati in locale ed esclusi da git.
+- `.env`, `db-setup.local.sql` (del vecchio MySQL) e `data/` (database del server da solo) sono locali ed esclusi da git.
 
 ## Stato di avanzamento
 
@@ -824,7 +855,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 5a. Pulizia e pubblicazione: Blog API generica (`docs/blog-api.md`), anteprima neutra, nessun riferimento
       personale, AGPL, cronologia nuova, release a ogni push su main, link di download fisso
 - [x] 5b. AI a scelta dell'utente (Impostazioni › AI, servizi compatibili OpenAI, chiave cifrata, ripiego sul .env)
-- [ ] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
+- [x] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
 - [ ] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
 - [ ] 5e. Configurazione guidata al primo avvio
 - [ ] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo

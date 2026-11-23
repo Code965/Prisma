@@ -83,7 +83,10 @@ export async function upsertSocialAccount(
   await db
     .insert(socialAccounts)
     .values({ ...values, status: 'collegato' })
-    .onDuplicateKeyUpdate({ set: { ...updatable, status: 'collegato', lastError: null } });
+    .onConflictDoUpdate({
+      target: [socialAccounts.brandId, socialAccounts.platform, socialAccounts.externalId],
+      set: { ...updatable, status: 'collegato', lastError: null, updatedAt: new Date() },
+    });
   const [row] = await db
     .select({ id: socialAccounts.id })
     .from(socialAccounts)

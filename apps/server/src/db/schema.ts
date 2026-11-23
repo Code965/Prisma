@@ -13,52 +13,59 @@ import {
   type InsightTip,
   AI_PRESETS,
 } from '@prisma-app/shared';
-import { sql } from 'drizzle-orm';
 import {
-  bigint,
   customType,
-  datetime,
   index,
-  int,
-  json,
-  mysqlEnum,
-  mysqlTable,
+  integer,
   primaryKey,
-  smallint,
+  sqliteTable,
   text,
   uniqueIndex,
-  varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/sqlite-core';
 
 // --- Colonne comuni -------------------------------------------------------------------------
+// SQLite: interi per id e numeri, testo per stringhe ed enum (controllati da Zod e dai tipi),
+// JSON come testo, date come millisecondi UTC.
 
-/** VARBINARY letto e scritto come Buffer (il `varbinary` di Drizzle è tipizzato come stringa). */
-const bytes = customType<{ data: Buffer; driverData: Buffer; config: { length: number } }>({
-  dataType: (config) => `varbinary(${config?.length ?? 255})`,
+/** BLOB letto come Buffer (`node:sqlite` restituisce Uint8Array). */
+const bytes = customType<{ data: Buffer; driverData: Uint8Array; config: { length?: number } }>({
+  dataType: () => 'blob',
+  fromDriver: (value) => Buffer.from(value),
+  toDriver: (value) => value,
 });
 
-const id = () => bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey();
+const id = () => integer('id').primaryKey({ autoIncrement: true });
 
-const ref = (name: string) => bigint(name, { mode: 'number', unsigned: true });
+const ref = (name: string) => integer(name);
 
 /** Tutte le date sono UTC con millisecondi. */
-const instant = (name: string) => datetime(name, { mode: 'date', fsp: 3 });
+const instant = (name: string) => integer(name, { mode: 'timestamp_ms' });
+
+/** Testo con un insieme chiuso di valori. */
+const choice = <const T extends readonly [string, ...string[]]>(name: string, values: T) =>
+  text(name, { enum: values });
+
+const varchar = (name: string, _config?: { length: number }) => text(name);
+
+const json = (name: string) => text(name, { mode: 'json' });
+
+const int = (name: string, _config?: { unsigned: boolean }) => integer(name);
 
 const timestamps = {
   createdAt: instant('created_at')
     .notNull()
-    .default(sql`(CURRENT_TIMESTAMP(3))`),
+    .$defaultFn(() => new Date()),
   updatedAt: instant('updated_at')
     .notNull()
-    .default(sql`(CURRENT_TIMESTAMP(3))`)
+    .$defaultFn(() => new Date())
     .$onUpdate(() => new Date()),
 };
 
-const platform = () => mysqlEnum('platform', PLATFORMS).notNull();
+const platform = () => choice('platform', PLATFORMS).notNull();
 
 // --- Brand e account ------------------------------------------------------------------------
 
-export const brands = mysqlTable('brands', {
+export const brands = sqliteTable('brands', {
   id: id(),
   name: varchar('name', { length: 120 }).notNull(),
   initials: varchar('initials', { length: 3 }).notNull(),
@@ -69,7 +76,7 @@ export const brands = mysqlTable('brands', {
 });
 
 /** Post dell'autore che l'LLM deve imitare (sezione «Voce» di Template e brand kit). */
-export const voiceExamples = mysqlTable(
+export const voiceExamples = sqliteTable(
   'voice_examples',
   {
     id: id(),
@@ -84,7 +91,7 @@ export const voiceExamples = mysqlTable(
   (t) => [index('voice_examples_brand').on(t.brandId, t.createdAt)],
 );
 
-export const socialAccounts = mysqlTable(
+export const socialAccounts = sqliteTable(
   'social_accounts',
   {
     id: id(),
@@ -101,7 +108,7 @@ export const socialAccounts = mysqlTable(
     tokenExpiresAt: instant('token_expires_at'),
     refreshTokenExpiresAt: instant('refresh_token_expires_at'),
     scopes: varchar('scopes', { length: 1024 }).notNull().default(''),
-    status: mysqlEnum('status', SOCIAL_ACCOUNT_STATUSES).notNull().default('collegato'),
+    status: choice('status', SOCIAL_ACCOUNT_STATUSES).notNull().default('collegato'),
     lastError: text('last_error'),
     ...timestamps,
   },
@@ -112,7 +119,7 @@ export const socialAccounts = mysqlTable(
 
 // --- Idee -----------------------------------------------------------------------------------
 
-export const tags = mysqlTable(
+export const tags = sqliteTable(
   'tags',
   {
     id: id(),
@@ -125,7 +132,7 @@ export const tags = mysqlTable(
   (t) => [uniqueIndex('tags_brand_name').on(t.brandId, t.name)],
 );
 
-export const ideas = mysqlTable(
+export const ideas = sqliteTable(
   'ideas',
   {
     id: id(),
@@ -133,15 +140,15 @@ export const ideas = mysqlTable(
       .notNull()
       .references(() => brands.id),
     text: text('text').notNull(),
-    source: mysqlEnum('source', IDEA_SOURCES).notNull().default('scritta'),
-    status: mysqlEnum('status', IDEA_STATUSES).notNull().default('nuova'),
+    source: choice('source', IDEA_SOURCES).notNull().default('scritta'),
+    status: choice('status', IDEA_STATUSES).notNull().default('nuova'),
     targetPlatforms: json('target_platforms').$type<Platform[]>().notNull(),
     ...timestamps,
   },
   (t) => [index('ideas_brand_status').on(t.brandId, t.status)],
 );
 
-export const ideaTags = mysqlTable(
+export const ideaTags = sqliteTable(
   'idea_tags',
   {
     ideaId: ref('idea_id')
@@ -156,7 +163,7 @@ export const ideaTags = mysqlTable(
 
 // --- Contenuti e variant --------------------------------------------------------------------
 
-export const contents = mysqlTable(
+export const contents = sqliteTable(
   'contents',
   {
     id: id(),
@@ -170,7 +177,7 @@ export const contents = mysqlTable(
   (t) => [index('contents_brand').on(t.brandId)],
 );
 
-export const variants = mysqlTable(
+export const variants = sqliteTable(
   'variants',
   {
     id: id(),
@@ -178,10 +185,10 @@ export const variants = mysqlTable(
       .notNull()
       .references(() => contents.id, { onDelete: 'cascade' }),
     platform: platform(),
-    format: mysqlEnum('format', VARIANT_FORMATS).notNull(),
+    format: choice('format', VARIANT_FORMATS).notNull(),
     body: text('body').notNull(),
     metadata: json('metadata').$type<VariantMetadata>().notNull(),
-    status: mysqlEnum('status', VARIANT_STATUSES).notNull().default('bozza'),
+    status: choice('status', VARIANT_STATUSES).notNull().default('bozza'),
     /** Lock ottimistico: incrementata a ogni modifica o transizione. */
     version: int('version', { unsigned: true }).notNull().default(0),
     approvedAt: instant('approved_at'),
@@ -193,7 +200,7 @@ export const variants = mysqlTable(
   ],
 );
 
-export const variantRevisions = mysqlTable(
+export const variantRevisions = sqliteTable(
   'variant_revisions',
   {
     id: id(),
@@ -202,7 +209,7 @@ export const variantRevisions = mysqlTable(
       .references(() => variants.id, { onDelete: 'cascade' }),
     body: text('body').notNull(),
     metadata: json('metadata').$type<VariantMetadata>().notNull(),
-    source: mysqlEnum('source', ['llm_generate', 'llm_edit', 'manuale']).notNull(),
+    source: choice('source', ['llm_generate', 'llm_edit', 'manuale']).notNull(),
     /** Istruzione data all'LLM (es. "accorcia l'inizio"), se presente. */
     instruction: text('instruction'),
     createdAt: timestamps.createdAt,
@@ -210,7 +217,7 @@ export const variantRevisions = mysqlTable(
   (t) => [index('variant_revisions_variant').on(t.variantId, t.createdAt)],
 );
 
-export const chatMessages = mysqlTable(
+export const chatMessages = sqliteTable(
   'chat_messages',
   {
     id: id(),
@@ -218,7 +225,7 @@ export const chatMessages = mysqlTable(
       .notNull()
       .references(() => contents.id, { onDelete: 'cascade' }),
     variantId: ref('variant_id').references(() => variants.id, { onDelete: 'set null' }),
-    role: mysqlEnum('role', ['user', 'assistant']).notNull(),
+    role: choice('role', ['user', 'assistant']).notNull(),
     text: text('text').notNull(),
     revisionId: ref('revision_id').references(() => variantRevisions.id, { onDelete: 'set null' }),
     createdAt: timestamps.createdAt,
@@ -228,19 +235,19 @@ export const chatMessages = mysqlTable(
 
 // --- Asset e template -----------------------------------------------------------------------
 
-export const assets = mysqlTable(
+export const assets = sqliteTable(
   'assets',
   {
     id: id(),
     brandId: ref('brand_id')
       .notNull()
       .references(() => brands.id),
-    kind: mysqlEnum('kind', ['image', 'pdf', 'video', 'audio']).notNull(),
+    kind: choice('kind', ['image', 'pdf', 'video', 'audio']).notNull(),
     localPath: varchar('local_path', { length: 1024 }),
     remoteKey: varchar('remote_key', { length: 512 }),
     remoteUrl: varchar('remote_url', { length: 1024 }),
     mime: varchar('mime', { length: 127 }).notNull(),
-    sizeBytes: bigint('size_bytes', { mode: 'number', unsigned: true }).notNull(),
+    sizeBytes: int('size_bytes').notNull(),
     width: int('width', { unsigned: true }),
     height: int('height', { unsigned: true }),
     durationMs: int('duration_ms', { unsigned: true }),
@@ -250,7 +257,7 @@ export const assets = mysqlTable(
   (t) => [index('assets_brand_checksum').on(t.brandId, t.checksumSha256)],
 );
 
-export const variantAssets = mysqlTable(
+export const variantAssets = sqliteTable(
   'variant_assets',
   {
     variantId: ref('variant_id')
@@ -259,18 +266,18 @@ export const variantAssets = mysqlTable(
     assetId: ref('asset_id')
       .notNull()
       .references(() => assets.id),
-    position: smallint('position', { unsigned: true }).notNull().default(0),
-    role: mysqlEnum('role', ['media', 'copertina']).notNull().default('media'),
+    position: int('position').notNull().default(0),
+    role: choice('role', ['media', 'copertina']).notNull().default('media'),
     /** sha256 di `renderInputKey` per i file disegnati dal carosello (export); null per gli altri. */
     renderHash: varchar('render_hash', { length: 64 }),
   },
   (t) => [primaryKey({ columns: [t.variantId, t.assetId, t.role] })],
 );
 
-export const templates = mysqlTable('templates', {
+export const templates = sqliteTable('templates', {
   id: id(),
   brandId: ref('brand_id').references(() => brands.id),
-  kind: mysqlEnum('kind', [
+  kind: choice('kind', [
     'carosello',
     'post',
     'citazione',
@@ -285,7 +292,7 @@ export const templates = mysqlTable('templates', {
 
 // --- Pubblicazioni --------------------------------------------------------------------------
 
-export const publications = mysqlTable(
+export const publications = sqliteTable(
   'publications',
   {
     id: id(),
@@ -296,9 +303,9 @@ export const publications = mysqlTable(
       .notNull()
       .references(() => socialAccounts.id),
     scheduledAt: instant('scheduled_at').notNull(),
-    status: mysqlEnum('status', PUBLICATION_STATUSES).notNull().default('programmato'),
-    attempts: smallint('attempts', { unsigned: true }).notNull().default(0),
-    maxAttempts: smallint('max_attempts', { unsigned: true }).notNull().default(5),
+    status: choice('status', PUBLICATION_STATUSES).notNull().default('programmato'),
+    attempts: int('attempts').notNull().default(0),
+    maxAttempts: int('max_attempts').notNull().default(5),
     /** Prossimo istante utile per il worker: scheduled_at, poi spostato dal backoff. */
     nextAttemptAt: instant('next_attempt_at'),
     lockedBy: varchar('locked_by', { length: 64 }),
@@ -326,17 +333,17 @@ export const publications = mysqlTable(
   ],
 );
 
-export const publicationAttempts = mysqlTable(
+export const publicationAttempts = sqliteTable(
   'publication_attempts',
   {
     id: id(),
     publicationId: ref('publication_id')
       .notNull()
       .references(() => publications.id, { onDelete: 'cascade' }),
-    attemptNo: smallint('attempt_no', { unsigned: true }).notNull(),
+    attemptNo: int('attempt_no').notNull(),
     startedAt: instant('started_at').notNull(),
     finishedAt: instant('finished_at'),
-    outcome: mysqlEnum('outcome', ['successo', 'errore_temporaneo', 'errore_definitivo']),
+    outcome: choice('outcome', ['successo', 'errore_temporaneo', 'errore_definitivo']),
     error: text('error'),
   },
   (t) => [uniqueIndex('publication_attempts_pub_no').on(t.publicationId, t.attemptNo)],
@@ -344,7 +351,7 @@ export const publicationAttempts = mysqlTable(
 
 // --- Metriche -------------------------------------------------------------------------------
 
-export const metricSnapshots = mysqlTable(
+export const metricSnapshots = sqliteTable(
   'metric_snapshots',
   {
     id: id(),
@@ -360,14 +367,14 @@ export const metricSnapshots = mysqlTable(
     shares: int('shares', { unsigned: true }),
     saves: int('saves', { unsigned: true }),
     /** `api` dalla piattaforma, `manuale` inserito dall'autore (LinkedIn). */
-    source: mysqlEnum('source', METRIC_SOURCES).notNull().default('api'),
+    source: choice('source', METRIC_SOURCES).notNull().default('api'),
     raw: json('raw'),
   },
   (t) => [index('metric_snapshots_pub_time').on(t.publicationId, t.capturedAt)],
 );
 
 /** Suggerimenti settimanali dell'AI (fase 4d): uno per tipo, in JSON. */
-export const analyticsInsights = mysqlTable(
+export const analyticsInsights = sqliteTable(
   'analytics_insights',
   {
     id: id(),
@@ -384,7 +391,7 @@ export const analyticsInsights = mysqlTable(
   (t) => [index('analytics_insights_brand_time').on(t.brandId, t.createdAt)],
 );
 
-export const accountMetricSnapshots = mysqlTable(
+export const accountMetricSnapshots = sqliteTable(
   'account_metric_snapshots',
   {
     id: id(),
@@ -413,9 +420,9 @@ export const accountMetricSnapshots = mysqlTable(
  * Servizio AI scelto dall'utente (una sola riga, id = 1). La chiave è cifrata come i token delle
  * piattaforme; senza riga si usa il ripiego del .env.
  */
-export const aiSettings = mysqlTable('ai_settings', {
-  id: smallint('id', { unsigned: true }).primaryKey(),
-  preset: mysqlEnum('preset', AI_PRESETS).notNull(),
+export const aiSettings = sqliteTable('ai_settings', {
+  id: integer('id').primaryKey(),
+  preset: choice('preset', AI_PRESETS).notNull(),
   baseUrl: varchar('base_url', { length: 500 }).notNull(),
   model: varchar('model', { length: 200 }).notNull(),
   apiKeyEnc: bytes('api_key_enc', { length: 2048 }),

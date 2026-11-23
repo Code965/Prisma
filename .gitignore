@@ -16,3 +16,5 @@ prisma-logo.zip
 # Installer e pacchetti di aggiornamento generati da electron-builder
 apps/desktop/release/
 CLAUDE.local.md
+# Database SQLite del server da solo (pnpm dev)
+data/

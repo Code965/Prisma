@@ -28,7 +28,7 @@ export async function countTagsOfBrand(
 }
 
 export async function insertTag(db: DbExecutor, brandId: number, name: string): Promise<number> {
-  const [created] = await db.insert(tags).values({ brandId, name }).$returningId();
+  const [created] = await db.insert(tags).values({ brandId, name }).returning({ id: tags.id });
   if (!created) throw new Error('Inserimento tag fallito');
   return created.id;
 }

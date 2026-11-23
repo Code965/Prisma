@@ -27,7 +27,7 @@ export async function findBrand(db: DbExecutor, id: number): Promise<Brand | nul
 }
 
 export async function insertBrand(db: DbExecutor, input: BrandInput): Promise<number> {
-  const [created] = await db.insert(brands).values(input).$returningId();
+  const [created] = await db.insert(brands).values(input).returning({ id: brands.id });
   if (!created) throw new Error('Inserimento brand fallito');
   return created.id;
 }

@@ -50,6 +50,9 @@ importers:
       '@fontsource/jetbrains-mono':
         specifier: ^5.3.0
         version: 5.3.0
+      '@prisma-app/server':
+        specifier: workspace:*
+        version: link:../server
       '@prisma-app/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -122,9 +125,6 @@ importers:
       fastify-plugin:
         specifier: ^6.0.1
         version: 6.0.1
-      mysql2:
-        specifier: ^3.24.6
-        version: 3.24.6(@types/node@24.19.2)
       openai:
         specifier: ^7.62.0
         version: 7.62.0(@aws-sdk/credential-provider-node@3.972.98)(@smithy/signature-v4@5.7.5)(undici@7.30.2)(ws@8.23.0)(zod@4.6.7)
@@ -141,6 +141,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
+      mysql2:
+        specifier: ^3.24.6
+        version: 3.24.6(@types/node@24.19.2)
       tsup:
         specifier: ^9.0.0
         version: 9.0.0(jiti@2.7.0)(postcss@8.5.33)(tsx@4.23.15)(typescript@5.9.3)

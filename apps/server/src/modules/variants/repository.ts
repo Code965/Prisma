@@ -41,14 +41,15 @@ function toRevision(row: RevisionRow): VariantRevision {
   };
 }
 
-/** Con `forUpdate` la riga resta bloccata fino alla fine della transazione. */
 export async function findVariantRow(
   db: DbExecutor,
   id: number,
-  options: { forUpdate?: boolean } = {},
+  // Con SQLite le transazioni sono già una alla volta (coda in db/client.ts): il blocco della
+  // riga che serviva con MySQL non c'è più; l'opzione resta per chi la passa.
+  _options: { forUpdate?: boolean } = {},
 ): Promise<VariantRow | null> {
   const query = db.select().from(variants).where(eq(variants.id, id));
-  const [row] = options.forUpdate ? await query.for('update') : await query;
+  const [row] = await query;
   return row ?? null;
 }
 
@@ -79,7 +80,7 @@ export async function insertVariant(
     metadata: VariantMetadata;
   },
 ): Promise<number> {
-  const [created] = await db.insert(variants).values(values).$returningId();
+  const [created] = await db.insert(variants).values(values).returning({ id: variants.id });
   if (!created) throw new Error('Inserimento variant fallito');
   return created.id;
 }
@@ -133,7 +134,10 @@ export async function insertRevision(
     instruction?: string | null;
   },
 ): Promise<number> {
-  const [created] = await db.insert(variantRevisions).values(values).$returningId();
+  const [created] = await db
+    .insert(variantRevisions)
+    .values(values)
+    .returning({ id: variantRevisions.id });
   if (!created) throw new Error('Inserimento revisione fallito');
   return created.id;
 }

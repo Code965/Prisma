@@ -83,7 +83,7 @@ function AiSettingsForm({ view }: { view: AiSettingsView }) {
               type="button"
               role="radio"
               aria-checked={active}
-              className={`${styles.preset} ${active ? styles.brandOn : ''}`}
+              className={`${styles.preset} ${active ? styles.presetOn : ''}`}
               onClick={() => {
                 test.reset();
                 setForm((current) => switchPreset(current, preset));

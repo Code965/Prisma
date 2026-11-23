@@ -142,7 +142,10 @@ export async function upsertAccountDay(
   await db
     .insert(accountMetricSnapshots)
     .values({ socialAccountId, day: metrics.day, capturedAt, ...values, raw: metrics.raw ?? null })
-    .onDuplicateKeyUpdate({ set: { ...update, capturedAt } });
+    .onConflictDoUpdate({
+      target: [accountMetricSnapshots.socialAccountId, accountMetricSnapshots.day],
+      set: { ...update, capturedAt },
+    });
 }
 
 export async function updateExternal(

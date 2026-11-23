@@ -9,10 +9,9 @@ export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
  */
 export type DbExecutor = Database | Transaction;
 
-/** Numero di righe toccate da un UPDATE/DELETE con il driver mysql2. */
+/** Numero di righe toccate da un UPDATE/DELETE (`changes` di `node:sqlite`, vedi db/client.ts). */
 export function affectedRows(result: unknown): number {
-  const header = Array.isArray(result) ? result[0] : result;
-  return (header as { affectedRows?: number }).affectedRows ?? 0;
+  return (result as { changes?: number } | undefined)?.changes ?? 0;
 }
 
 export function toIso(date: Date): string {

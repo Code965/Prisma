@@ -84,6 +84,6 @@ export function aiStatusLabel(view: AiSettingsView): string {
   if (view.source === 'nessuna' || !view.preset) {
     return 'Nessuna AI configurata: generazione e modifica dei contenuti non sono disponibili';
   }
-  const where = view.source === 'env' ? ' · dal file .env del server' : '';
+  const where = view.source === 'env' ? ' · dal file .env (ripiego)' : '';
   return `In uso: ${AI_PRESET_INFO[view.preset].label} · ${view.model ?? ''}${where}`;
 }

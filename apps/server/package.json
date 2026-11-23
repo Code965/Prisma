@@ -4,15 +4,19 @@
   "license": "AGPL-3.0-only",
   "private": true,
   "type": "module",
+  "exports": {
+    "./runtime": "./src/runtime.ts",
+    "./config": "./src/config/env.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx src/db/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:generate": "drizzle-kit generate && tsx src/db/generate-migrations.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:import-mysql": "tsx src/db/import-mysql.ts",
+    "embed": "tsx src/llm/generate-prompts.ts && tsx src/db/generate-migrations.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1175.0",
@@ -22,7 +26,6 @@
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
     "fastify-plugin": "^6.0.1",
-    "mysql2": "^3.24.6",
     "openai": "^7.62.0",
     "sanitize-html": "^2.18.2",
     "zod": "^4.6.7"
@@ -30,6 +33,7 @@
   "devDependencies": {
     "@types/sanitize-html": "^2.16.2",
     "drizzle-kit": "^0.31.11",
+    "mysql2": "^3.24.6",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15"
   }

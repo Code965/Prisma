@@ -44,6 +44,7 @@ export const IPC = {
   updateDismiss: 'updates:dismiss',
   updateSkip: 'updates:skip',
   updateInstall: 'updates:install',
+  restartApp: 'app:restart',
 } as const;
 
 /** Evento dal main al renderer quando cambia lo stato degli aggiornamenti. */
@@ -52,18 +53,28 @@ export const UPDATE_STATE_EVENT = 'updates:changed';
 /** Evento dal main al renderer con l'avanzamento dei lavori sui video. */
 export const VIDEO_PROGRESS_EVENT = 'video:progress';
 
+/** Dove stanno i dati: dentro l'app (predefinito) o su un server Prisma separato. */
+export const CONNECTION_MODES = ['locale', 'remoto'] as const;
+export type ConnectionMode = (typeof CONNECTION_MODES)[number];
+
 export const ConnectionSettingsSchema = z.object({
+  mode: z.enum(CONNECTION_MODES).default('locale'),
   serverUrl: z.url().refine((url) => /^https?:\/\//.test(url), 'Serve un indirizzo http o https'),
   /** Assente = lascia invariato il token salvato. */
   apiToken: z.string().trim().min(32).optional(),
 });
-export type ConnectionSettingsInput = z.infer<typeof ConnectionSettingsSchema>;
+export type ConnectionSettingsInput = z.input<typeof ConnectionSettingsSchema>;
 
 export interface ConnectionSettingsView {
+  mode: ConnectionMode;
   serverUrl: string;
   hasToken: boolean;
   /** Da dove arriva il token: salvato cifrato, oppure letto dal .env in sviluppo. */
   tokenSource: 'salvato' | 'env-sviluppo' | 'assente';
+  /** Modalità in uso adesso: cambia solo dopo il riavvio dell'app. */
+  activeMode: ConnectionMode;
+  /** File del database quando i dati stanno sul computer. */
+  databasePath: string | null;
 }
 
 export const ApiRequestSchema = z.object({

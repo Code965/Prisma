@@ -96,10 +96,12 @@ export async function findPublicationView(
 export async function findPublicationRow(
   db: DbExecutor,
   id: number,
-  options: { forUpdate?: boolean } = {},
+  // Con SQLite le transazioni sono già una alla volta (coda in db/client.ts): il blocco della
+  // riga che serviva con MySQL non c'è più; l'opzione resta per chi la passa.
+  _options: { forUpdate?: boolean } = {},
 ): Promise<PublicationRow | null> {
   const query = db.select().from(publications).where(eq(publications.id, id));
-  const [row] = options.forUpdate ? await query.for('update') : await query;
+  const [row] = await query;
   return row ?? null;
 }
 
@@ -115,7 +117,7 @@ export async function insertPublication(
   const [created] = await db
     .insert(publications)
     .values({ ...values, status: 'programmato', nextAttemptAt: values.scheduledAt })
-    .$returningId();
+    .returning({ id: publications.id });
   if (!created) throw new Error('Inserimento pubblicazione fallito');
   return created.id;
 }

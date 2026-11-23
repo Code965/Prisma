@@ -15,12 +15,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:up": "docker compose up -d mysql",
-    "db:down": "docker compose down",
     "dev": "pnpm --filter @prisma-app/server dev",
-    "db:generate": "pnpm --filter @prisma-app/server db:generate",
-    "db:migrate": "pnpm --filter @prisma-app/server db:migrate",
-    "db:seed": "pnpm --filter @prisma-app/server db:seed"
+    "db:generate": "pnpm --filter @prisma-app/server db:generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

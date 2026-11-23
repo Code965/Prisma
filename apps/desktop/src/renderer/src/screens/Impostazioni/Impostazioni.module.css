@@ -231,6 +231,13 @@
   cursor: pointer;
 }
 
+.presetOn {
+  border: 2px solid var(--accent);
+  background: var(--accentSoft);
+  /* Il bordo più spesso non deve spostare il contenuto. */
+  padding: 8px 11px;
+}
+
 .presetTag {
   font-size: 11.5px;
   color: var(--muted);

@@ -1,1 +1,0 @@
-ALTER TABLE `variant_assets` ADD `render_hash` varchar(64);

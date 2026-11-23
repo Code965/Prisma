@@ -53,7 +53,7 @@ export async function insertVoiceExample(
   const [created] = await db
     .insert(voiceExamples)
     .values({ brandId, ...input })
-    .$returningId();
+    .returning({ id: voiceExamples.id });
   if (!created) throw new Error('Inserimento esempio di voce fallito');
   return created.id;
 }

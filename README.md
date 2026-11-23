@@ -35,8 +35,8 @@ Come la luce in un prisma: un’idea entra al centro ed esce divisa in quattro f
 
 ## Come è fatto
 
-- **App desktop** (Windows): Electron + React. Lavora in locale su video e file, con FFmpeg, whisper.cpp e FilmCraft installati sul PC.
-- **Server** (VPS): Fastify + MySQL. Tiene i token delle piattaforme (cifrati), chiama l’AI che scegli tu (Ollama o LM Studio gratis sul tuo PC, oppure DeepSeek, OpenAI, OpenRouter… con la tua chiave) e fa girare lo scheduler.
+- **App desktop** (Windows): Electron + React. Tutto gira sul tuo PC: i dati stanno in un database SQLite nella cartella dell’app, e video e file si lavorano con FFmpeg, whisper.cpp e FilmCraft.
+- **Motore** (dentro l’app): Fastify + SQLite. Tiene i token delle piattaforme (cifrati), chiama l’AI che scegli tu (Ollama o LM Studio gratis sul tuo PC, oppure DeepSeek, OpenAI, OpenRouter… con la tua chiave) e fa girare lo scheduler.
 - **Piattaforme**: API ufficiali di LinkedIn, Instagram, YouTube e TikTok, più la [Blog API](docs/blog-api.md) per pubblicare sul tuo blog personale. File da pubblicare su Cloudflare R2.
 
 Dettagli tecnici, scelte e stato dei lavori sono in [CLAUDE.md](CLAUDE.md).
@@ -50,7 +50,8 @@ Dettagli tecnici, scelte e stato dei lavori sono in [CLAUDE.md](CLAUDE.md).
 2. Apri il file: Prisma si installa per il tuo utente, senza permessi di amministratore, e crea il
    collegamento nel menu Start e sul desktop.
 
-Al primo avvio, in **Impostazioni › Server**, inserisci l’indirizzo del server e il token API.
+Al primo avvio non c’è nulla da configurare per i dati: stanno sul tuo PC. In **Impostazioni › AI** scegli il
+servizio che scrive le bozze (Ollama gratis sul PC, oppure DeepSeek, OpenAI, OpenRouter… con la tua chiave).
 
 Windows potrebbe mostrare «Editore sconosciuto»: l’installer non è firmato. Scegli _Ulteriori
 informazioni › Esegui comunque_.
@@ -82,8 +83,8 @@ Serve Node ≥ 22 e pnpm.
 
 ```powershell
 pnpm.cmd install
-pnpm.cmd dev                                    # server (legge il .env alla radice)
-pnpm.cmd --filter @prisma-app/desktop dev       # app desktop
+pnpm.cmd --filter @prisma-app/desktop dev       # app desktop (il server è dentro)
+pnpm.cmd dev                                    # solo il server, per l’anteprima nel browser
 pnpm.cmd lint; pnpm.cmd typecheck; pnpm.cmd test
 ```
 

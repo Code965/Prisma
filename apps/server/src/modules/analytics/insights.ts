@@ -212,7 +212,7 @@ export function createInsightsService(deps: InsightsDeps) {
         tips: generated.tips,
         createdAt,
       })
-      .$returningId();
+      .returning({ id: analyticsInsights.id });
     return {
       id: row!.id,
       createdAt: createdAt.toISOString(),

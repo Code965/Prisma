@@ -3,9 +3,9 @@ import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fas
 import type { Platform } from '@prisma-app/shared';
 import { buildApp } from '../../src/app.js';
 import { randomBytes } from 'node:crypto';
-import { loadDotEnv } from '../../src/config/env.js';
 import { createTokenCipher, tokenContext } from '../../src/crypto/token-cipher.js';
 import { createDatabase, type Database } from '../../src/db/client.js';
+import { applyMigrations } from '../../src/db/migrations.js';
 import type { Transaction } from '../../src/db/executor.js';
 import { brands, socialAccounts } from '../../src/db/schema.js';
 import type { LlmProvider } from '../../src/llm/types.js';
@@ -19,9 +19,11 @@ import type { BlogConnectionConfig } from '../../src/modules/blog-connection/ser
 import type { LinkedInOAuthConfig } from '../../src/modules/oauth/linkedin-service.js';
 import { createServices } from '../../src/services.js';
 
-loadDotEnv();
-
-export const databaseUrl = process.env.DATABASE_URL;
+/**
+ * I test di integrazione usano un database SQLite in memoria, uno per file di test, con le
+ * migrazioni vere: girano sempre, anche nella CI. (Il nome resta per i `describe.skipIf`.)
+ */
+export const databaseUrl = ':memory:';
 export const TEST_TOKEN = 't'.repeat(64);
 /** Orologio fisso: le date dei test non dipendono da quando girano. */
 export const NOW = new Date('2026-11-21T12:00:00.000Z');
@@ -45,16 +47,18 @@ export function accountExternalId(platform: Platform, brandId: number): string {
   return `ext-${platform}-${brandId}`;
 }
 
-let database: { db: Database; pool: { end: () => Promise<void> } } | undefined;
+let database: ReturnType<typeof createDatabase> | undefined;
 
-function getDatabase(): Database {
-  if (!databaseUrl) throw new Error('DATABASE_URL mancante');
-  database ??= createDatabase(databaseUrl);
+export function getDatabase(): Database {
+  if (!database) {
+    database = createDatabase(':memory:');
+    applyMigrations(database.sqlite);
+  }
   return database.db;
 }
 
 export async function closeDatabase(): Promise<void> {
-  await database?.pool.end();
+  database?.close();
   database = undefined;
 }
 
@@ -111,7 +115,7 @@ export async function withRollback(
             const [row] = await tx
               .insert(brands)
               .values({ name: 'Brand di test', initials: 'BT' })
-              .$returningId();
+              .returning({ id: brands.id });
             return row!.id;
           },
           createAccount: async (brandId, platform) => {
@@ -128,7 +132,7 @@ export async function withRollback(
                   tokenContext(platform, externalId),
                 ),
               })
-              .$returningId();
+              .returning({ id: socialAccounts.id });
             return row!.id;
           },
         });

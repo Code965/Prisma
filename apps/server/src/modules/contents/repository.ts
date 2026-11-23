@@ -34,7 +34,7 @@ export async function insertContent(
   db: DbExecutor,
   values: { brandId: number; ideaId: number | null; title: string },
 ): Promise<number> {
-  const [created] = await db.insert(contents).values(values).$returningId();
+  const [created] = await db.insert(contents).values(values).returning({ id: contents.id });
   if (!created) throw new Error('Inserimento contenuto fallito');
   return created.id;
 }

@@ -1,11 +1,18 @@
 import { app, safeStorage } from 'electron';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { ConnectionSettingsInput, ConnectionSettingsView } from './ipc-contract.js';
+import { CORE_DATABASE } from './core.js';
+import type {
+  ConnectionMode,
+  ConnectionSettingsInput,
+  ConnectionSettingsView,
+} from './ipc-contract.js';
 
 const DEFAULT_SERVER_URL = 'http://127.0.0.1:4000';
 
 interface StoredSettings {
+  /** Assente nelle impostazioni salvate prima del passo 5c: vale `locale`. */
+  mode?: ConnectionMode;
   serverUrl: string;
   /** Token API cifrato con safeStorage (DPAPI su Windows), in base64. */
   apiTokenEnc?: string;
@@ -18,7 +25,11 @@ function settingsPath(): string {
 function readStored(): StoredSettings {
   try {
     const parsed = JSON.parse(readFileSync(settingsPath(), 'utf8')) as Partial<StoredSettings>;
-    return { serverUrl: parsed.serverUrl ?? DEFAULT_SERVER_URL, apiTokenEnc: parsed.apiTokenEnc };
+    return {
+      mode: parsed.mode === 'remoto' ? 'remoto' : 'locale',
+      serverUrl: parsed.serverUrl ?? DEFAULT_SERVER_URL,
+      apiTokenEnc: parsed.apiTokenEnc,
+    };
   } catch {
     return { serverUrl: DEFAULT_SERVER_URL };
   }
@@ -45,6 +56,14 @@ function decryptToken(stored: StoredSettings): string | null {
   }
 }
 
+/** Modalità letta all'avvio: è quella in uso finché l'app non si riavvia. */
+let activeMode: ConnectionMode | null = null;
+
+export function startupMode(): ConnectionMode {
+  activeMode ??= readStored().mode ?? 'locale';
+  return activeMode;
+}
+
 export function getConnection(): { serverUrl: string; apiToken: string | null } {
   const stored = readStored();
   return { serverUrl: stored.serverUrl, apiToken: decryptToken(stored) ?? devTokenFromEnv() };
@@ -54,16 +73,24 @@ export function getSettingsView(): ConnectionSettingsView {
   const stored = readStored();
   const saved = decryptToken(stored);
   const fromEnv = saved ? null : devTokenFromEnv();
+  const mode = stored.mode ?? 'locale';
   return {
+    mode,
+    activeMode: startupMode(),
     serverUrl: stored.serverUrl,
     hasToken: Boolean(saved ?? fromEnv),
     tokenSource: saved ? 'salvato' : fromEnv ? 'env-sviluppo' : 'assente',
+    databasePath: join(app.getPath('userData'), CORE_DATABASE),
   };
 }
 
 export function saveSettings(input: ConnectionSettingsInput): ConnectionSettingsView {
   const stored = readStored();
-  const next: StoredSettings = { ...stored, serverUrl: input.serverUrl.replace(/\/+$/, '') };
+  const next: StoredSettings = {
+    ...stored,
+    mode: input.mode ?? 'locale',
+    serverUrl: input.serverUrl.replace(/\/+$/, ''),
+  };
   if (input.apiToken) {
     if (!safeStorage.isEncryptionAvailable()) {
       throw new Error('Archivio credenziali del sistema non disponibile: token non salvato');

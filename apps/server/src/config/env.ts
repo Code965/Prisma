@@ -14,7 +14,8 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
   HOST: z.string().default('127.0.0.1'),
-  DATABASE_URL: z.url().refine((url) => url.startsWith('mysql://'), 'Deve essere un URL mysql://'),
+  /** File SQLite del database (creato al primo avvio). Relativo alla cartella da cui si avvia. */
+  DATABASE_PATH: z.string().min(1).default('data/prisma.db'),
   API_TOKEN: z.string().min(32, 'Usa almeno 32 caratteri (openssl rand -hex 32)'),
   TOKEN_ENCRYPTION_KEY: base64Key32,
   SCHEDULER_ENABLED: z
@@ -90,6 +91,11 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     throw new Error(`Configurazione non valida:\n${problems}`);
   }
   return result.data;
+}
+
+/** Radice del monorepo (dove stanno .env e la cartella data/ del server da solo). */
+export function repoRoot(): string {
+  return resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 }
 
 /** Carica il .env alla radice del monorepo, se esiste. Le variabili già impostate hanno la precedenza. */

@@ -1,13 +1,11 @@
 import { defineConfig } from 'drizzle-kit';
-import { loadDotEnv } from './src/config/env.js';
 
-loadDotEnv();
-
+// Solo per generare le migrazioni (`pnpm db:generate`): il database è un file SQLite e le
+// migrazioni le applica il server all'avvio (src/db/migrations.ts).
 export default defineConfig({
-  dialect: 'mysql',
+  dialect: 'sqlite',
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dbCredentials: { url: process.env.DATABASE_URL ?? '' },
   strict: true,
   verbose: true,
 });

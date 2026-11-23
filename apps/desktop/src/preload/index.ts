@@ -53,6 +53,7 @@ const CHANNELS = {
   updateSkip: 'updates:skip',
   updateInstall: 'updates:install',
   updateChanged: 'updates:changed',
+  restartApp: 'app:restart',
 } as const;
 
 /**
@@ -69,6 +70,8 @@ const api = {
   request: (request: ApiRequest): Promise<ApiResponse> =>
     ipcRenderer.invoke(CHANNELS.apiRequest, request),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke(CHANNELS.openExternal, url),
+  /** Riavvia Prisma (cambio tra dati sul computer e server remoto). */
+  restart: (): Promise<void> => ipcRenderer.invoke(CHANNELS.restartApp),
   exportCarousel: (request: ExportCarouselRequest): Promise<ExportCarouselResult> =>
     ipcRenderer.invoke(CHANNELS.exportCarousel, request),
   showExport: (path: string): Promise<void> => ipcRenderer.invoke(CHANNELS.showExport, path),

@@ -144,7 +144,7 @@ export function createAiSettingsService(deps: { db: DbExecutor; config: AiSettin
       await deps.db
         .insert(aiSettings)
         .values({ id: ROW_ID, ...values })
-        .onDuplicateKeyUpdate({ set: values });
+        .onConflictDoUpdate({ target: aiSettings.id, set: { ...values, updatedAt: new Date() } });
       return view();
     },
 

@@ -82,7 +82,7 @@ export async function insertAsset(
   db: DbExecutor,
   values: typeof assets.$inferInsert,
 ): Promise<number> {
-  const [created] = await db.insert(assets).values(values).$returningId();
+  const [created] = await db.insert(assets).values(values).returning({ id: assets.id });
   if (!created) throw new Error('Inserimento asset fallito');
   return created.id;
 }

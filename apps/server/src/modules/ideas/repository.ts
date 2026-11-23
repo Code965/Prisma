@@ -78,7 +78,7 @@ export async function insertIdea(
   db: DbExecutor,
   values: { brandId: number; text: string; source: IdeaSource; targetPlatforms: Platform[] },
 ): Promise<number> {
-  const [created] = await db.insert(ideas).values(values).$returningId();
+  const [created] = await db.insert(ideas).values(values).returning({ id: ideas.id });
   if (!created) throw new Error('Inserimento idea fallito');
   return created.id;
 }

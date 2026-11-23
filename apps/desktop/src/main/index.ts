@@ -6,7 +6,9 @@ import { SLIDE_FONT_FILES } from './export/font-files.js';
 import { embeddedFontFaceCss } from './export/fonts.js';
 import { SPLASH_BACKGROUND, SPLASH_MIN_MS, SPLASH_SIZE, splashDataUrl } from './splash.js';
 import { registerUpdates } from './updates.js';
-import { registerIpcHandlers } from './ipc.js';
+import { startCore, type Core } from './core.js';
+import { registerIpcHandlers, setCore } from './ipc.js';
+import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
 import { LocalStore } from './video/store.js';
 import { VIDEO_PROGRESS_EVENT } from './ipc-contract.js';
@@ -117,6 +119,14 @@ void app.whenReady().then(async () => {
     return null;
   });
   const userDataDir = app.getPath('userData');
+  // Dati sul computer (predefinito): il server di Prisma parte qui dentro, mentre c'è l'intro.
+  let core: Promise<Core> | null = null;
+  if (startupMode() === 'locale') {
+    core = startCore(userDataDir);
+    core.catch((error: unknown) => console.error('Avvio dei dati non riuscito:', error));
+    app.once('before-quit', () => void core?.then((started) => started.stop()).catch(() => {}));
+  }
+  setCore(core);
   const store = new LocalStore(join(userDataDir, 'prisma.db'));
   const video = createVideoService({ userDataDir, store });
   handleMediaProtocol(video.sourcePathOf);

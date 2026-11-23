@@ -23,15 +23,46 @@ import {
   ConnectionSettingsSchema,
   ExternalUrlSchema,
   IPC,
+  type ApiRequest,
   type ApiResponse,
 } from './ipc-contract.js';
-import { getConnection, getSettingsView, saveSettings } from './settings.js';
+import type { Core } from './core.js';
+import { getConnection, getSettingsView, saveSettings, startupMode } from './settings.js';
 
 const REQUEST_TIMEOUT_MS = 180_000; // la generazione con l'LLM può richiedere tempo
 
-/** Inoltra una richiesta al server aggiungendo il token: il renderer non lo vede mai. */
+/**
+ * Server dentro l'app (modalità `locale`): avviato all'apertura in `index.ts`. Null se i dati
+ * stanno su un server remoto.
+ */
+let core: Promise<Core> | null = null;
+
+export function setCore(started: Promise<Core> | null): void {
+  core = started;
+}
+
+/** Richiesta dell'interfaccia: al server dentro l'app o a quello remoto. */
 async function forwardToServer(input: unknown): Promise<ApiResponse> {
   const request = ApiRequestSchema.parse(input);
+  if (startupMode() === 'locale') {
+    if (!core) {
+      return { status: 0, body: { error: 'non_avviato', message: 'Prisma si sta avviando…' } };
+    }
+    try {
+      return await (await core).request(request);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return {
+        status: 0,
+        body: { error: 'avvio_non_riuscito', message: `Avvio dei dati non riuscito: ${detail}` },
+      };
+    }
+  }
+  return forwardToRemote(request);
+}
+
+/** Inoltra una richiesta al server remoto aggiungendo il token: il renderer non lo vede mai. */
+async function forwardToRemote(request: ApiRequest): Promise<ApiResponse> {
   const { serverUrl, apiToken } = getConnection();
   if (!apiToken) {
     return {
@@ -93,6 +124,11 @@ export function registerIpcHandlers(
     saveSettings(ConnectionSettingsSchema.parse(input)),
   );
   ipcMain.handle(IPC.apiRequest, (_event, input: unknown) => forwardToServer(input));
+  // Dopo il cambio tra dati sul computer e server remoto.
+  ipcMain.handle(IPC.restartApp, () => {
+    app.relaunch();
+    app.exit(0);
+  });
   ipcMain.handle(IPC.openExternal, async (_event, url: unknown) => {
     await shell.openExternal(ExternalUrlSchema.parse(url));
   });

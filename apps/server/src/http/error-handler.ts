@@ -52,7 +52,10 @@ export class NotConfiguredError extends Error {
 export function isDuplicateKeyError(error: unknown): boolean {
   let current: unknown = error;
   for (let depth = 0; current && depth < 5; depth++) {
-    if ((current as { code?: string }).code === 'ER_DUP_ENTRY') return true;
+    // node:sqlite: SQLITE_CONSTRAINT_UNIQUE (2067) o PRIMARYKEY (1555), con il messaggio di SQLite.
+    const { errcode, message } = current as { errcode?: number; message?: string };
+    if (errcode === 2067 || errcode === 1555) return true;
+    if (typeof message === 'string' && /UNIQUE constraint failed/.test(message)) return true;
     current = (current as { cause?: unknown }).cause;
   }
   return false;

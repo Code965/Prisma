@@ -10,8 +10,9 @@ export interface ClaimCandidate {
 }
 
 /**
- * Pubblicazioni scadute da prendere in carico. `SKIP LOCKED` fa sì che due worker in parallelo
- * non prendano mai la stessa riga: quelle già bloccate da un altro vengono saltate, non attese.
+ * Pubblicazioni scadute da prendere in carico. Il claim avviene in una transazione e con SQLite
+ * le transazioni sono una alla volta (db/client.ts): due worker non prendono mai la stessa riga,
+ * perché il secondo la trova già `in_pubblicazione`.
  */
 export async function selectDueForUpdate(
   tx: DbExecutor,
@@ -38,8 +39,7 @@ export async function selectDueForUpdate(
       ),
     )
     .orderBy(asc(publications.nextAttemptAt), asc(publications.id))
-    .limit(limit)
-    .for('update', { skipLocked: true });
+    .limit(limit);
 }
 
 /**
@@ -64,8 +64,7 @@ export async function selectStaleForUpdate(
         inArray(variants.platform, [...platforms]),
       ),
     )
-    .limit(limit)
-    .for('update', { skipLocked: true });
+    .limit(limit);
 }
 
 export async function insertAttempt(
@@ -139,8 +138,7 @@ export async function selectPreparableForUpdate(
       ),
     )
     .orderBy(asc(publications.scheduledAt), asc(publications.id))
-    .limit(1)
-    .for('update', { skipLocked: true });
+    .limit(1);
   return row ?? null;
 }
 

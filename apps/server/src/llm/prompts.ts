@@ -1,16 +1,18 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { EMBEDDED_PROMPTS } from './prompts.generated.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-/** I prompt stanno in apps/server/prompts, sia eseguendo da src/llm sia dal bundle in dist. */
-function defaultPromptsDir(): string {
+/**
+ * I prompt stanno in apps/server/prompts: eseguendo da src/llm o dal bundle in dist si leggono i
+ * file (una modifica vale subito). Dentro l'app desktop la cartella non c'è e si usano quelli
+ * copiati nel codice (`prompts.generated.ts`).
+ */
+function defaultPromptsDir(): string | null {
   const candidates = [resolve(here, '../../prompts'), resolve(here, '../prompts')];
-  const found = candidates.find((dir) => existsSync(resolve(dir, 'generate-variants.system.md')));
-  if (!found)
-    throw new Error(`Cartella dei prompt non trovata (cercata in: ${candidates.join(', ')})`);
-  return found;
+  return candidates.find((dir) => existsSync(resolve(dir, 'generate-variants.system.md'))) ?? null;
 }
 
 export type PromptVariables = Record<string, string>;
@@ -29,12 +31,17 @@ export interface PromptLibrary {
   render(name: string, variables?: PromptVariables): string;
 }
 
-export function createPromptLibrary(dir: string = defaultPromptsDir()): PromptLibrary {
+export function createPromptLibrary(dir: string | null = defaultPromptsDir()): PromptLibrary {
   const cache = new Map<string, string>();
   const read = (name: string): string => {
     let template = cache.get(name);
     if (template === undefined) {
-      template = readFileSync(resolve(dir, `${name}.md`), 'utf8');
+      if (dir) {
+        template = readFileSync(resolve(dir, `${name}.md`), 'utf8');
+      } else {
+        template = EMBEDDED_PROMPTS[name];
+        if (template === undefined) throw new Error(`Prompt sconosciuto: ${name}`);
+      }
       cache.set(name, template);
     }
     return template;
