@@ -1,5 +1,7 @@
 import { Page } from '../../components/Page/Page';
 import { useBrand } from '../../hooks/brand';
+import { useOpenSetup } from '../../hooks/setup-context';
+import { Button } from '../../components/Button/Button';
 import { AccountsSection } from './AccountsSection';
 import { AiSettingsSection } from './AiSettingsSection';
 import { BackgroundSection } from './BackgroundSection';
@@ -11,6 +13,7 @@ import styles from './Impostazioni.module.css';
 /** Impostazioni (V3Impostazioni), per ora con le parti che servono alla fase 1. */
 export function ImpostazioniScreen() {
   const { brand, brands, selectBrand } = useBrand();
+  const openSetup = useOpenSetup();
 
   return (
     <Page title="Impostazioni">
@@ -49,6 +52,12 @@ export function ImpostazioniScreen() {
             );
           })}
           {brands.length === 0 && <span className={styles.sectionHint}>Nessun brand caricato</span>}
+        </div>
+        <div className={styles.buttons}>
+          <Button variant="secondary" size={32} onClick={openSetup}>
+            Apri la configurazione guidata
+          </Button>
+          <span className={styles.sectionHint}>Brand, argomenti, AI e account, passo passo</span>
         </div>
       </section>
 

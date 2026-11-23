@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar, type SidebarBrand } from '../components/Sidebar/Sidebar';
 import { UpdateDialog } from '../components/UpdateDialog/UpdateDialog';
 import { useBrand } from '../hooks/brand';
+import { SetupContext } from '../hooks/setup-context';
 import { useSetupDone } from '../hooks/useSetup';
 import { SetupWizard } from '../screens/Setup/SetupWizard';
 import { shouldShowSetup } from '../services/setup';
@@ -32,6 +33,7 @@ export function AppShell() {
   if (setupOpen === null && !isLoading && brands.length > 0) {
     setSetupOpen(shouldShowSetup(brands, setupDone));
   }
+  const setupContext = useMemo(() => ({ openSetup: () => setSetupOpen(true) }), []);
   const ideas = useIdeas();
   const publications = usePublications();
 
@@ -46,23 +48,25 @@ export function AppShell() {
   };
 
   return (
-    <div className={styles.shell}>
-      <aside className={styles.side}>
-        <Sidebar brand={sidebarBrand} counts={counts} />
-      </aside>
-      <div className={styles.content}>
-        <ConnectionNotice />
-        <Outlet />
+    <SetupContext.Provider value={setupContext}>
+      <div className={styles.shell}>
+        <aside className={styles.side}>
+          <Sidebar brand={sidebarBrand} counts={counts} />
+        </aside>
+        <div className={styles.content}>
+          <ConnectionNotice />
+          <Outlet />
+        </div>
+        <UpdateDialog />
+        {setupOpen && (
+          <SetupWizard
+            onDone={() => {
+              setSetupDone(true);
+              setSetupOpen(false);
+            }}
+          />
+        )}
       </div>
-      <UpdateDialog />
-      {setupOpen && (
-        <SetupWizard
-          onDone={() => {
-            setSetupDone(true);
-            setSetupOpen(false);
-          }}
-        />
-      )}
-    </div>
+    </SetupContext.Provider>
   );
 }

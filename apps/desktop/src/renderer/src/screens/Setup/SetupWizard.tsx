@@ -1,3 +1,4 @@
+import { DEFAULT_BRAND } from '@prisma-app/shared';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
@@ -40,6 +41,14 @@ export function SetupWizard({ onDone }: { onDone: () => void }) {
               </li>
             ))}
           </ol>
+          <button
+            type="button"
+            className={styles.skip}
+            onClick={onDone}
+            aria-label="Chiudi la configurazione"
+          >
+            Chiudi
+          </button>
         </header>
 
         <div className={styles.body}>
@@ -136,8 +145,11 @@ function BrandStep({ onSaved }: { onSaved: () => void }) {
   const { brand } = useBrand();
   const tags = useTags();
   const save = useSaveBrandSetup();
-  const [name, setName] = useState('');
-  const [initials, setInitials] = useState('');
+  // Riaperta dalle Impostazioni: parte dal brand attuale (il nome predefinito non si propone).
+  const [name, setName] = useState(brand && brand.name !== DEFAULT_BRAND.name ? brand.name : '');
+  const [initials, setInitials] = useState(
+    brand && brand.name !== DEFAULT_BRAND.name ? brand.initials : '',
+  );
   const [chosen, setChosen] = useState<string[] | null>(null);
   const [draft, setDraft] = useState('');
   const current = chosen ?? (tags.data ?? []).map((tag) => tag.name);
