@@ -1,0 +1,26 @@
+/**
+ * Simbolo di Prisma (`design/brand/svg/prisma-simbolo.svg`). I colori sono quelli del logo, fissi
+ * come i colori delle piattaforme che rappresentano.
+ */
+export function PrismaMark({ size = 40 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
+      <defs>
+        <mask id="prisma-mark-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="#fff" />
+          <g fill="none" stroke="#000" strokeWidth="2.6" strokeLinejoin="round">
+            <path d="M6 32H58M32 6V58" />
+            <path d="M32 21L43 32L32 43L21 32Z" />
+          </g>
+        </mask>
+      </defs>
+      <g mask="url(#prisma-mark-gap)">
+        <path fill="#3D7FF2" d="M6 32L32 6V32Z" />
+        <path fill="#E2447F" d="M32 6L58 32H32Z" />
+        <path fill="#17AFA6" d="M58 32L32 58V32Z" />
+        <path fill="#F26B3A" d="M32 58L6 32H32Z" />
+      </g>
+      <path fill="currentColor" d="M32 22.6L41.4 32L32 41.4L22.6 32Z" />
+    </svg>
+  );
+}

@@ -26,6 +26,8 @@ export const PREFERENCE_KEYS = {
   theme: 'prisma.tema',
   sidebarCollapsed: 'prisma.sidebar.chiusa',
   brand: 'prisma.brand',
+  /** Configurazione guidata del primo avvio completata o saltata. */
+  setupDone: 'prisma.configurazione',
 } as const;
 
 const LEGACY_KEYS: Record<string, string> = {

@@ -23,7 +23,11 @@ const isDev = !app.isPackaged;
 
 // Nome e cartella dei dati, prima di qualunque uso di `userData` (anche da parte di Electron).
 app.setName('Prisma');
-const dataDir = resolveDataDir(app.getPath('appData'));
+// PRISMA_DATA_DIR: cartella dei dati a parte (prove e dimostrazioni con un database nuovo).
+const customDataDir = process.env['PRISMA_DATA_DIR'];
+const dataDir = customDataDir
+  ? { userData: customDataDir, outcome: 'nuova' as const, error: undefined }
+  : resolveDataDir(app.getPath('appData'));
 app.setPath('userData', dataDir.userData);
 if (dataDir.outcome === 'spostata') console.info(`Dati spostati in ${dataDir.userData}`);
 if (dataDir.outcome === 'unita')

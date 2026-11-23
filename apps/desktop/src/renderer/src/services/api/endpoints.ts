@@ -5,6 +5,7 @@ import {
   AiSettingsViewSchema,
   type AiSettingsInput,
   BrandSchema,
+  type BrandUpdate,
   ChatMessageSchema,
   ContentSchema,
   type RegisterExport,
@@ -71,6 +72,9 @@ export const api = {
   tags: (brandId: number) => apiRequest('GET', `/brands/${brandId}/tags`, z.array(TagSchema)),
   createTag: (brandId: number, input: TagInput) =>
     apiRequest('POST', `/brands/${brandId}/tags`, TagSchema, input),
+  deleteTag: (id: number) => apiCommand('DELETE', `/tags/${id}`),
+  updateBrand: (id: number, input: BrandUpdate) =>
+    apiRequest('PATCH', `/brands/${id}`, BrandSchema, input),
 
   ideas: (brandId: number, query: IdeaListQuery = {}) => {
     const params = new URLSearchParams();

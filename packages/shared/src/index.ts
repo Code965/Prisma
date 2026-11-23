@@ -1,4 +1,5 @@
 export * from './domain/errors.js';
+export * from './domain/defaults.js';
 export * from './domain/platforms.js';
 export * from './domain/carousel-format.js';
 export * from './domain/caption.js';

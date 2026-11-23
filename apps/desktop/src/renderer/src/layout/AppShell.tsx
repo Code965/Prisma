@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar, type SidebarBrand } from '../components/Sidebar/Sidebar';
 import { UpdateDialog } from '../components/UpdateDialog/UpdateDialog';
 import { useBrand } from '../hooks/brand';
+import { useSetupDone } from '../hooks/useSetup';
+import { SetupWizard } from '../screens/Setup/SetupWizard';
+import { shouldShowSetup } from '../services/setup';
 import { useIdeas } from '../hooks/useIdeas';
 import { usePublications } from '../hooks/useCalendar';
 import { visibleIdeas } from '../services/ideas';
@@ -21,7 +25,13 @@ const NO_BRAND: SidebarBrand = {
  * così la navigazione resta sempre visibile anche nelle pagine lunghe.
  */
 export function AppShell() {
-  const { brand, isLoading } = useBrand();
+  const { brand, brands, isLoading } = useBrand();
+  const [setupDone, setSetupDone] = useSetupDone();
+  // Deciso una volta, a brand caricati: salvando il nome del brand la configurazione resta aperta.
+  const [setupOpen, setSetupOpen] = useState<boolean | null>(null);
+  if (setupOpen === null && !isLoading && brands.length > 0) {
+    setSetupOpen(shouldShowSetup(brands, setupDone));
+  }
   const ideas = useIdeas();
   const publications = usePublications();
 
@@ -45,6 +55,14 @@ export function AppShell() {
         <Outlet />
       </div>
       <UpdateDialog />
+      {setupOpen && (
+        <SetupWizard
+          onDone={() => {
+            setSetupDone(true);
+            setSetupOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -366,6 +366,20 @@ Verificato sulla documentazione ufficiale (novembre 2026). Ogni utente crea le s
   127.0.0.1 e PKCE, listener che rifiuta uno state falso (401) e i percorsi non di login (404). Da provare con le app
   vere delle quattro piattaforme.
 
+## Configurazione guidata (fase 5e)
+
+- `screens/Setup/SetupWizard.tsx`: Benvenuto (simbolo `components/PrismaMark`, cosa fa Prisma), Il tuo brand (nome,
+  iniziali ricavate dal nome, argomenti come etichette), AI (`AiSettingsSection`), Account (`AccountsSection`, la
+  stessa delle Impostazioni con app, «Collega» e R2), Pronto («Scrivi la prima idea» porta alle Idee). Dopo il brand
+  ogni passo si può rimandare; «Salta la configurazione» chiude tutto.
+- Si apre (`services/setup.ts`, `shouldShowSetup`) solo su un database nuovo: un solo brand con il nome predefinito
+  (`DEFAULT_BRAND` in shared, lo stesso del seed del server) e configurazione non completata
+  (`localStorage` `prisma.configurazione`). `AppShell` lo decide una volta a brand caricati, così salvare il nome non
+  la chiude a metà. Il brand si salva con `PATCH /brands/:id`, gli argomenti con le rotte dei tag (`tagChanges`).
+- `PRISMA_DATA_DIR=<cartella>` avvia l'app su una cartella dei dati a parte (database nuovo): usato per provare la
+  configurazione guidata senza toccare i dati veri. Provata così con il percorso completo (brand «Marta Rossi / MR»,
+  arrivo alle Idee).
+
 ## Installazione, intro e aggiornamenti (desktop)
 
 - **Logo**: sorgenti in `design/brand/` (simbolo, icona, `prisma.ico`, LEGGIMI con colori e usi); `apps/desktop/build/`
@@ -893,7 +907,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 5b. AI a scelta dell'utente (Impostazioni › AI, servizi compatibili OpenAI, chiave cifrata, ripiego sul .env)
 - [x] 5c. Server dentro l'app desktop con SQLite al posto di MySQL, e migrazione dei dati esistenti
 - [x] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
-- [ ] 5e. Configurazione guidata al primo avvio
+- [x] 5e. Configurazione guidata al primo avvio
 - [ ] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
