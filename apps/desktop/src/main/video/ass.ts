@@ -1,4 +1,10 @@
-import { editedTimeMs, type Caption, type SubtitleStyle, type TimeRange } from '@prisma-app/shared';
+import {
+  editedTimeMs,
+  type Caption,
+  type Hook,
+  type SubtitleStyle,
+  type TimeRange,
+} from '@prisma-app/shared';
 
 /**
  * Sottotitoli in formato ASS per il filtro `subtitles` di FFmpeg (libass), con le dimensioni
@@ -68,6 +74,8 @@ const STYLES: Record<SubtitleStyle, StyleSpec> = {
 const WHITE = '&H00FFFFFF';
 /** #FACC15 in &HBBGGRR. */
 const YELLOW = '&H15CCFA';
+/** #38BDF8 (azzurro): parole chiave scelte da «Monta con l'AI». */
+const KEYWORD = '&HF8BD38';
 
 /** «H:MM:SS.cc» (centesimi), il formato dei tempi ASS. */
 export function assTime(ms: number): string {
@@ -96,17 +104,21 @@ function events(
   captions: readonly Caption[],
   cuts: readonly TimeRange[],
   style: SubtitleStyle,
+  keywords: ReadonlySet<number>,
 ): Event[] {
   const at = (ms: number) => editedTimeMs(cuts, ms);
   const upper = STYLES[style].uppercase;
-  const word = (text: string) => assText(upper ? text.toUpperCase() : text);
+  const plain = (text: string) => assText(upper ? text.toUpperCase() : text);
+  // Le parole chiave hanno il loro colore; la parola attiva resta gialla.
+  const word = (w: Caption['words'][number]) =>
+    keywords.has(w.startMs) ? `{\\c${KEYWORD}&}${plain(w.text)}{\\c${WHITE}&}` : plain(w.text);
   const result: Event[] = [];
   for (const caption of captions) {
     if (style === 'clean' || style === 'box') {
       result.push({
         startMs: at(caption.startMs),
         endMs: at(caption.endMs),
-        text: caption.words.map((w) => word(w.text)).join(' '),
+        text: caption.words.map(word).join(' '),
       });
       continue;
     }
@@ -118,11 +130,9 @@ function events(
       if (endMs <= startMs) return;
       const text =
         style === 'big'
-          ? word(active.text)
+          ? word(active)
           : caption.words
-              .map((w, j) =>
-                j === i ? `{\\c${YELLOW}&}${word(w.text)}{\\c${WHITE}&}` : word(w.text),
-              )
+              .map((w, j) => (j === i ? `{\\c${YELLOW}&}${plain(w.text)}{\\c${WHITE}&}` : word(w)))
               .join(' ');
       result.push({ startMs, endMs, text });
     });
@@ -136,6 +146,10 @@ export function buildAss(options: {
   style: SubtitleStyle;
   width: number;
   height: number;
+  /** Istanti d'inizio delle parole chiave da evidenziare. */
+  keywords?: readonly number[];
+  /** Titolo grande in alto nei primi secondi del video montato. */
+  hook?: Hook | null;
 }): string {
   const { width, height, style } = options;
   const spec = STYLES[style];
@@ -152,12 +166,21 @@ export function buildAss(options: {
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
     `Style: Default,Segoe UI,${px(spec.size)},${WHITE},&H000000FF,&H00000000,${spec.back},${spec.bold ? -1 : 0},0,0,0,100,100,0,0,${spec.borderStyle},${px(spec.outline)},${px(spec.shadow)},2,${margin},${margin},${px(spec.marginV)},1`,
+    // Hook: grande, in alto al centro (Alignment 8), su un riquadro scuro.
+    `Style: Hook,Segoe UI,${px(0.05)},${WHITE},&H000000FF,&H00000000,&H26000000,-1,0,0,0,100,100,0,0,3,${px(0.012)},0,8,${margin},${margin},${px(0.12)},1`,
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
   ];
-  const lines = events(options.captions, options.cuts, style).map(
+  const keywords = new Set(options.keywords ?? []);
+  const lines = events(options.captions, options.cuts, style, keywords).map(
     (e) => `Dialogue: 0,${assTime(e.startMs)},${assTime(e.endMs)},Default,,0,0,0,,${e.text}`,
   );
+  if (options.hook) {
+    // Dissolvenza in entrata e in uscita, sopra i sottotitoli (livello 1).
+    lines.unshift(
+      `Dialogue: 1,${assTime(0)},${assTime(options.hook.durationMs)},Hook,,0,0,0,,{\\fad(150,250)}${assText(options.hook.text)}`,
+    );
+  }
   return `${[...header, ...lines].join('\n')}\n`;
 }

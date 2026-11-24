@@ -1,4 +1,5 @@
 import type {
+  AutoEditPlan,
   ToolsStatus,
   TranscriptLanguage,
   GenerateShortsResult,
@@ -11,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 import { api } from '../services/api/endpoints';
+import { autoEditRequest } from '../services/auto-edit';
 import { shortsRequest } from '../services/shorts';
 import { canUseVideo } from '../services/video';
 import { useBrand } from './brand';
@@ -190,6 +192,22 @@ export function useGenerateShorts(project: VideoProject) {
     onSettled: () => {
       void client.invalidateQueries({ queryKey: keys.projects });
       if (brand) void client.invalidateQueries({ queryKey: queryKeys.contents(brand.id) });
+    },
+  });
+  return { ...mutation, available: request !== null };
+}
+
+/**
+ * «Monta con l'AI»: il server chiede al modello la proposta di montaggio; l'editor la applica
+ * alle modifiche (`applyAutoEdit`) e l'autore la rivede prima dell'export.
+ */
+export function useAutoEdit(project: VideoProject) {
+  const { brand } = useBrand();
+  const request = brand ? autoEditRequest(project, brand.id) : null;
+  const mutation = useMutation({
+    mutationFn: async (): Promise<AutoEditPlan> => {
+      if (!request) throw new Error('Prima trascrivi il video');
+      return api.autoEditPlan(request);
     },
   });
   return { ...mutation, available: request !== null };

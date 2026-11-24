@@ -302,6 +302,40 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
 - Nota sul token `--rec`: in `tokens.css` è lo sfondo verde degli slot consigliati; nel mockup Idee lo stesso nome
   è il rosso della registrazione vocale. Per la registrazione servirà un token distinto.
 
+## Video con l'AI (fase 6)
+
+Scelte (proposte e confermate): prima 6a (montaggio dei propri video), poi 6c (video dall'idea), poi audio con musica da
+una cartella dell'utente, B-roll, inquadratura che segue il volto, registrazione nell'app per ultima.
+
+### «Monta con l'AI» (6a)
+
+- **Modifiche** (`VideoEditSchema` in `packages/shared/src/schemas/video-edit.ts`, campi con default per i progetti
+  vecchi): `zooms` (intervalli del sorgente con `scale` 1–1,5), `keywords` (istanti d'inizio delle parole da
+  evidenziare), `hook` (`text` ≤ 80, `durationMs` 1–6 s). `zoomAt`, `zoomedParts` (parti rimaste divise dove cambia lo
+  zoom), `isKeyword`.
+- **Proposta dell'AI** (`POST /video/auto-edit`, `modules/ai/auto-edit.ts`, `video-auto-edit.{system,user}.md`): come
+  «Genera Short» il modello legge le frasi numerate e risponde con `removeSegments` (false partenze, ripetizioni, al
+  massimo un terzo delle frasi), `fillers` (riempitivi per frase: «cioè», «praticamente»…), `keywords` (1–2 parole per
+  frase importante), `emphasis` (frasi su cui zoomare) e `hook` (≤ 60 caratteri, dalla frase più forte). Lo schema
+  (`autoEditPlanSchema`) controlla i numeri di frase; il server non salva nulla.
+- **Applicazione** (`applyAutoEdit` in `packages/shared/src/schemas/video-auto-edit.ts`, pura e testata): taglia i
+  silenzi, le esitazioni riconosciute da sole (`isHesitation`: «ehm», «uhm», «mmh»…), i riempitivi e le frasi indicate
+  (parole cercate senza punteggiatura dentro la frase, `matchSegmentWords`), toglie i pezzi rimasti sotto 250 ms;
+  zoom 1,08 su una parte rimasta sì e una no (punch-in ai tagli) e 1,18 sulle frasi importanti; parole chiave (al
+  massimo 2 per frase); hook di 2,5 s. Riepilogo per l'avviso.
+- **Editor** (`VideoEditor.tsx`): «Monta con l'AI» (pulsante principale) con avviso del riepilogo e «Annulla» che
+  rimette le modifiche di prima. `PlayerPanel`: riquadro ristretto dallo zoom attivo con «Zoom ×1,18», titolo
+  d'apertura in alto nei primi secondi, parole chiave in azzurro nei sottotitoli; pannello «Montaggio dell'AI» con il
+  titolo modificabile e «Togli» per titolo, parole chiave e zoom. Logica in `services/auto-edit.ts`.
+- **Render** (`render-plan.ts`, `ass.ts`): ogni parte si ritaglia con il suo zoom (`zoomedCrop`: riquadro del formato
+  diviso per `scale`, centrato, misure pari) e si scala alle dimensioni finali prima di `concat`. Sottotitoli ASS:
+  parole chiave `#38BDF8`, stile `Hook` (in alto al centro, riquadro scuro, `\fad(150,250)`) sul livello 1.
+  FilmCraft riceve solo tagli, formato e sottotitoli (non zoom, parole chiave e hook).
+- Provato nell'app vera su una cartella dei dati a parte con un video sintetico (voce italiana di Windows con falsa
+  partenza, «ehm», «cioè» e pause), whisper.cpp vero e un servizio AI finto compatibile OpenAI: 4 tagli, hook,
+  parola chiave e 3 zoom salvati, export 1080×1920 da 24,4 a 14,5 s con hook e parola chiave visibili nei
+  fotogrammi e i ritagli dello zoom (608 → 562 → 516 px) nel grafo.
+
 ## Local-first: il server dentro l'app (fase 5c)
 
 - **Dati sul computer** (predefinito, `Impostazioni › Dati`): all'avvio, durante l'intro, `src/main/core.ts` avvia
@@ -930,6 +964,17 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 5d. Credenziali delle app delle piattaforme e di R2 nelle Impostazioni, OAuth con ritorno su localhost
 - [x] 5e. Configurazione guidata al primo avvio
 - [x] 5f. Prisma in background (area di notifica, avvio con Windows); server in Docker facoltativo
+
+### Fase 6 — Video con l'AI
+
+- [x] 6a. «Monta con l'AI» sui propri video: silenzi, esitazioni, riempitivi e false partenze, hook, parole chiave,
+      zoom
+- [ ] 6c. «Crea video dall'idea»: copione dell'AI, voce locale, slide animate del brand kit, sottotitoli parola per
+      parola
+- [ ] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
+- [ ] 6d. B-roll e testi in sovrimpressione
+- [ ] 6e. Inquadratura che segue il volto
+- [ ] 6f. Registrazione nell'app (webcam, schermo, microfono)
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 

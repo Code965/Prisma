@@ -752,3 +752,114 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* --- Monta con l'AI (fase 6a) ------------------------------------------------------------------ */
+
+.actionPrimary {
+  background: var(--primary);
+  color: var(--onPrimary);
+  border-color: var(--primary);
+}
+
+.actionPrimary:hover:not(:disabled) {
+  background: var(--primary);
+  opacity: 0.9;
+}
+
+.toastUndo {
+  margin-left: auto;
+  border: none;
+  background: none;
+  padding: 2px 6px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.hook {
+  position: absolute;
+  top: 9%;
+  left: 6%;
+  right: 6%;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hook span {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.85);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: clamp(11px, 1.6vw, 18px);
+  line-height: 1.25;
+}
+
+.subKeyword {
+  color: #38bdf8;
+}
+
+.zoomBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.6);
+  color: #ffffff;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.aiPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel2);
+}
+
+.aiPanelTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.aiRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.aiRow input {
+  flex: 1 1 220px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.aiClear {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.aiClear:hover {
+  color: var(--s-err);
+}

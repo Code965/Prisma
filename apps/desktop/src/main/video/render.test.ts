@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { assText, assTime, buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
 import { createRenderService, renderFileName } from './render.js';
-import { buildFilterGraph, ffmpegRenderArgs } from './render-plan.js';
+import { buildFilterGraph, ffmpegRenderArgs, zoomedCrop } from './render-plan.js';
 import { LocalStore } from './store.js';
 
 const w = (text: string, startMs: number, endMs: number): TranscriptWord => ({
@@ -74,11 +74,11 @@ describe('sottotitoli ASS', () => {
 describe('grafo dei filtri', () => {
   const crop = { x: 656, y: 0, width: 608, height: 1080 };
 
-  it('taglia, unisce, ritaglia, scala e aggiunge i sottotitoli', () => {
+  it('taglia, ritaglia e scala ogni parte, unisce e aggiunge i sottotitoli', () => {
     const graph = buildFilterGraph({
-      kept: [
-        { startMs: 0, endMs: 1500 },
-        { startMs: 4200, endMs: 10_000 },
+      parts: [
+        { startMs: 0, endMs: 1500, scale: 1 },
+        { startMs: 4200, endMs: 10_000, scale: 1 },
       ],
       crop,
       width: 1080,
@@ -88,19 +88,19 @@ describe('grafo dei filtri', () => {
     });
     expect(graph).toBe(
       [
-        '[0:v]trim=start=0.000:end=1.500,setpts=PTS-STARTPTS[v0]',
+        '[0:v]trim=start=0.000:end=1.500,setpts=PTS-STARTPTS,crop=w=608:h=1080:x=656:y=0,scale=1080:1920:flags=lanczos,setsar=1[v0]',
         '[0:a]atrim=start=0.000:end=1.500,asetpts=PTS-STARTPTS[a0]',
-        '[0:v]trim=start=4.200:end=10.000,setpts=PTS-STARTPTS[v1]',
+        '[0:v]trim=start=4.200:end=10.000,setpts=PTS-STARTPTS,crop=w=608:h=1080:x=656:y=0,scale=1080:1920:flags=lanczos,setsar=1[v1]',
         '[0:a]atrim=start=4.200:end=10.000,asetpts=PTS-STARTPTS[a1]',
         '[v0][a0][v1][a1]concat=n=2:v=1:a=1[vc][aout]',
-        '[vc]crop=w=608:h=1080:x=656:y=0,scale=1080:1920:flags=lanczos,setsar=1,subtitles=filename=sottotitoli.ass[vout]',
+        '[vc]subtitles=filename=sottotitoli.ass[vout]',
       ].join(';\n') + '\n',
     );
   });
 
   it('senza audio e senza sottotitoli, e rifiuta un video tutto tagliato', () => {
     const graph = buildFilterGraph({
-      kept: [{ startMs: 0, endMs: 1000 }],
+      parts: [{ startMs: 0, endMs: 1000, scale: 1 }],
       crop,
       width: 1080,
       height: 1920,
@@ -111,7 +111,7 @@ describe('grafo dei filtri', () => {
     expect(graph).toContain('concat=n=1:v=1:a=0[vc]\n'.replace('\n', ';'));
     expect(graph).not.toContain('subtitles');
     expect(() =>
-      buildFilterGraph({ kept: [], crop, width: 1, height: 1, hasAudio: false, subtitles: null }),
+      buildFilterGraph({ parts: [], crop, width: 1, height: 1, hasAudio: false, subtitles: null }),
     ).toThrow(/tagliato/);
     expect(
       ffmpegRenderArgs({
@@ -218,5 +218,43 @@ describe('servizio di render', () => {
     expect(existsSync(output)).toBe(false);
     expect(store.getProject(project.id)!.render).toBeNull();
     store.close();
+  });
+});
+
+describe('zoom, parole chiave e hook (fase 6a)', () => {
+  it('lo zoom restringe il riquadro attorno al centro, con misure pari', () => {
+    const crop = { x: 656, y: 0, width: 608, height: 1080 };
+    expect(zoomedCrop(crop, 1)).toEqual(crop);
+    expect(zoomedCrop(crop, 1.2)).toEqual({ x: 707, y: 90, width: 506, height: 900 });
+    const graph = buildFilterGraph({
+      parts: [{ startMs: 0, endMs: 1000, scale: 1.2 }],
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: false,
+      subtitles: null,
+    });
+    expect(graph).toContain('crop=w=506:h=900:x=707:y=90,scale=1080:1920');
+  });
+
+  it('colora le parole chiave e mette l’hook in alto nei primi secondi', () => {
+    const words = [
+      { text: 'Rust', startMs: 0, endMs: 400, p: 1 },
+      { text: 'vola.', startMs: 400, endMs: 800, p: 1 },
+    ];
+    const ass = buildAss({
+      captions: [{ startMs: 0, endMs: 800, words }],
+      cuts: [],
+      style: 'clean',
+      width: 1080,
+      height: 1920,
+      keywords: [0],
+      hook: { text: 'Perché {Rust}', durationMs: 2500 },
+    });
+    expect(ass).toContain('Style: Hook,Segoe UI,96,');
+    expect(ass).toContain(
+      'Dialogue: 1,0:00:00.00,0:00:02.50,Hook,,0,0,0,,{\\fad(150,250)}Perché (Rust)',
+    );
+    expect(ass).toContain('{\\c&HF8BD38&}Rust{\\c&H00FFFFFF&} vola.');
   });
 });

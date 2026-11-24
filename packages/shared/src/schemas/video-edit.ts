@@ -49,12 +49,35 @@ export const TimeRangeSchema = z
   .refine((r) => r.endMs > r.startMs, 'Intervallo vuoto');
 export type TimeRange = z.infer<typeof TimeRangeSchema>;
 
+/** Zoom (fase 6a) in tempo del sorgente: il riquadro del formato ingrandito di `scale`. */
+export const ZOOM_LIMITS = { min: 1, max: 1.5 } as const;
+export const ZoomSchema = z
+  .object({
+    startMs: z.int().nonnegative(),
+    endMs: z.int().nonnegative(),
+    scale: z.number().min(ZOOM_LIMITS.min).max(ZOOM_LIMITS.max),
+  })
+  .refine((r) => r.endMs > r.startMs, 'Intervallo vuoto');
+export type Zoom = z.infer<typeof ZoomSchema>;
+
+/** Titolo grande nei primi secondi del video montato (l'«hook»). */
+export const HookSchema = z.object({
+  text: z.string().trim().min(1).max(80),
+  durationMs: z.int().min(1000).max(6000),
+});
+export type Hook = z.infer<typeof HookSchema>;
+
 export const VideoEditSchema = z.object({
   cuts: z.array(TimeRangeSchema).max(5000),
   format: z.enum(VIDEO_FORMATS),
   /** Posizione del ritaglio lungo l'asse libero (0 = sinistra/alto, 1 = destra/basso). */
   cropOffset: z.number().min(0).max(1),
   subtitles: z.enum(SUBTITLE_STYLES),
+  /** Ingrandimenti (punch-in ai tagli, enfasi sulle frasi importanti). Assente nei progetti vecchi. */
+  zooms: z.array(ZoomSchema).max(5000).default([]),
+  /** Parole chiave evidenziate nei sottotitoli, indicate dall'istante d'inizio della parola. */
+  keywords: z.array(z.int().nonnegative()).max(5000).default([]),
+  hook: HookSchema.nullable().default(null),
 });
 export type VideoEdit = z.infer<typeof VideoEditSchema>;
 
@@ -63,6 +86,9 @@ export const DEFAULT_VIDEO_EDIT: VideoEdit = {
   format: '9:16',
   cropOffset: 0.5,
   subtitles: 'word',
+  zooms: [],
+  keywords: [],
+  hook: null,
 };
 
 // --- Tagli -----------------------------------------------------------------------------------
@@ -148,6 +174,50 @@ export function editedTimeMs(cuts: readonly TimeRange[], sourceMs: number): numb
     removed += Math.min(cut.endMs, sourceMs) - cut.startMs;
   }
   return Math.max(0, sourceMs - removed);
+}
+
+// --- Zoom ----------------------------------------------------------------------------------
+
+/** Ingrandimento a un istante del sorgente (1 = nessuno); con zoom sovrapposti vince il più forte. */
+export function zoomAt(zooms: readonly Zoom[], ms: number): number {
+  return zooms.reduce(
+    (scale, z) => (ms >= z.startMs && ms < z.endMs ? Math.max(scale, z.scale) : scale),
+    1,
+  );
+}
+
+/**
+ * Le parti rimaste divise dove cambia lo zoom: il render applica a ciascuna un ingrandimento
+ * fisso («punch-in», lo stile dei creator).
+ */
+export function zoomedParts(
+  kept: readonly TimeRange[],
+  zooms: readonly Zoom[],
+): Array<TimeRange & { scale: number }> {
+  const parts: Array<TimeRange & { scale: number }> = [];
+  for (const range of kept) {
+    const bounds = new Set([range.startMs, range.endMs]);
+    for (const z of zooms) {
+      if (z.startMs > range.startMs && z.startMs < range.endMs) bounds.add(z.startMs);
+      if (z.endMs > range.startMs && z.endMs < range.endMs) bounds.add(z.endMs);
+    }
+    const points = [...bounds].sort((a, b) => a - b);
+    for (let i = 0; i < points.length - 1; i++) {
+      const startMs = points[i]!;
+      const endMs = points[i + 1]!;
+      const scale = zoomAt(zooms, startMs);
+      const last = parts[parts.length - 1];
+      // Parti contigue con lo stesso zoom restano una sola.
+      if (last && last.endMs === startMs && last.scale === scale) last.endMs = endMs;
+      else parts.push({ startMs, endMs, scale });
+    }
+  }
+  return parts;
+}
+
+/** La parola è una parola chiave da evidenziare. */
+export function isKeyword(keywords: readonly number[], word: TranscriptWord): boolean {
+  return keywords.includes(word.startMs);
 }
 
 // --- Ritaglio --------------------------------------------------------------------------------

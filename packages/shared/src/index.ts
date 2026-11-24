@@ -27,6 +27,7 @@ export * from './schemas/ai.js';
 export * from './schemas/ai-settings.js';
 export * from './schemas/app-credentials.js';
 export * from './schemas/shorts.js';
+export * from './schemas/video-auto-edit.js';
 export * from './schemas/metrics.js';
 export * from './schemas/analytics.js';
 export * from './schemas/insights.js';

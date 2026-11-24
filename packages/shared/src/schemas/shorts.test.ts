@@ -32,6 +32,12 @@ describe('shortEdit', () => {
         { startMs: 12_000, endMs: 13_000 },
         { startMs: 50_000, endMs: 51_000 },
       ],
+      zooms: [
+        { startMs: 2000, endMs: 3000, scale: 1.08 },
+        { startMs: 20_000, endMs: 22_000, scale: 1.18 },
+      ],
+      keywords: [21_000],
+      hook: { text: 'Titolo del video lungo', durationMs: 2500 },
     };
     expect(shortEdit(parent, 60_000, { startMs: 10_000, endMs: 40_000 })).toEqual({
       format: '9:16',
@@ -42,6 +48,9 @@ describe('shortEdit', () => {
         { startMs: 12_000, endMs: 13_000 },
         { startMs: 40_000, endMs: 60_000 },
       ],
+      zooms: [{ startMs: 20_000, endMs: 22_000, scale: 1.18 }],
+      keywords: [21_000],
+      hook: null,
     });
   });
 

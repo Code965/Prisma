@@ -91,7 +91,8 @@ export function shortSegments(
 
 /**
  * Modifiche del progetto Short: tutto ciò che sta fuori dal momento è tagliato, i tagli del
- * video lungo dentro il momento restano, formato verticale e stesso stile dei sottotitoli.
+ * video lungo dentro il momento restano, formato verticale e stesso stile dei sottotitoli; senza
+ * il titolo d'apertura del video lungo.
  */
 export function shortEdit(parent: VideoEdit, durationMs: number, moment: TimeRange): VideoEdit {
   let cuts = parent.cuts.filter((c) => c.endMs > moment.startMs && c.startMs < moment.endMs);
@@ -102,5 +103,8 @@ export function shortEdit(parent: VideoEdit, durationMs: number, moment: TimeRan
     cuts,
     format: '9:16',
     cropOffset: parent.format === '9:16' ? parent.cropOffset : 0.5,
+    // Zoom e parole chiave del momento restano; il titolo d'apertura era del video lungo.
+    zooms: parent.zooms.filter((z) => z.endMs > moment.startMs && z.startMs < moment.endMs),
+    hook: null,
   };
 }

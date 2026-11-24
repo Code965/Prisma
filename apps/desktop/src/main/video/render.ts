@@ -4,6 +4,7 @@ import {
   cropRect,
   editedDurationMs,
   keptRanges,
+  zoomedParts,
   videoRenderKey,
   type VideoJobProgress,
   type VideoProject,
@@ -75,6 +76,7 @@ export function createRenderService(deps: RenderDeps) {
     const info = VIDEO_FORMAT_INFO[edit.format];
     const duration = editedDurationMs(edit.cuts, source.durationMs);
     const captions = project.transcript ? buildCaptions(project.transcript.words, edit.cuts) : [];
+    const parts = zoomedParts(kept, edit.zooms);
 
     const controller = new AbortController();
     running.set(projectId, controller);
@@ -83,7 +85,7 @@ export function createRenderService(deps: RenderDeps) {
     try {
       await mkdir(workDir, { recursive: true });
       await mkdir(join(output, '..'), { recursive: true });
-      const subtitles = captions.length > 0 ? 'sottotitoli.ass' : null;
+      const subtitles = captions.length > 0 || edit.hook ? 'sottotitoli.ass' : null;
       if (subtitles) {
         await writeFile(
           join(workDir, subtitles),
@@ -93,6 +95,8 @@ export function createRenderService(deps: RenderDeps) {
             style: edit.subtitles,
             width: info.width,
             height: info.height,
+            keywords: edit.keywords,
+            hook: edit.hook,
           }),
           'utf8',
         );
@@ -100,7 +104,7 @@ export function createRenderService(deps: RenderDeps) {
       await writeFile(
         join(workDir, 'filtri.txt'),
         buildFilterGraph({
-          kept,
+          parts,
           crop: cropRect(edit.format, source.width, source.height, edit.cropOffset),
           width: info.width,
           height: info.height,

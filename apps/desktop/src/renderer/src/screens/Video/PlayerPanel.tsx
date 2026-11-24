@@ -5,6 +5,8 @@ import {
   VIDEO_FORMAT_INFO,
   buildCaptions,
   captionAt,
+  isKeyword,
+  zoomAt,
   editedDurationMs,
   editedTimeMs,
   skipCuts,
@@ -13,6 +15,7 @@ import {
   type VideoProject,
 } from '@prisma-app/shared';
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { zoomedOverlay } from '../../services/auto-edit';
 import { mediaUrl } from '../../services/video';
 import { clockLabel, cropOverlay, draggedOffset, sourceTimeMs } from '../../services/video-editor';
 import styles from './VideoEditor.module.css';
@@ -46,7 +49,10 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
   const [dragOffset, setDragOffset] = useState<number | null>(null);
   const { source } = project;
   const offset = dragOffset ?? edit.cropOffset;
-  const overlay = cropOverlay(edit.format, source.width, source.height, offset);
+  const baseOverlay = cropOverlay(edit.format, source.width, source.height, offset);
+  // Con uno zoom attivo il riquadro si restringe: è quello che finirà nel video (fase 6a).
+  const zoom = zoomAt(edit.zooms, sourceMs);
+  const overlay = zoomedOverlay(baseOverlay, zoom);
   const total = editedDurationMs(edit.cuts, source.durationMs);
   const captions = useMemo(
     () => (project.transcript ? buildCaptions(project.transcript.words, edit.cuts) : []),
@@ -188,7 +194,19 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
             <span className={`${styles.cropLabel} mono`}>
               {VIDEO_FORMAT_INFO[edit.format].label}
             </span>
-            {caption && <Subtitle styleId={edit.subtitles} caption={caption} />}
+            {edit.hook && elapsed < edit.hook.durationMs && (
+              <div className={styles.hook}>
+                <span>{edit.hook.text}</span>
+              </div>
+            )}
+            {zoom > 1 && (
+              <span className={`${styles.zoomBadge} mono`}>
+                Zoom ×{zoom.toFixed(2).replace('.', ',')}
+              </span>
+            )}
+            {caption && (
+              <Subtitle styleId={edit.subtitles} caption={caption} keywords={edit.keywords} />
+            )}
           </div>
         </div>
       </div>
@@ -251,6 +269,60 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
           ))}
         </div>
       </div>
+
+      {(edit.hook || edit.keywords.length > 0 || edit.zooms.length > 0) && (
+        <div className={styles.aiPanel}>
+          <span className={styles.aiPanelTitle}>Montaggio dell’AI</span>
+          {edit.hook && (
+            <label className={styles.aiRow}>
+              Titolo d’apertura
+              <input
+                value={edit.hook.text}
+                maxLength={80}
+                onChange={(event) =>
+                  onChange({
+                    ...edit,
+                    hook: event.target.value.trim()
+                      ? { ...edit.hook!, text: event.target.value }
+                      : edit.hook,
+                  })
+                }
+              />
+              <button
+                type="button"
+                className={styles.aiClear}
+                onClick={() => onChange({ ...edit, hook: null })}
+              >
+                Togli
+              </button>
+            </label>
+          )}
+          {edit.keywords.length > 0 && (
+            <div className={styles.aiRow}>
+              {edit.keywords.length} parole chiave evidenziate nei sottotitoli
+              <button
+                type="button"
+                className={styles.aiClear}
+                onClick={() => onChange({ ...edit, keywords: [] })}
+              >
+                Togli
+              </button>
+            </div>
+          )}
+          {edit.zooms.length > 0 && (
+            <div className={styles.aiRow}>
+              {edit.zooms.length} zoom (ai tagli e sulle frasi importanti)
+              <button
+                type="button"
+                className={styles.aiClear}
+                onClick={() => onChange({ ...edit, zooms: [] })}
+              >
+                Togli
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -258,26 +330,36 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
 function Subtitle({
   styleId,
   caption,
+  keywords,
 }: {
   styleId: SubtitleStyle;
   caption: NonNullable<ReturnType<typeof captionAt>>;
+  keywords: readonly number[];
 }) {
   const { words } = caption.caption;
+  const keyword = (i: number) => (isKeyword(keywords, words[i]!) ? styles.subKeyword : undefined);
   if (styleId === 'big') {
-    return <span className={styles.subBig}>{words[caption.activeWord]?.text}</span>;
-  }
-  if (styleId === 'word') {
+    const active = words[caption.activeWord];
     return (
-      <span className={styles.subWord}>
-        {words.map((word, i) => (
-          <span key={i} className={i === caption.activeWord ? styles.subWordActive : undefined}>
-            {i > 0 ? ' ' : ''}
-            {word.text}
-          </span>
-        ))}
+      <span className={`${styles.subBig} ${keyword(caption.activeWord) ?? ''}`}>
+        {active?.text}
       </span>
     );
   }
-  const text = words.map((w) => w.text).join(' ');
-  return <span className={styleId === 'box' ? styles.subBox : styles.subClean}>{text}</span>;
+  const wordClass = (i: number) =>
+    styleId === 'word' && i === caption.activeWord ? styles.subWordActive : keyword(i);
+  return (
+    <span
+      className={
+        styleId === 'word' ? styles.subWord : styleId === 'box' ? styles.subBox : styles.subClean
+      }
+    >
+      {words.map((word, i) => (
+        <span key={i} className={wordClass(i)}>
+          {i > 0 ? ' ' : ''}
+          {word.text}
+        </span>
+      ))}
+    </span>
+  );
 }

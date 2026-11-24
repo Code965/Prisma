@@ -1,4 +1,5 @@
 import {
+  applyAutoEdit,
   editedDurationMs,
   formatDurationMs,
   type VideoEdit,
@@ -6,7 +7,8 @@ import {
 } from '@prisma-app/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useGenerateShorts, useSaveVideoEdit } from '../../hooks/useVideo';
+import { useAutoEdit, useGenerateShorts, useSaveVideoEdit } from '../../hooks/useVideo';
+import { autoEditToast } from '../../services/auto-edit';
 import { errorMessage } from '../../services/api/client';
 import { shortsToast } from '../../services/shorts';
 import { editorSegments, removeSilences, secondsLabel } from '../../services/video-editor';
@@ -31,6 +33,9 @@ export function VideoEditor({ project }: { project: VideoProject }) {
   const [seekTo, setSeekTo] = useState<{ ms: number } | null>(null);
   const save = useSaveVideoEdit(project.id);
   const shorts = useGenerateShorts(project);
+  const autoEdit = useAutoEdit(project);
+  // Modifiche di prima di «Monta con l'AI», per tornare indietro con «Annulla».
+  const [beforeAutoEdit, setBeforeAutoEdit] = useState<VideoEdit | null>(null);
   const first = useRef(true);
 
   useEffect(() => {
@@ -58,6 +63,31 @@ export function VideoEditor({ project }: { project: VideoProject }) {
     );
   }
 
+  function handleAutoEdit() {
+    setToast(null);
+    autoEdit.mutate(undefined, {
+      onSuccess: (plan) => {
+        if (!project.transcript) return;
+        const result = applyAutoEdit(
+          edit,
+          project.transcript.words,
+          project.source.durationMs,
+          plan,
+        );
+        setBeforeAutoEdit(edit);
+        setEdit(result.edit);
+        setToast(autoEditToast(result.summary));
+      },
+    });
+  }
+
+  function undoAutoEdit() {
+    if (!beforeAutoEdit) return;
+    setEdit(beforeAutoEdit);
+    setBeforeAutoEdit(null);
+    setToast('Montaggio dell’AI annullato.');
+  }
+
   function handleGenerateShorts() {
     setToast(null);
     shorts.mutate(undefined, { onSuccess: (result) => setToast(shortsToast(result.shorts)) });
@@ -78,6 +108,33 @@ export function VideoEditor({ project }: { project: VideoProject }) {
           </div>
         </div>
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.action} ${styles.actionPrimary}`}
+            disabled={!autoEdit.available || autoEdit.isPending}
+            title={
+              autoEdit.available
+                ? 'Taglia silenzi e riempitivi, propone titolo, parole chiave e zoom'
+                : 'Prima trascrivi il video'
+            }
+            aria-busy={autoEdit.isPending}
+            onClick={handleAutoEdit}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+            </svg>
+            {autoEdit.isPending ? 'Monto il video…' : 'Monta con l’AI'}
+          </button>
           <button
             type="button"
             className={styles.action}
@@ -144,8 +201,18 @@ export function VideoEditor({ project }: { project: VideoProject }) {
             <path d="M20 6L9 17l-5-5" />
           </svg>
           {toast}
+          {beforeAutoEdit && (
+            <button type="button" className={styles.toastUndo} onClick={undoAutoEdit}>
+              Annulla
+            </button>
+          )}
         </div>
       )}
+      {autoEdit.error ? (
+        <p role="alert" className={styles.error}>
+          {errorMessage(autoEdit.error)}
+        </p>
+      ) : null}
       {shorts.error ? (
         <p role="alert" className={styles.error}>
           {errorMessage(shorts.error)}
