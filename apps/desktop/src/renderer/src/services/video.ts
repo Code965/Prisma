@@ -25,6 +25,21 @@ export function mediaUrl(projectId: string): string {
   return `prisma-media://video/${projectId}`;
 }
 
+/** «12 brani», «Nessun brano», «Non trovata», «Non scelta». */
+export function musicFolderLabel(
+  status: { dir: string | null; tracks: readonly unknown[]; error: string | null } | null,
+): string {
+  if (!status?.dir) return 'Non scelta';
+  if (status.error) return status.error;
+  const count = status.tracks.length;
+  return count === 0 ? 'Nessun brano' : count === 1 ? '1 brano' : `${count} brani`;
+}
+
+/** Brano della cartella della musica: il main serve solo i file di quella cartella. */
+export function musicUrl(fileName: string): string {
+  return `prisma-media://musica/${encodeURIComponent(fileName)}`;
+}
+
 const RATIOS: Array<[number, string]> = [
   [16 / 9, '16:9'],
   [9 / 16, '9:16'],

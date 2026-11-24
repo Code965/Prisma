@@ -45,6 +45,7 @@ const KEEP = [
   'voci',
   'video-creati',
   'video-tools.json',
+  'musica.json',
   'settings.json',
   'filmcraft',
   'esportazioni',

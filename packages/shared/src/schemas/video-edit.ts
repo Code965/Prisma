@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { TranscriptWord } from './transcript.js';
+import { DEFAULT_VIDEO_AUDIO, LEGACY_VIDEO_AUDIO, VideoAudioSchema } from './video-audio.js';
 
 /**
  * Modifiche di un progetto video (editor del passo 3c): parti tagliate, formato con posizione
@@ -78,6 +79,8 @@ export const VideoEditSchema = z.object({
   /** Parole chiave evidenziate nei sottotitoli, indicate dall'istante d'inizio della parola. */
   keywords: z.array(z.int().nonnegative()).max(5000).default([]),
   hook: HookSchema.nullable().default(null),
+  /** Voce ripulita, volume uniforme e musica (6b). */
+  audio: VideoAudioSchema.default(LEGACY_VIDEO_AUDIO),
 });
 export type VideoEdit = z.infer<typeof VideoEditSchema>;
 
@@ -89,6 +92,7 @@ export const DEFAULT_VIDEO_EDIT: VideoEdit = {
   zooms: [],
   keywords: [],
   hook: null,
+  audio: DEFAULT_VIDEO_AUDIO,
 };
 
 // --- Tagli -----------------------------------------------------------------------------------

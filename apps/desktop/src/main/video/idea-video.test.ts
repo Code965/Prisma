@@ -205,6 +205,11 @@ describe('«Crea video dall’idea»', () => {
       },
       codePage: async () => 1252,
       platform: 'win32',
+      pickMusic: async () => ({
+        path: 'C:\\Musica\\lofi.mp3',
+        fileName: 'lofi.mp3',
+        durationMs: 90_000,
+      }),
     });
     return { service, store, calls, progress, transcribed: () => transcribed };
   }
@@ -228,7 +233,15 @@ describe('«Crea video dall’idea»', () => {
     expect(ffmpeg.args).toContain('slide-2.jpg');
     expect(project).toMatchObject({
       title: 'Perché uso Rust',
-      edit: { format: '9:16', subtitles: 'word' },
+      edit: {
+        format: '9:16',
+        subtitles: 'word',
+        audio: {
+          clean: true,
+          normalize: true,
+          music: { fileName: 'lofi.mp3', volumeDb: -10, ducking: true },
+        },
+      },
       generated: { source: 'idea', sourceId: 7, voice: 'Voce di Windows', scenes: 2 },
     });
     // La seconda scena parte dopo 1 s di voce e la pausa.

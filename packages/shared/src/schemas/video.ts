@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { IdSchema, InstantSchema } from './common.js';
 import { TranscriptSchema } from './transcript.js';
+import { isLegacyAudio } from './video-audio.js';
 import { DEFAULT_VIDEO_EDIT, VIDEO_FORMATS, VideoEditSchema } from './video-edit.js';
 
 /**
@@ -182,6 +183,12 @@ export interface VideoJobProgress {
   percent: number | null;
 }
 
+/** L'audio dei progetti di prima della 6b non entra nella chiave: i render già fatti restano validi. */
+function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['edit']> {
+  if (!isLegacyAudio(edit.audio)) return edit;
+  return Object.fromEntries(Object.entries(edit).filter(([key]) => key !== 'audio'));
+}
+
 /**
  * Ciò che determina il video esportato, in forma stabile: sorgente, tagli, formato, ritaglio,
  * stile e parole dei sottotitoli. Il main ne calcola lo sha256 per sapere se il file è superato.
@@ -191,7 +198,7 @@ export function videoRenderKey(
 ): string {
   return JSON.stringify({
     source: [project.source.path, project.source.sizeBytes, project.source.durationMs],
-    edit: project.edit,
+    edit: withoutLegacyAudio(project.edit),
     words: (project.transcript?.words ?? []).map((w) => [w.text, w.startMs, w.endMs]),
   });
 }

@@ -1,5 +1,8 @@
 import {
+  DEFAULT_VIDEO_AUDIO,
   DEFAULT_VIDEO_EDIT,
+  musicFromTrack,
+  type MusicTrack,
   alignScriptWords,
   estimatedWords,
   scriptCarousel,
@@ -42,6 +45,8 @@ export interface IdeaVideoDeps {
   /** Trascrizione con whisper.cpp, se c'è: tempi delle parole più precisi della stima. */
   transcribe: (projectId: string) => Promise<VideoProject>;
   codePage: () => Promise<number | null>;
+  /** Un brano a caso dalla cartella della musica (6b); null se non ce ne sono. */
+  pickMusic?: () => Promise<MusicTrack | null>;
   platform?: NodeJS.Platform;
   now?: () => Date;
 }
@@ -154,6 +159,7 @@ export function createIdeaVideoService(deps: IdeaVideoDeps) {
 
       // 4. Progetto video, con la trascrizione stimata dal copione.
       const source = await deps.probe(ffprobe, output);
+      const track = await (deps.pickMusic?.() ?? Promise.resolve(null)).catch(() => null);
       let startMs = 0;
       const timed = script.scenes.map((scene, i) => {
         const entry = { narration: texts[i] ?? scene.narration, startMs, speechMs: speechMs[i]! };
@@ -162,7 +168,11 @@ export function createIdeaVideoService(deps: IdeaVideoDeps) {
       });
       const at = (deps.now?.() ?? new Date()).toISOString();
       const project = deps.store.createProject(source, script.title, {
-        edit: { ...DEFAULT_VIDEO_EDIT, format: '9:16' },
+        edit: {
+          ...DEFAULT_VIDEO_EDIT,
+          format: '9:16',
+          audio: { ...DEFAULT_VIDEO_AUDIO, music: track ? musicFromTrack(track) : null },
+        },
         transcript: {
           language: 'it',
           model: 'copione',

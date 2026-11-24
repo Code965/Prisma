@@ -1,8 +1,14 @@
 import { VIDEO_TOOL_LABELS, type ToolStatus } from '@prisma-app/shared';
 import { Button } from '../../components/Button/Button';
-import { usePickToolPath, useSetToolPath, useToolsStatus } from '../../hooks/useVideo';
+import {
+  useMusic,
+  usePickToolPath,
+  useSetMusicDir,
+  useSetToolPath,
+  useToolsStatus,
+} from '../../hooks/useVideo';
 import { errorMessage } from '../../services/api/client';
-import { TOOL_HINTS, canUseVideo } from '../../services/video';
+import { TOOL_HINTS, canUseVideo, musicFolderLabel } from '../../services/video';
 import styles from './Impostazioni.module.css';
 
 const SOURCE_LABEL: Record<ToolStatus['source'], string> = {
@@ -20,6 +26,8 @@ export function VideoToolsSection() {
   const pick = usePickToolPath();
   const reset = useSetToolPath();
   const busy = pick.isPending || reset.isPending;
+  const music = useMusic();
+  const setMusicDir = useSetMusicDir();
 
   return (
     <section aria-labelledby="h-tools" className={`${styles.section} ${styles.accounts}`}>
@@ -74,6 +82,43 @@ export function VideoToolsSection() {
           )}
         </div>
       ))}
+      {canUseVideo() && (
+        <div className={styles.accountRow}>
+          <div className={styles.accountText}>
+            <span className={styles.accountName}>
+              Cartella della musica{' '}
+              <span
+                className={styles.accountHandle}
+                style={{ color: music.data?.dir ? 'var(--s-pub)' : 'var(--muted)' }}
+              >
+                {musicFolderLabel(music.data ?? null)}
+              </span>
+            </span>
+            <span className={`${styles.accountStatus} ${styles.toolPath} mono`}>
+              {music.data?.dir ??
+                'Facoltativa: i tuoi brani (MP3, WAV, M4A, FLAC, OGG) per la musica dei video'}
+            </span>
+          </div>
+          <Button
+            variant="secondary"
+            size={32}
+            disabled={setMusicDir.isPending}
+            onClick={() => setMusicDir.mutate('pick')}
+          >
+            Scegli…
+          </Button>
+          {music.data?.dir && (
+            <button
+              type="button"
+              className={styles.inlineLink}
+              disabled={setMusicDir.isPending}
+              onClick={() => setMusicDir.mutate('clear')}
+            >
+              Togli
+            </button>
+          )}
+        </div>
+      )}
       {status.error || pick.error || reset.error ? (
         <p role="alert" className={styles.error}>
           {errorMessage(status.error ?? pick.error ?? reset.error)}

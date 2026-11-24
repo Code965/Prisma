@@ -1,3 +1,4 @@
+import { isTrackInFolder } from './music.js';
 import {
   VIDEO_FORMAT_INFO,
   buildCaptions,
@@ -16,7 +17,15 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
-import { buildFilterGraph, ffmpegRenderArgs } from './render-plan.js';
+import {
+  buildFilterGraph,
+  ffmpegRenderArgs,
+  loudnessArgs,
+  loudnessGraph,
+  mixLoudnessArgs,
+  mixLoudnessGraph,
+  voiceGainFromLoudnorm,
+} from './render-plan.js';
 import type { LocalStore } from './store.js';
 import { ffmpegProgress } from './whisper.js';
 
@@ -34,6 +43,8 @@ export interface RenderDeps {
    * con molti tagli brevi può differire da quella calcolata. Assente → si usa quella calcolata.
    */
   measureDurationMs?: (path: string) => Promise<number>;
+  /** Cartella della musica: il render usa solo brani che stanno lì (6b). */
+  musicDir?: () => Promise<string | null>;
 }
 
 export function sha256Hex(text: string): string {
@@ -71,6 +82,10 @@ export function createRenderService(deps: RenderDeps) {
     if (!project) throw new Error('Progetto video non trovato');
     if (running.has(projectId)) throw new Error('Esportazione già in corso per questo video');
     const ffmpeg = await deps.requireTool('ffmpeg');
+    const music = project.edit.audio.music;
+    if (music && !isTrackInFolder((await deps.musicDir?.()) ?? null, music.path)) {
+      throw new Error('Il brano non è nella cartella della musica: sceglilo di nuovo nell’editor');
+    }
     const { source, edit } = project;
     const kept = keptRanges(edit.cuts, source.durationMs);
     const info = VIDEO_FORMAT_INFO[edit.format];
@@ -101,6 +116,36 @@ export function createRenderService(deps: RenderDeps) {
           'utf8',
         );
       }
+      // Prima si misura la voce (solo audio, veloce): guadagno fisso per il volume uniforme e
+      // livello di riferimento per il gate delle pause.
+      let voiceGainDb: number | null = null;
+      if ((edit.audio.normalize || edit.audio.clean) && source.hasAudio) {
+        deps.emit({ projectId, stage: 'render', percent: null });
+        await writeFile(join(workDir, 'misura.txt'), loudnessGraph(kept, edit.audio), 'utf8');
+        const lines: string[] = [];
+        const measured = await deps.run(ffmpeg, loudnessArgs(source.path, 'misura.txt'), {
+          cwd: workDir,
+          signal: controller.signal,
+          onLine: (line) => lines.push(line),
+        });
+        if (measured.code === 0) voiceGainDb = voiceGainFromLoudnorm(lines.join('\n'));
+      }
+      // Con la musica si misura anche il mix: le pause con la musica abbassano il volume medio.
+      let mixGainDb: number | null = null;
+      if (edit.audio.normalize && edit.audio.music) {
+        await writeFile(
+          join(workDir, 'misura-mix.txt'),
+          mixLoudnessGraph(kept, source.hasAudio, { ...edit.audio, voiceGainDb }),
+          'utf8',
+        );
+        const lines: string[] = [];
+        const measured = await deps.run(
+          ffmpeg,
+          mixLoudnessArgs(source.path, edit.audio.music.path, 'misura-mix.txt'),
+          { cwd: workDir, signal: controller.signal, onLine: (line) => lines.push(line) },
+        );
+        if (measured.code === 0) mixGainDb = voiceGainFromLoudnorm(lines.join('\n'));
+      }
       await writeFile(
         join(workDir, 'filtri.txt'),
         buildFilterGraph({
@@ -110,6 +155,7 @@ export function createRenderService(deps: RenderDeps) {
           height: info.height,
           hasAudio: source.hasAudio,
           subtitles,
+          audio: { ...edit.audio, voiceGainDb, mixGainDb },
         }),
         'utf8',
       );
@@ -122,6 +168,7 @@ export function createRenderService(deps: RenderDeps) {
           graphFile: 'filtri.txt',
           output,
           hasAudio: source.hasAudio,
+          music: edit.audio.music?.path ?? null,
         }),
         {
           cwd: workDir,

@@ -6,7 +6,7 @@ import {
   generatedLabel,
   scriptRequest,
 } from './create-video';
-import { projectListMeta } from './video';
+import { musicFolderLabel, projectListMeta } from './video';
 
 describe('«Crea video dall’idea»', () => {
   it('chiede il copione da un’idea o da una bozza', () => {
@@ -39,5 +39,16 @@ describe('«Crea video dall’idea»', () => {
     } as unknown as VideoProject;
     expect(projectListMeta(project)).toBe('Dall’idea · 0:47 · 9:16');
     expect(generatedLabel(project)).toBe('Creato dall’idea · 6 scene · Voce di Windows');
+  });
+});
+
+describe('cartella della musica nelle Impostazioni', () => {
+  it('riassume lo stato', () => {
+    expect(musicFolderLabel(null)).toBe('Non scelta');
+    expect(musicFolderLabel({ dir: 'C:\\M', tracks: [], error: 'Cartella non trovata' })).toBe(
+      'Cartella non trovata',
+    );
+    expect(musicFolderLabel({ dir: 'C:\\M', tracks: [1, 2], error: null })).toBe('2 brani');
+    expect(musicFolderLabel({ dir: 'C:\\M', tracks: [1], error: null })).toBe('1 brano');
   });
 });

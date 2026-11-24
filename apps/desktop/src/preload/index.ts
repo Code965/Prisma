@@ -14,6 +14,7 @@ import type {
   UploadFileRequest,
 } from '../main/ipc-contract.js';
 import type { UpdateState } from '../main/update-state.js';
+import type { MusicStatus } from '../main/video/music.js';
 import type {
   ToolsStatus,
   TranscriptLanguage,
@@ -45,6 +46,9 @@ const CHANNELS = {
   renderStatus: 'video:render-status',
   createShort: 'video:create-short',
   generateVideo: 'video:generate',
+  musicStatus: 'music:status',
+  musicPick: 'music:pick',
+  musicClear: 'music:clear',
   filmcraftStatus: 'filmcraft:status',
   filmcraftOpen: 'filmcraft:open',
   filmcraftExport: 'filmcraft:export',
@@ -119,6 +123,13 @@ const api = {
       ipcRenderer.on(CHANNELS.updateChanged, handler);
       return () => ipcRenderer.removeListener(CHANNELS.updateChanged, handler);
     },
+  },
+  /** Cartella della musica (6b): brani elencati dal main, mai percorsi scelti dal renderer. */
+  music: {
+    status: (): Promise<MusicStatus> => ipcRenderer.invoke(CHANNELS.musicStatus),
+    /** null se l'utente annulla la scelta della cartella. */
+    pick: (): Promise<MusicStatus | null> => ipcRenderer.invoke(CHANNELS.musicPick),
+    clear: (): Promise<MusicStatus> => ipcRenderer.invoke(CHANNELS.musicClear),
   },
   video: {
     list: (): Promise<VideoProject[]> => ipcRenderer.invoke(CHANNELS.listVideos),

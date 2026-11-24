@@ -336,6 +336,42 @@ una cartella dell'utente, B-roll, inquadratura che segue il volto, registrazione
   parola chiave e 3 zoom salvati, export 1080×1920 da 24,4 a 14,5 s con hook e parola chiave visibili nei
   fotogrammi e i ritagli dello zoom (608 → 562 → 516 px) nel grafo.
 
+### Audio: voce, volume e musica (6b)
+
+Scelte (proposte e confermate): filtri integrati di FFmpeg (niente modelli da scaricare); il brano lo sceglie l'utente,
+«Crea video» ne mette uno a caso dalla cartella.
+
+- **Modifiche** (`VideoAudioSchema` in `packages/shared/src/schemas/video-audio.ts`, campo `edit.audio`): `clean`,
+  `normalize`, `music` (percorso, nome, durata, `volumeDb` −30…0, predefinito −10, `ducking`). Progetti nuovi
+  `DEFAULT_VIDEO_AUDIO` (voce ripulita e volume uniforme); quelli salvati prima `LEGACY_VIDEO_AUDIO` (tutto spento),
+  che `videoRenderKey` non conta, così i render già fatti restano aggiornati. Gli Short ereditano l'audio del video lungo.
+- **Cartella della musica** (`src/main/video/music.ts`, `userData/musica.json`): scelta in **Impostazioni › Strumenti
+  video** (riga «Cartella della musica», finestra di sistema dal main, IPC `music:status/pick/clear`). Si leggono
+  solo i file direttamente nella cartella (MP3, WAV, M4A, AAC, FLAC, OGG, Opus), con la durata da ffprobe (in cache
+  per dimensione e data). L'anteprima passa da `prisma-media://musica/<nome>` (solo nomi semplici di quella
+  cartella); il render rifiuta un brano fuori dalla cartella (`isTrackInFolder`).
+- **Render** (`render-plan.ts`, `audioMix`): dopo `concat` la voce passa da passa-alto a 80 Hz, `afftdn`
+  (nr 20, nf −45, stima continua), compressione leggera, guadagno fisso fino a −14 LUFS, un gate morbido sulle pause
+  (`agate` soglia 0,04, rapporto 4, fino a −15 dB, knee 1,5) e un limitatore (`level=false`). Il guadagno si misura
+  prima con un passaggio di solo audio (`loudnessGraph`, `loudnorm` che stampa il JSON): `loudnorm` in tempo reale
+  alzava le pause e riportava su il rumore appena tolto. Con solo «Pulisci» il gate lavora sul livello di
+  riferimento e poi la voce torna al volume originale. Musica come ingresso 1 con `-stream_loop -1`: tagliata alla
+  durata, `loudnorm` a −14, volume scelto, dissolvenze 1 s / 2 s, `sidechaincompress` comandato dalla voce (soglia
+  0,02, rapporto 5: circa −13 dB mentre si parla), `amix` senza riscalare e limitatore. Con la musica una seconda
+  misura del mix (`mixLoudnessGraph`) corregge il volume finale: le pause con la musica contano nella misura.
+  FilmCraft non riceve l'audio lavorato.
+- **Editor** (`screens/Video/AudioPanel.tsx`, logica in `services/audio.ts`): pannello «Audio» sotto gli stili dei
+  sottotitoli con «Pulisci la voce», «Volume uniforme», il menu dei brani (o «Scegli la cartella della tua
+  musica…»), volume e «Abbassa la musica mentre parli». L'anteprima fa sentire la musica al passo con il video
+  montato (ricomincia se è corta), al volume scelto, abbassata mentre c'è una parola della trascrizione e in
+  dissolvenza; pulizia e volume si sentono solo nell'export. Nella timeline la traccia «Musica» mostra il brano.
+- **«Crea video»**: il progetto nasce con voce ripulita, volume uniforme e un brano a caso della cartella (`pickTrack`).
+- Provato con FFmpeg 9.1 su un video sintetico (voce Piper con rumore rosa, pausa di 5 s) e musica sintetica:
+  voce −16 dB, rumore nelle pause da −45 a −57 dB, −14,0 LUFS; musica −27 dB nelle pause e circa −13 dB sotto
+  la voce; con la musica −14,02 LUFS secondo `loudnorm` (`ebur128` dà −13,4 su toni puri). Nell'app vera su una
+  cartella dei dati a parte: brano scelto dal menu e salvato, anteprima da `prisma-media://musica/…` (volume 0,071
+  mentre si parla), export 1080×1920 in 4 s.
+
 ### «Crea video dall'idea» (6c)
 
 - **Copione** (`POST /video/script` con `ideaId` o `variantId`, `modules/ai/video-script.ts`,
@@ -1008,7 +1044,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
       zoom
 - [x] 6c. «Crea video dall'idea»: copione dell'AI, voce locale, slide animate del brand kit, sottotitoli parola per
       parola
-- [ ] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
+- [x] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
 - [ ] 6d. B-roll e testi in sovrimpressione
 - [ ] 6e. Inquadratura che segue il volto
 - [ ] 6f. Registrazione nell'app (webcam, schermo, microfono)

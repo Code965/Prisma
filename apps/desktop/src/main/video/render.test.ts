@@ -6,7 +6,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { assText, assTime, buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
 import { createRenderService, renderFileName } from './render.js';
-import { buildFilterGraph, ffmpegRenderArgs, zoomedCrop } from './render-plan.js';
+import {
+  buildFilterGraph,
+  ffmpegRenderArgs,
+  loudnessGraph,
+  mixLoudnessArgs,
+  mixLoudnessGraph,
+  voiceGainFromLoudnorm,
+  zoomedCrop,
+} from './render-plan.js';
 import { LocalStore } from './store.js';
 
 const w = (text: string, startMs: number, endMs: number): TranscriptWord => ({
@@ -173,6 +181,13 @@ describe('servizio di render', () => {
   it('scrive grafo e sottotitoli, lancia FFmpeg nella cartella di lavoro e salva il risultato', async () => {
     const seen: { cwd?: string; graph?: string; ass?: string } = {};
     const run: ProcessRunner = async (_command, args, options) => {
+      if (args.includes('misura.txt')) {
+        // Primo passaggio: loudnorm stampa le misure; la voce è a −20 LUFS.
+        for (const line of ['{', '\t"input_i" : "-20.00",', '\t"input_tp" : "-3.00",', '}']) {
+          options?.onLine?.(line, 'stderr');
+        }
+        return { code: 0, stderrTail: '' };
+      }
       seen.cwd = options?.cwd;
       seen.graph = readFileSync(join(options!.cwd!, 'filtri.txt'), 'utf8');
       seen.ass = readFileSync(join(options!.cwd!, 'sottotitoli.ass'), 'utf8');
@@ -184,6 +199,9 @@ describe('servizio di render', () => {
     const updated = await service.render(project.id);
 
     expect(seen.graph).toContain('trim=start=0.000:end=5.000');
+    // Volume uniforme con il guadagno misurato: da −20 a −14 LUFS.
+    expect(seen.graph).toContain('volume=6.0dB,agate=threshold=0.04');
+    expect(seen.graph).toContain('alimiter=limit=0.84:level=false');
     expect(seen.ass).toContain('La soluzione');
     expect(updated.render).toMatchObject({
       format: '9:16',
@@ -256,5 +274,134 @@ describe('zoom, parole chiave e hook (fase 6a)', () => {
       'Dialogue: 1,0:00:00.00,0:00:02.50,Hook,,0,0,0,,{\\fad(150,250)}Perché (Rust)',
     );
     expect(ass).toContain('{\\c&HF8BD38&}Rust{\\c&H00FFFFFF&} vola.');
+  });
+});
+
+describe('audio del render (6b)', () => {
+  it('ricava il guadagno della voce dalle misure di loudnorm', () => {
+    expect(voiceGainFromLoudnorm('{\n "input_i" : "-23.40",\n}')).toBe(9.4);
+    expect(voiceGainFromLoudnorm('"input_i" : "-inf"')).toBeNull();
+    expect(voiceGainFromLoudnorm('niente')).toBeNull();
+    expect(voiceGainFromLoudnorm('"input_i" : "-70.0"')).toBe(30);
+    const graph = loudnessGraph([{ startMs: 0, endMs: 1000 }], {
+      clean: true,
+      normalize: true,
+      music: null,
+    });
+    expect(graph).toContain('concat=n=1:v=0:a=1,highpass=f=80');
+    expect(graph).toContain('print_format=json[aout]');
+  });
+
+  const parts = [{ startMs: 0, endMs: 10_000, scale: 1 }];
+  const crop = { x: 0, y: 0, width: 1080, height: 1920 };
+  const base = { parts, crop, width: 1080, height: 1920, subtitles: null };
+
+  it('senza nulla da fare la voce montata va dritta nel file', () => {
+    const graph = buildFilterGraph({
+      ...base,
+      hasAudio: true,
+      audio: { clean: false, normalize: false, music: null },
+    });
+    expect(graph).toContain('concat=n=1:v=1:a=1[vc][aout]');
+    expect(graph).not.toContain('[voce]');
+  });
+
+  it('voce ripulita e a −14 LUFS', () => {
+    const graph = buildFilterGraph({
+      ...base,
+      hasAudio: true,
+      audio: { clean: true, normalize: true, music: null },
+    });
+    expect(graph).toContain('[vc][voce]');
+    expect(graph).toContain('[voce]highpass=f=80,afftdn=nr=20:nf=-45:tn=1,acompressor=');
+    expect(graph).toContain('loudnorm=I=-14:TP=-1.5:LRA=11');
+    expect(graph).toContain('[vpulita]anull[aout]');
+    const onlyClean = buildFilterGraph({
+      ...base,
+      hasAudio: true,
+      audio: { clean: true, normalize: false, music: null, voiceGainDb: 4 },
+    });
+    expect(onlyClean).toContain(
+      'volume=4.0dB,agate=threshold=0.04:ratio=4:range=0.18:knee=1.5:attack=10:release=300,volume=-4.0dB',
+    );
+  });
+
+  it('musica alla durata del video, in dissolvenza e abbassata dalla voce', () => {
+    const graph = buildFilterGraph({
+      ...base,
+      hasAudio: true,
+      audio: { clean: false, normalize: false, music: { volumeDb: -10, ducking: true } },
+    });
+    expect(graph).toContain('[1:a]atrim=duration=10.000');
+    expect(graph).toContain(
+      'volume=-10.0dB,afade=t=in:d=1.000,afade=t=out:st=8.000:d=2.000[musica]',
+    );
+    expect(graph).toContain('[musica][vcomando]sidechaincompress=');
+    expect(graph).toContain('[vmix][mbassa]amix=inputs=2:duration=first:normalize=0');
+    const args = ffmpegRenderArgs({
+      source: 'v.mp4',
+      graphFile: 'filtri.txt',
+      output: 'o.mp4',
+      hasAudio: false,
+      music: 'C:\\Musica\\a.mp3',
+    });
+    expect(args.slice(2, 8)).toEqual([
+      '-i',
+      'v.mp4',
+      '-stream_loop',
+      '-1',
+      '-i',
+      'C:\\Musica\\a.mp3',
+    ]);
+    expect(args).toContain('[aout]');
+  });
+
+  it('con la musica misura anche il mix e ne corregge il volume', () => {
+    const audio = {
+      clean: true,
+      normalize: true,
+      music: { volumeDb: -10, ducking: true },
+      voiceGainDb: 5,
+    };
+    const measure = mixLoudnessGraph([{ startMs: 0, endMs: 4000 }], true, audio);
+    expect(measure).toContain('concat=n=1:v=0:a=1[voce]');
+    expect(measure).toContain('volume=5.0dB');
+    expect(measure).toContain('[aout]loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json[misura]');
+    expect(mixLoudnessArgs('v.mp4', 'm.mp3', 'misura-mix.txt')).toEqual([
+      '-y',
+      '-nostdin',
+      '-i',
+      'v.mp4',
+      '-stream_loop',
+      '-1',
+      '-i',
+      'm.mp3',
+      '-/filter_complex',
+      'misura-mix.txt',
+      '-map',
+      '[misura]',
+      '-f',
+      'null',
+      '-',
+    ]);
+    const graph = buildFilterGraph({
+      ...base,
+      hasAudio: true,
+      audio: { ...audio, mixGainDb: 1.8 },
+    });
+    expect(graph).toContain(
+      'amix=inputs=2:duration=first:normalize=0,volume=1.8dB,alimiter=limit=0.95:level=false[aout]',
+    );
+  });
+
+  it('un video muto con musica ha solo la musica', () => {
+    const graph = buildFilterGraph({
+      ...base,
+      hasAudio: false,
+      audio: { clean: true, normalize: true, music: { volumeDb: -6, ducking: true } },
+    });
+    expect(graph).toContain('concat=n=1:v=1:a=0[vc];');
+    expect(graph).toContain('[musica]alimiter=limit=0.95:level=false[aout]');
+    expect(graph).not.toContain('[voce]');
   });
 });

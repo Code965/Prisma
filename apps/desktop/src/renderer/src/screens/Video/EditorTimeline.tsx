@@ -1,5 +1,6 @@
 import type { VideoProject } from '@prisma-app/shared';
 import type { PointerEvent } from 'react';
+import { musicTrackLabel } from '../../services/audio';
 import { rulerLabels, type EditorSegment } from '../../services/video-editor';
 import styles from './VideoEditor.module.css';
 
@@ -90,7 +91,13 @@ export function EditorTimeline({ project, segments, currentMs, onSeek }: EditorT
 
           <div className={styles.trackRow}>
             <span className={styles.trackName}>Musica</span>
-            <div className={styles.emptyTrack}>Nessuna musica</div>
+            {project.edit.audio.music ? (
+              <div className={styles.musicClip} title={project.edit.audio.music.fileName}>
+                {musicTrackLabel(project.edit.audio.music)}
+              </div>
+            ) : (
+              <div className={styles.emptyTrack}>Nessuna musica: sceglila nel pannello Audio</div>
+            )}
           </div>
 
           <div

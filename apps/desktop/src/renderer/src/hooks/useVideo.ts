@@ -28,6 +28,7 @@ type SetToolPath = { tool: VideoTool; path: string | null };
 
 const keys = {
   tools: ['video-tools'] as const,
+  music: ['music'] as const,
   projects: ['video-projects'] as const,
 };
 
@@ -36,6 +37,27 @@ function bridge() {
     throw new Error('Il video funziona solo nell’app desktop');
   }
   return window.prisma;
+}
+
+/** Cartella della musica e i suoi brani (6b). */
+export function useMusic() {
+  return useQuery({
+    queryKey: keys.music,
+    queryFn: () => bridge().music.status(),
+    enabled: canUseVideo(),
+  });
+}
+
+/** Scelta della cartella (finestra di sistema) o «Togli». */
+export function useSetMusicDir() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (action: 'pick' | 'clear') =>
+      action === 'pick' ? bridge().music.pick() : bridge().music.clear(),
+    onSuccess: (status) => {
+      if (status) client.setQueryData(keys.music, status);
+    },
+  });
 }
 
 /** Stato di FFmpeg, ffprobe, whisper.cpp e del modello (rilevati o impostati). */

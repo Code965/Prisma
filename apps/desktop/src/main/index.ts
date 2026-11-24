@@ -14,10 +14,12 @@ import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
 import { LocalStore } from './video/store.js';
 import { VIDEO_PROGRESS_EVENT } from './ipc-contract.js';
+import { pickTrack } from '@prisma-app/shared';
 import { probeVideo } from './video/ffprobe.js';
 import { createFilmcraftService } from './video/filmcraft/service.js';
 import { createIdeaVideoService } from './video/idea-video.js';
 import { readAnsiCodePage } from './video/tts.js';
+import { createMusicLibrary } from './video/music.js';
 import { runProcess } from './video/process.js';
 import { createRenderService } from './video/render.js';
 import { createTranscriptionService } from './video/transcription.js';
@@ -143,7 +145,14 @@ void app.whenReady().then(async () => {
   setCore(core);
   const store = new LocalStore(join(userDataDir, 'prisma.db'));
   const video = createVideoService({ userDataDir, store });
-  handleMediaProtocol(video.sourcePathOf);
+  const music = createMusicLibrary({
+    settingsFile: join(userDataDir, 'musica.json'),
+    ffprobe: () => video.requireTool('ffprobe').catch(() => null),
+  });
+  handleMediaProtocol(video.sourcePathOf, async (fileName) => {
+    const dir = await music.dir();
+    return dir ? join(dir, fileName) : null;
+  });
   // L'avanzamento va a tutte le finestre: ognuna mostra quello dei suoi progetti.
   const emitProgress = (progress: VideoJobProgress) => {
     for (const window of BrowserWindow.getAllWindows()) {
@@ -167,6 +176,7 @@ void app.whenReady().then(async () => {
     emit: emitProgress,
     measureDurationMs: async (path) =>
       (await probeVideo(await video.requireTool('ffprobe'), path)).durationMs,
+    musicDir: () => music.dir(),
   });
   const filmcraft = createFilmcraftService({
     store,
@@ -190,8 +200,10 @@ void app.whenReady().then(async () => {
     probe: probeVideo,
     transcribe: (projectId) => transcription.transcribe(projectId, 'it'),
     codePage: readAnsiCodePage,
+    // Il video ha già una musica, da cambiare o togliere nell'editor.
+    pickMusic: async () => pickTrack((await music.status()).tracks, Math.random()),
   });
-  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo);
+  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music);
   const updates = registerUpdates();
 
   // L'intro resta almeno SPLASH_MIN_MS, poi lascia il posto alla finestra principale.

@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, shell } from 'electron';
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron';
 import { join, relative, isAbsolute } from 'node:path';
 import { exportCarousel } from './export/carousel-export.js';
 import { SLIDE_FONT_FILES } from './export/font-files.js';
@@ -6,6 +6,7 @@ import { embeddedFontFaceCss } from './export/fonts.js';
 import { isR2UploadUrl, uploadFile } from './export/upload.js';
 import type { FilmcraftService } from './video/filmcraft/service.js';
 import type { IdeaVideoService } from './video/idea-video.js';
+import type { MusicLibrary } from './video/music.js';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
 import type { VideoService } from './video/video-service.js';
@@ -127,7 +128,19 @@ export function registerIpcHandlers(
   render: RenderService,
   filmcraft: FilmcraftService,
   ideaVideo: IdeaVideoService,
+  music: MusicLibrary,
 ): void {
+  ipcMain.handle(IPC.musicStatus, () => music.status());
+  ipcMain.handle(IPC.musicClear, () => music.setDir(null));
+  ipcMain.handle(IPC.musicPick, async (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const options = { properties: ['openDirectory' as const] };
+    const result = window
+      ? await dialog.showOpenDialog(window, options)
+      : await dialog.showOpenDialog(options);
+    if (result.canceled || !result.filePaths[0]) return null;
+    return music.setDir(result.filePaths[0]);
+  });
   ipcMain.handle(IPC.getSettings, () => getSettingsView());
   ipcMain.handle(IPC.saveSettings, (_event, input: unknown) =>
     saveSettings(ConnectionSettingsSchema.parse(input)),

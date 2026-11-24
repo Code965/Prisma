@@ -1,3 +1,4 @@
+import { DEFAULT_VIDEO_AUDIO } from './video-audio.js';
 import { describe, expect, it } from 'vitest';
 import { GenerateShortsRequestSchema, shortEdit, shortSegments } from './shorts.js';
 import { DEFAULT_VIDEO_EDIT } from './video-edit.js';
@@ -38,6 +39,7 @@ describe('shortEdit', () => {
       ],
       keywords: [21_000],
       hook: { text: 'Titolo del video lungo', durationMs: 2500 },
+      audio: DEFAULT_VIDEO_AUDIO,
     };
     expect(shortEdit(parent, 60_000, { startMs: 10_000, endMs: 40_000 })).toEqual({
       format: '9:16',
@@ -51,6 +53,7 @@ describe('shortEdit', () => {
       zooms: [{ startMs: 20_000, endMs: 22_000, scale: 1.18 }],
       keywords: [21_000],
       hook: null,
+      audio: DEFAULT_VIDEO_AUDIO,
     });
   });
 

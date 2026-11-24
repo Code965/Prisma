@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { zoomedOverlay } from '../../services/auto-edit';
 import { mediaUrl } from '../../services/video';
 import { clockLabel, cropOverlay, draggedOffset, sourceTimeMs } from '../../services/video-editor';
+import { AudioPanel } from './AudioPanel';
 import styles from './VideoEditor.module.css';
 
 interface PlayerPanelProps {
@@ -269,6 +270,15 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
           ))}
         </div>
       </div>
+
+      <AudioPanel
+        project={project}
+        edit={edit}
+        onChange={onChange}
+        playing={playing}
+        sourceMs={sourceMs}
+        totalMs={total}
+      />
 
       {(edit.hook || edit.keywords.length > 0 || edit.zooms.length > 0) && (
         <div className={styles.aiPanel}>
