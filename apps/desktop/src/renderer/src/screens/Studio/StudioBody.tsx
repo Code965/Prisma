@@ -6,15 +6,18 @@ import {
   type Variant,
 } from '@prisma-app/shared';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Page } from '../../components/Page/Page';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
 import { StatusPill } from '../../components/StatusPill/StatusPill';
 import { useBrand } from '../../hooks/brand';
 import { useApproveVariant, useSaveVariant, type DraftValues } from '../../hooks/useStudio';
+import { useCreateVideo } from '../../hooks/useVideo';
 import { errorMessage } from '../../services/api/client';
 import { isCarouselPlatform } from '../../services/carousel';
+import { canCreateVideoFrom, createVideoLabel } from '../../services/create-video';
+import { canUseVideo } from '../../services/video';
 import { approvalSteps, isDirty, isReadOnly } from '../../services/studio';
 import { ChatPanel } from './ChatPanel';
 import { FeedPreview } from './FeedPreview';
@@ -38,6 +41,8 @@ export function StudioBody({
   onSelectPlatform,
 }: StudioBodyProps) {
   const { brand } = useBrand();
+  const navigate = useNavigate();
+  const createVideo = useCreateVideo();
   const saved: DraftValues = { body: variant.body, metadata: variant.metadata };
   const [draft, setDraft] = useState<DraftValues>(saved);
   const dirty = isDirty(draft, saved);
@@ -134,6 +139,45 @@ export function StudioBody({
                     {variant.metadata.carousel ? 'Modifica le slide' : 'Crea il carosello'}
                   </Link>
                 )}
+              </div>
+            )}
+
+            {canUseVideo() && canCreateVideoFrom(variant.platform) && (
+              <div className={styles.carouselRow}>
+                <span>Video di circa 45 secondi: copione dell’AI, voce e slide del brand kit</span>
+                {dirty ? (
+                  <span className={styles.note}>Salva la bozza per creare il video</span>
+                ) : createVideo.isPending ? (
+                  <span className={styles.note}>
+                    {createVideoLabel(createVideo.progress)}{' '}
+                    <button
+                      type="button"
+                      className={styles.linkButton}
+                      onClick={createVideo.cancel}
+                    >
+                      Annulla
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.linkButton}
+                    disabled={!variant.body.trim()}
+                    onClick={() =>
+                      createVideo.mutate(
+                        { kind: 'variant', id: variant.id },
+                        { onSuccess: (project) => navigate(`/video/${project.id}`) },
+                      )
+                    }
+                  >
+                    Crea video dal post
+                  </button>
+                )}
+                {createVideo.error ? (
+                  <p role="alert" className={styles.error}>
+                    Video non creato: {errorMessage(createVideo.error)}
+                  </p>
+                ) : null}
               </div>
             )}
 

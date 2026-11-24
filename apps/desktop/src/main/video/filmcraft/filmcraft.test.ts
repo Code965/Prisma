@@ -49,6 +49,7 @@ function project(overrides: Partial<VideoProject> = {}): VideoProject {
     edit: { ...DEFAULT_VIDEO_EDIT, cuts: [{ startMs: 5000, endMs: 9000 }], cropOffset: 0.25 },
     render: null,
     short: null,
+    generated: null,
     filmcraft: null,
     createdAt: '2026-11-22T10:00:00.000Z',
     updatedAt: '2026-11-22T10:00:00.000Z',

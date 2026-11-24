@@ -8,13 +8,16 @@ import { SPLASH_BACKGROUND, SPLASH_MIN_MS, SPLASH_SIZE, splashDataUrl } from './
 import { registerUpdates } from './updates.js';
 import { startCore, type Core } from './core.js';
 import { setupBackground, startedHidden } from './background.js';
-import { registerIpcHandlers, setCore } from './ipc.js';
+import { captureJpeg } from './export/carousel-export.js';
+import { registerIpcHandlers, setCore, slideFontFaceCss } from './ipc.js';
 import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
 import { LocalStore } from './video/store.js';
 import { VIDEO_PROGRESS_EVENT } from './ipc-contract.js';
 import { probeVideo } from './video/ffprobe.js';
 import { createFilmcraftService } from './video/filmcraft/service.js';
+import { createIdeaVideoService } from './video/idea-video.js';
+import { readAnsiCodePage } from './video/tts.js';
 import { runProcess } from './video/process.js';
 import { createRenderService } from './video/render.js';
 import { createTranscriptionService } from './video/transcription.js';
@@ -174,7 +177,21 @@ void app.whenReady().then(async () => {
     probe: probeVideo,
     emit: emitProgress,
   });
-  registerIpcHandlers(video, transcription, render, filmcraft);
+  const ideaVideo = createIdeaVideoService({
+    store,
+    toolsStatus: video.toolsStatus,
+    requireTool: video.requireTool,
+    // I video creati restano qui: sono il sorgente del progetto.
+    videosRoot: join(userDataDir, 'video-creati'),
+    run: runProcess,
+    emit: emitProgress,
+    captureSlide: captureJpeg,
+    fontFaceCss: slideFontFaceCss,
+    probe: probeVideo,
+    transcribe: (projectId) => transcription.transcribe(projectId, 'it'),
+    codePage: readAnsiCodePage,
+  });
+  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo);
   const updates = registerUpdates();
 
   // L'intro resta almeno SPLASH_MIN_MS, poi lascia il posto alla finestra principale.

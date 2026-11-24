@@ -122,7 +122,7 @@ async function load(window: BrowserWindow, html: string): Promise<void> {
  * ristretta all'altezza dello schermo e su un portatile 1350 px non ci stanno, mentre le
  * metriche emulate fissano la pagina a 1080×1350 con densità 1, qualunque sia lo schermo.
  */
-async function captureJpeg(html: string): Promise<Buffer> {
+export async function captureJpeg(html: string): Promise<Buffer> {
   const window = renderWindow(true);
   const cdp = window.webContents.debugger;
   try {

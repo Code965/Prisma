@@ -1,11 +1,13 @@
 import {
   BrandKitSchema,
+  CAROUSEL_TEMPLATES,
   CarouselSchema,
   EXPORT_FORMATS,
   IdSchema,
   TRANSCRIPT_LANGUAGES,
   VideoEditSchema,
   VIDEO_TOOLS,
+  VideoScriptSchema,
   type ExportedFile,
   type ExportFormat,
 } from '@prisma-app/shared';
@@ -35,6 +37,7 @@ export const IPC = {
   renderVideo: 'video:render',
   renderStatus: 'video:render-status',
   createShort: 'video:create-short',
+  generateVideo: 'video:generate',
   filmcraftStatus: 'filmcraft:status',
   filmcraftOpen: 'filmcraft:open',
   filmcraftExport: 'filmcraft:export',
@@ -196,6 +199,18 @@ export const CreateShortRequestSchema = z
   })
   .refine((r) => r.endMs > r.startMs, { message: 'Fine prima dell’inizio' });
 export type CreateShortRequest = z.infer<typeof CreateShortRequestSchema>;
+
+/** «Crea video dall'idea»: copione dell'AI, template e brand kit per le slide. */
+export const GenerateVideoRequestSchema = z.object({
+  /** Scelto dal renderer: l'avanzamento arriva con questo id finché il progetto non esiste. */
+  jobId: z.uuid(),
+  script: VideoScriptSchema,
+  source: z.object({ kind: z.enum(['idea', 'variant']), id: IdSchema }),
+  template: z.enum(CAROUSEL_TEMPLATES),
+  kit: BrandKitSchema,
+  initials: z.string().max(3),
+});
+export type GenerateVideoRequest = z.infer<typeof GenerateVideoRequestSchema>;
 
 /** «Apri in FilmCraft»; `rebuild` ricrea il progetto FilmCraft dalle modifiche di Prisma. */
 export const FilmcraftOpenSchema = z.object({

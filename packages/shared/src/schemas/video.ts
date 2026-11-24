@@ -78,6 +78,16 @@ export const VideoShortOriginSchema = z.object({
 });
 export type VideoShortOrigin = z.infer<typeof VideoShortOriginSchema>;
 
+/** Video creato da Prisma («Crea video dall'idea»): da dove viene e con quale voce. */
+export const VideoGeneratedSchema = z.object({
+  source: z.enum(['idea', 'variant']),
+  sourceId: IdSchema,
+  /** «Voce Piper it_IT-paola-medium» o «Voce di Windows Microsoft Elsa». */
+  voice: z.string().max(200),
+  scenes: z.int().positive(),
+});
+export type VideoGenerated = z.infer<typeof VideoGeneratedSchema>;
+
 export const VideoProjectSchema = z.object({
   id: z.uuid(),
   title: z.string().trim().min(1).max(200),
@@ -88,6 +98,7 @@ export const VideoProjectSchema = z.object({
   edit: VideoEditSchema.default(DEFAULT_VIDEO_EDIT),
   render: VideoRenderSchema.nullable().default(null),
   short: VideoShortOriginSchema.nullable().default(null),
+  generated: VideoGeneratedSchema.nullable().default(null),
   filmcraft: VideoFilmcraftSchema.nullable().default(null),
   createdAt: InstantSchema,
   updatedAt: InstantSchema,
@@ -95,7 +106,15 @@ export const VideoProjectSchema = z.object({
 export type VideoProject = z.infer<typeof VideoProjectSchema>;
 
 /** Programmi esterni usati dal main di Electron. */
-export const VIDEO_TOOLS = ['ffmpeg', 'ffprobe', 'whisper', 'whisperModel', 'filmcraft'] as const;
+export const VIDEO_TOOLS = [
+  'ffmpeg',
+  'ffprobe',
+  'whisper',
+  'whisperModel',
+  'tts',
+  'ttsVoice',
+  'filmcraft',
+] as const;
 export type VideoTool = (typeof VIDEO_TOOLS)[number];
 
 export const VIDEO_TOOL_LABELS: Record<VideoTool, string> = {
@@ -103,6 +122,8 @@ export const VIDEO_TOOL_LABELS: Record<VideoTool, string> = {
   ffprobe: 'ffprobe',
   whisper: 'whisper.cpp',
   whisperModel: 'Modello Whisper',
+  tts: 'sherpa-onnx (voce)',
+  ttsVoice: 'Voce Piper',
   filmcraft: 'FilmCraft',
 };
 
@@ -112,7 +133,7 @@ export const ToolStatusSchema = z.object({
   path: z.string().nullable(),
   /** `impostato` a mano nelle Impostazioni, `rilevato` cercando nel PATH e nelle cartelle note. */
   source: z.enum(['impostato', 'rilevato', 'assente']),
-  /** Prima riga della versione (programmi) o dimensione (modello). */
+  /** Prima riga della versione (programmi), dimensione (modello) o nome della voce. */
   detail: z.string().nullable(),
   /** Il percorso impostato esiste ma non funziona. */
   error: z.string().nullable(),
@@ -133,7 +154,15 @@ export function formatDurationMs(ms: number): string {
 }
 
 /** Avanzamento di un lavoro lungo sul video, inviato dal main al renderer. */
-export const VIDEO_JOB_STAGES = ['audio', 'trascrizione', 'render', 'filmcraft'] as const;
+export const VIDEO_JOB_STAGES = [
+  'audio',
+  'trascrizione',
+  'render',
+  'filmcraft',
+  'voce',
+  'slide',
+  'montaggio',
+] as const;
 export type VideoJobStage = (typeof VIDEO_JOB_STAGES)[number];
 
 export const VIDEO_JOB_STAGE_LABELS: Record<VideoJobStage, string> = {
@@ -141,6 +170,9 @@ export const VIDEO_JOB_STAGE_LABELS: Record<VideoJobStage, string> = {
   trascrizione: 'Trascrivo con Whisper',
   render: 'Esporto il video con FFmpeg',
   filmcraft: 'Esporto da FilmCraft',
+  voce: 'Leggo il copione con la voce',
+  slide: 'Disegno le slide',
+  montaggio: 'Monto slide e voce',
 };
 
 export interface VideoJobProgress {

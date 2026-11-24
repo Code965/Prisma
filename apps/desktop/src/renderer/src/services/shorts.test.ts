@@ -23,6 +23,7 @@ const project = (transcript: VideoProject['transcript']): VideoProject => ({
   edit: { ...DEFAULT_VIDEO_EDIT, cuts: [{ startMs: 0, endMs: 5000 }] },
   render: null,
   short: null,
+  generated: null,
   filmcraft: null,
   createdAt: '2026-11-22T10:00:00.000Z',
   updatedAt: '2026-11-22T10:00:00.000Z',

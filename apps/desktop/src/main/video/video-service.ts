@@ -27,6 +27,8 @@ const TOOL_FILTERS: Record<VideoTool, Electron.FileFilter[]> = {
   ffprobe: [{ name: 'Eseguibile', extensions: ['exe'] }],
   whisper: [{ name: 'Eseguibile', extensions: ['exe'] }],
   whisperModel: [{ name: 'Modello whisper.cpp', extensions: ['bin'] }],
+  tts: [{ name: 'sherpa-onnx-offline-tts.exe', extensions: ['exe'] }],
+  ttsVoice: [{ name: 'Voce Piper (.onnx)', extensions: ['onnx'] }],
   filmcraft: [{ name: 'FilmCraft (filmcraft.exe)', extensions: ['exe'] }],
 };
 

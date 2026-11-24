@@ -12,11 +12,15 @@ function fakeEnv(files: Record<string, number>, probe: ToolEnvironment['probe'])
   return {
     searchDirs: ['C:\\bin', 'C:\\winget'],
     modelDirs: ['C:\\dati\\whisper-models'],
+    voiceDirs: ['C:\\dati\\voci'],
     exists: (path) => path in files,
-    list: (dir) =>
-      Object.keys(files)
-        .filter((f) => f.startsWith(`${dir}\\`))
-        .map((f) => f.slice(dir.length + 1)),
+    list: (dir) => [
+      ...new Set(
+        Object.keys(files)
+          .filter((f) => f.startsWith(`${dir}\\`))
+          .map((f) => f.slice(dir.length + 1).split('\\')[0]!),
+      ),
+    ],
     sizeOf: (path) => files[path] ?? 0,
     probe,
   };
@@ -88,6 +92,36 @@ describe('rilevamento degli strumenti video', () => {
       path: join(dir, 'ggml-small.bin'),
       source: 'rilevato',
       detail: '466 MB',
+    });
+  });
+
+  it('trova sherpa-onnx e una voce Piper con token e dati di espeak-ng', async () => {
+    const bin = 'C:\\bin\\sherpa-onnx-v1.13.8-win-x64\\bin';
+    const voice = 'C:\\dati\\voci\\vits-piper-it_IT-paola-medium';
+    const files = {
+      [join(bin, 'sherpa-onnx-offline-tts.exe')]: 1,
+      [`${voice}\\it_IT-paola-medium.onnx`]: 60 * 1024 * 1024,
+      [`${voice}\\tokens.txt`]: 1,
+      [`${voice}\\espeak-ng-data`]: 0,
+    };
+    const env = { ...fakeEnv(files, versionProbe), searchDirs: [bin] };
+    expect(await toolStatus('tts', undefined, env)).toMatchObject({
+      source: 'rilevato',
+      detail: 'v1.13.8',
+      error: null,
+    });
+    expect(await toolStatus('ttsVoice', undefined, env)).toMatchObject({
+      path: `${voice}\\it_IT-paola-medium.onnx`,
+      detail: 'it_IT-paola-medium',
+      error: null,
+    });
+    const withoutData: Record<string, number> = Object.fromEntries(
+      Object.entries(files).filter(([path]) => !path.endsWith('espeak-ng-data')),
+    );
+    expect(
+      await toolStatus('ttsVoice', undefined, fakeEnv(withoutData, versionProbe)),
+    ).toMatchObject({
+      error: 'Manca la cartella espeak-ng-data accanto alla voce',
     });
   });
 });

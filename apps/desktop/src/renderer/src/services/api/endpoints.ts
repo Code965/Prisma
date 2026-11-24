@@ -1,5 +1,7 @@
 import {
   AutoEditPlanSchema,
+  VideoScriptSchema,
+  type VideoScriptRequest,
   type AutoEditRequest,
   AppCredentialViewSchema,
   type AppCredentialKey,
@@ -174,6 +176,8 @@ export const api = {
     apiRequest('POST', `/brands/${brandId}/analytics/insights`, AnalyticsInsightsSchema),
   saveManualMetrics: (publicationId: number, input: ManualMetricsInput) =>
     apiRequest('POST', `/publications/${publicationId}/metrics`, PublicationMetricsSchema, input),
+  videoScript: (input: VideoScriptRequest) =>
+    apiRequest('POST', '/video/script', VideoScriptSchema, input),
   autoEditPlan: (input: AutoEditRequest) =>
     apiRequest('POST', '/video/auto-edit', AutoEditPlanSchema, input),
   generateShorts: (input: GenerateShortsRequest) =>

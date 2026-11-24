@@ -13,9 +13,15 @@ import { useEffect, useState } from 'react';
 
 import { api } from '../services/api/endpoints';
 import { autoEditRequest } from '../services/auto-edit';
+import {
+  DEFAULT_VIDEO_TEMPLATE,
+  scriptRequest,
+  type CreateVideoSource,
+} from '../services/create-video';
 import { shortsRequest } from '../services/shorts';
 import { canUseVideo } from '../services/video';
 import { useBrand } from './brand';
+import { useBrandKit } from './useBrandKit';
 import { queryKeys } from './query-client';
 
 type SetToolPath = { tool: VideoTool; path: string | null };
@@ -211,6 +217,49 @@ export function useAutoEdit(project: VideoProject) {
     },
   });
   return { ...mutation, available: request !== null };
+}
+
+/**
+ * «Crea video dall'idea»: copione dal server, poi voce, slide e montaggio nel main. Restituisce
+ * il progetto video creato, da aprire nell'editor.
+ */
+export function useCreateVideo() {
+  const { brand } = useBrand();
+  const kit = useBrandKit().data;
+  const client = useQueryClient();
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [progress, setProgress] = useJobProgress(jobId ?? '');
+  const mutation = useMutation({
+    mutationFn: async (source: CreateVideoSource): Promise<VideoProject> => {
+      if (!kit) throw new Error('Brand kit non ancora caricato');
+      const video = bridge().video;
+      const id = crypto.randomUUID();
+      setJobId(id);
+      setProgress(null);
+      const script = await api.videoScript(scriptRequest(source));
+      return video.generate({
+        jobId: id,
+        script,
+        source,
+        template: DEFAULT_VIDEO_TEMPLATE,
+        kit,
+        initials: brand?.initials ?? '',
+      });
+    },
+    onSuccess: (project) =>
+      client.setQueryData<VideoProject[]>(keys.projects, (list) => [project, ...(list ?? [])]),
+    onSettled: () => {
+      setJobId(null);
+      void client.invalidateQueries({ queryKey: keys.projects });
+    },
+  });
+  return {
+    ...mutation,
+    progress: mutation.isPending ? progress : null,
+    cancel: () => {
+      if (jobId) void bridge().video.cancel(jobId);
+    },
+  };
 }
 
 /** FilmCraft aperto da Prisma e progetto superato; si ricontrolla spesso perché l'app si può chiudere. */

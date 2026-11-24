@@ -5,6 +5,7 @@ import {
   GenerateContentSchema,
   GenerateShortsRequestSchema,
   AutoEditRequestSchema,
+  VideoScriptRequestSchema,
 } from '@prisma-app/shared';
 import type { FastifyInstance } from 'fastify';
 import { parseId } from '../../http/params.js';
@@ -12,6 +13,7 @@ import type { CarouselAiService } from './carousel.js';
 import type { AiService } from './service.js';
 import type { ShortsAiService } from './shorts.js';
 import type { AutoEditService } from './auto-edit.js';
+import type { VideoScriptService } from './video-script.js';
 
 export function aiRoutes(
   app: FastifyInstance,
@@ -19,6 +21,7 @@ export function aiRoutes(
   carousel: CarouselAiService,
   shorts: ShortsAiService,
   autoEdit: AutoEditService,
+  videoScript: VideoScriptService,
 ): void {
   app.post('/contents/generate', async (request, reply) => {
     const content = await ai.generate(GenerateContentSchema.parse(request.body));
@@ -43,6 +46,11 @@ export function aiRoutes(
   // «Monta con l'AI»: solo la proposta, il desktop la applica al progetto video.
   app.post('/video/auto-edit', (request) =>
     autoEdit.plan(AutoEditRequestSchema.parse(request.body)),
+  );
+
+  // «Crea video dall'idea»: solo il copione, il desktop crea il video.
+  app.post('/video/script', (request) =>
+    videoScript.generate(VideoScriptRequestSchema.parse(request.body)),
   );
 
   app.post('/variants/:id/carousel/edit', (request) =>

@@ -36,6 +36,7 @@ const project: VideoProject = {
   edit: DEFAULT_VIDEO_EDIT,
   render: null,
   short: null,
+  generated: null,
   filmcraft: null,
   createdAt: '2026-11-22T12:00:00.000Z',
   updatedAt: '2026-11-22T12:00:00.000Z',

@@ -62,7 +62,7 @@ export class LocalStore {
   createProject(
     source: VideoSource,
     title = source.fileName.replace(/\.[^.]+$/, ''),
-    extra: Partial<Pick<VideoProject, 'transcript' | 'edit' | 'short'>> = {},
+    extra: Partial<Pick<VideoProject, 'transcript' | 'edit' | 'short' | 'generated'>> = {},
   ): VideoProject {
     const at = this.now().toISOString();
     const project = VideoProjectSchema.parse({

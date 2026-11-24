@@ -78,6 +78,9 @@ export const TOOL_HINTS: Record<VideoTool, string> = {
   whisper: 'Zip della release di whisper.cpp per Windows: contiene whisper-cli.exe',
   whisperModel:
     'File ggml-small.bin di whisper.cpp nella cartella whisper-models dei dati di Prisma, o scegli il file',
+  tts: 'Facoltativo, per una voce più naturale: zip «win-x64-shared» di sherpa-onnx 1.13 (sherpa-onnx-offline-tts.exe). Senza, si usa la voce italiana di Windows',
+  ttsVoice:
+    'Facoltativo: una voce Piper per sherpa-onnx (es. vits-piper-it_IT-paola-medium) nella cartella voci dei dati di Prisma, o scegli il file .onnx',
   filmcraft:
     'Facoltativo, per rifinire il montaggio: installa FilmCraft dal launcher di ArtCraft (filmcraft.exe con filmcraft-cli.exe accanto)',
 };
@@ -138,6 +141,10 @@ export function videoTargets(contents: readonly Content[]): VideoTarget[] {
 export function projectListMeta(project: VideoProject): string {
   if (project.short) {
     return `Short · ${formatDurationMs(editedDurationMs(project.edit.cuts, project.source.durationMs))} · 9:16`;
+  }
+  if (project.generated) {
+    const from = project.generated.source === 'idea' ? 'Dall’idea' : 'Dal post';
+    return `${from} · ${formatDurationMs(project.source.durationMs)} · 9:16`;
   }
   return `${formatDurationMs(project.source.durationMs)} · ${resolutionLabel(project.source.width, project.source.height)}`;
 }

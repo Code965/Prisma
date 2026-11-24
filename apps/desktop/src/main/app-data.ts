@@ -40,7 +40,15 @@ function rewriteProjectPaths(dbPath: string, from: string, to: string): void {
 }
 
 /** Dati dell'app da non perdere (il resto della cartella è cache di Chromium). */
-const KEEP = ['whisper-models', 'video-tools.json', 'settings.json', 'filmcraft', 'esportazioni'];
+const KEEP = [
+  'whisper-models',
+  'voci',
+  'video-creati',
+  'video-tools.json',
+  'settings.json',
+  'filmcraft',
+  'esportazioni',
+];
 
 /**
  * Esistono tutte e due le cartelle (es. la nuova creata prima che la vecchia fosse spostata): si

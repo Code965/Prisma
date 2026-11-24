@@ -38,6 +38,7 @@ import {
 } from './modules/oauth/tiktok-service.js';
 import { createSocialAccountService } from './modules/social-accounts/service.js';
 import { createTagService } from './modules/tags/service.js';
+import { createVideoScriptService } from './modules/ai/video-script.js';
 import { createAutoEditService } from './modules/ai/auto-edit.js';
 import { createAiSettingsService, type AiSettingsConfig } from './modules/ai-settings/service.js';
 import {
@@ -159,6 +160,14 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       voice: brandKit.voicePrompt,
     }),
     autoEdit: createAutoEditService({ llm, prompts, brands, voice: brandKit.voicePrompt }),
+    videoScript: createVideoScriptService({
+      db,
+      llm,
+      prompts,
+      brands,
+      ideas,
+      voice: brandKit.voicePrompt,
+    }),
     blogConnection: createBlogConnectionService({
       db,
       config: options.blogConnection ?? null,

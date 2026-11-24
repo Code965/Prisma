@@ -15,6 +15,16 @@ interface IdeaCardProps {
   onGenerate: () => void;
   deleting: boolean;
   onDelete: () => void;
+  /** «Crea video»: assente fuori dall'app desktop. */
+  video?: {
+    busy: boolean;
+    /** Questa idea è quella in lavorazione. */
+    active: boolean;
+    label: string;
+    error: unknown;
+    onCreate: () => void;
+    onCancel: () => void;
+  };
 }
 
 /** Una riga della lista idee: testo, argomento, piattaforme scelte e "Genera contenuti". */
@@ -27,6 +37,7 @@ export function IdeaCard({
   onGenerate,
   deleting,
   onDelete,
+  video,
 }: IdeaCardProps) {
   const count = idea.targetPlatforms.length;
 
@@ -76,6 +87,23 @@ export function IdeaCard({
         >
           {generating ? 'Genero le bozze…' : `Genera contenuti · ${platformCountLabel(count)}`}
         </Button>
+        {video && (
+          <Button
+            variant="secondary"
+            size={40}
+            icon={<Icon name="video" size={14} />}
+            disabled={video.busy || generating}
+            onClick={video.onCreate}
+            title="Copione dell’AI, voce e slide del brand kit: un video verticale di circa 45 secondi"
+          >
+            {video.active ? video.label : 'Crea video'}
+          </Button>
+        )}
+        {video?.active && (
+          <button type="button" className={styles.inlineLink} onClick={video.onCancel}>
+            Annulla
+          </button>
+        )}
         <button
           type="button"
           className={styles.deleteButton}
@@ -88,6 +116,11 @@ export function IdeaCard({
         </button>
       </div>
 
+      {video?.error ? (
+        <p role="alert" className={`${styles.error} ${styles.cardError}`}>
+          Video non creato: {errorMessage(video.error)}
+        </p>
+      ) : null}
       {generateError ? (
         <p role="alert" className={`${styles.error} ${styles.cardError}`}>
           {errorMessage(generateError)}

@@ -7,6 +7,7 @@ import type {
   ConnectionSettingsView,
   CreateShortRequest,
   FilmcraftOpen,
+  GenerateVideoRequest,
   ExportCarouselRequest,
   ExportCarouselResult,
   SetToolPath,
@@ -43,6 +44,7 @@ const CHANNELS = {
   renderVideo: 'video:render',
   renderStatus: 'video:render-status',
   createShort: 'video:create-short',
+  generateVideo: 'video:generate',
   filmcraftStatus: 'filmcraft:status',
   filmcraftOpen: 'filmcraft:open',
   filmcraftExport: 'filmcraft:export',
@@ -135,6 +137,9 @@ const api = {
       ipcRenderer.invoke(CHANNELS.renderStatus, projectId),
     createShort: (input: CreateShortRequest): Promise<VideoProject> =>
       ipcRenderer.invoke(CHANNELS.createShort, input),
+    /** «Crea video dall'idea»: voce, slide e montaggio; annullabile con `cancel(jobId)`. */
+    generate: (input: GenerateVideoRequest): Promise<VideoProject> =>
+      ipcRenderer.invoke(CHANNELS.generateVideo, input),
     /** Avanzamento dei lavori sui video; restituisce la funzione per smettere di ascoltare. */
     onProgress: (listener: (progress: VideoJobProgress) => void): (() => void) => {
       const handler = (_event: Electron.IpcRendererEvent, progress: VideoJobProgress) =>

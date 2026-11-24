@@ -11,6 +11,9 @@ import {
   useUpdateIdea,
 } from '../../hooks/useIdeas';
 import { useNow } from '../../hooks/useNow';
+import { useCreateVideo } from '../../hooks/useVideo';
+import { createVideoLabel } from '../../services/create-video';
+import { canUseVideo } from '../../services/video';
 import { errorMessage } from '../../services/api/client';
 import {
   deleteIdeaConfirm,
@@ -33,6 +36,9 @@ export function IdeeScreen() {
   const updateIdea = useUpdateIdea();
   const generate = useGenerateContent();
   const deleteIdea = useDeleteIdea();
+  const createVideo = useCreateVideo();
+  const videoFor = (ideaId: number) =>
+    createVideo.variables?.kind === 'idea' && createVideo.variables.id === ideaId;
   const [filter, setFilter] = useState<TagFilter>('tutti');
   const now = useNow();
 
@@ -118,6 +124,22 @@ export function IdeeScreen() {
             }
             deleting={deleteIdea.isPending && deleteIdea.variables === idea.id}
             onDelete={() => window.confirm(deleteIdeaConfirm(idea)) && deleteIdea.mutate(idea.id)}
+            video={
+              canUseVideo()
+                ? {
+                    busy: createVideo.isPending,
+                    active: createVideo.isPending && videoFor(idea.id),
+                    label: createVideoLabel(createVideo.progress),
+                    error: videoFor(idea.id) ? createVideo.error : null,
+                    onCreate: () =>
+                      createVideo.mutate(
+                        { kind: 'idea', id: idea.id },
+                        { onSuccess: (project) => navigate(`/video/${project.id}`) },
+                      ),
+                    onCancel: createVideo.cancel,
+                  }
+                : undefined
+            }
           />
         ))}
       </div>

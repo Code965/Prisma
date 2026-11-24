@@ -336,6 +336,43 @@ una cartella dell'utente, B-roll, inquadratura che segue il volto, registrazione
   parola chiave e 3 zoom salvati, export 1080×1920 da 24,4 a 14,5 s con hook e parola chiave visibili nei
   fotogrammi e i ritagli dello zoom (608 → 562 → 516 px) nel grafo.
 
+### «Crea video dall'idea» (6c)
+
+- **Copione** (`POST /video/script` con `ideaId` o `variantId`, `modules/ai/video-script.ts`,
+  `generate-video-script.{system,user}.md`, schemi in `packages/shared/src/schemas/video-script.ts`): l'LLM scrive
+  3–8 scene di circa 45 s in tutto (70–160 parole, controllate da `GeneratedVideoScriptSchema`, gli errori tornano al
+  modello), ognuna con `narration` (letta alla lettera: niente simboli, emoji, elenchi) e una `slide` come quelle dei
+  caroselli (cover all'inizio, cta alla fine). Dagli articoli del blog si usa il testo senza HTML. Il server non salva
+  nulla.
+- **Voce locale** (`src/main/video/tts.ts`): strumenti video `tts` (`sherpa-onnx-offline-tts.exe`, cercato anche in
+  `%LOCALAPPDATA%\Programs\sherpa-onnx\*\bin`) e `ttsVoice` (voce Piper `.onnx` con `tokens.txt` ed
+  `espeak-ng-data` accanto, cercata in `userData/voci/<voce>/`). Serve sherpa-onnx **1.13** (zip
+  `win-x64-shared`): la 2.x ha tolto espeak-ng, che serve alle voci Piper. sherpa-onnx legge gli argomenti con la
+  code page ANSI (1252), non in UTF-8: `ansiArgument` passa i byte UTF-8 come caratteri della code page (letta dal
+  registro, `readAnsiCodePage`) e Windows li riconverte negli stessi byte; prima `speechText` tiene solo lettere
+  latine, accenti italiani, cifre e punteggiatura semplice (e legge %, &, +, €). Senza sherpa-onnx o voce: **voce di
+  Windows** (System.Speech da PowerShell con `-EncodedCommand`, testo da un file UTF-8, voce `it-IT` se c'è).
+  Voce provata: `vits-piper-it_IT-paola-medium` (licenza CC0, release `tts-models` di sherpa-onnx).
+- **Montaggio** (`idea-video.ts`, `slideshow.ts`): un WAV per scena (durata dall'intestazione, `wavDurationMs`),
+  slide JPEG 1080×1350 con `renderSlideHtml` e la finestra offscreen dell'export (`captureJpeg`), template «Tech
+  scuro»; un passaggio di FFmpeg con grafo da file: ogni slide ingrandita a 2× e poi `zoompan` lento fino a 1,06,
+  `pad` a 1080×1920 col fondo del template (slide a 190 px dall'alto, sotto restano i sottotitoli), voce con
+  `apad`/`atrim` alla durata della scena (voce + 450 ms), `concat`. Il video resta in
+  `userData/video-creati/<lavoro>/video.mp4` (sorgente del progetto), i file di lavoro si cancellano; un errore toglie
+  tutta la cartella. Un lavoro alla volta, annullabile (`video:cancel` con l'id del lavoro).
+- **Progetto**: come un video importato, 9:16, sottotitoli parola per parola, `project.generated` (idea o post,
+  voce, scene). Trascrizione: con whisper.cpp le parole del copione prendono i tempi sentiti (`alignScriptWords`,
+  distanza di modifica: la voce sintetica a volte viene capita male, «bug» → «buco»); senza whisper tempi stimati
+  per lunghezza delle parole (`estimatedWords`, modello `copione`). Poi «Monta con l'AI», export e «Collega a» come
+  per ogni video.
+- **UI**: «Crea video» nelle schede delle Idee e «Crea video dal post» nello Studio per YouTube, TikTok, Instagram e
+  LinkedIn (a bozza salvata), con le fasi (`createVideoLabel`: copione, voce, slide, montaggio, Whisper) e
+  «Annulla»; a fine lavoro si apre l'editor. Nell'elenco «Dall'idea · 0:30 · 9:16». Logica in
+  `services/create-video.ts`, hook `useCreateVideo`. L'avanzamento arriva con l'id del lavoro scelto dal renderer.
+- Provato nell'app vera su una cartella dei dati a parte con un servizio AI finto: clic su «Crea video» → editor in
+  30 s, 5 scene, 1080×1920, 30 s con la voce Piper (sherpa-onnx 1.13.8), trascrizione identica al copione; con la
+  voce di Windows (voce Piper non valida) 41 s di video in 26 s.
+
 ## Local-first: il server dentro l'app (fase 5c)
 
 - **Dati sul computer** (predefinito, `Impostazioni › Dati`): all'avvio, durante l'intro, `src/main/core.ts` avvia
@@ -969,7 +1006,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 
 - [x] 6a. «Monta con l'AI» sui propri video: silenzi, esitazioni, riempitivi e false partenze, hook, parole chiave,
       zoom
-- [ ] 6c. «Crea video dall'idea»: copione dell'AI, voce locale, slide animate del brand kit, sottotitoli parola per
+- [x] 6c. «Crea video dall'idea»: copione dell'AI, voce locale, slide animate del brand kit, sottotitoli parola per
       parola
 - [ ] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
 - [ ] 6d. B-roll e testi in sovrimpressione

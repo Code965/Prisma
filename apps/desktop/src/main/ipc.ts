@@ -5,12 +5,14 @@ import { SLIDE_FONT_FILES } from './export/font-files.js';
 import { embeddedFontFaceCss } from './export/fonts.js';
 import { isR2UploadUrl, uploadFile } from './export/upload.js';
 import type { FilmcraftService } from './video/filmcraft/service.js';
+import type { IdeaVideoService } from './video/idea-video.js';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
 import type { VideoService } from './video/video-service.js';
 import {
   ApiRequestSchema,
   CreateShortRequestSchema,
+  GenerateVideoRequestSchema,
   FilmcraftOpenSchema,
   ExportCarouselRequestSchema,
   SaveVideoEditSchema,
@@ -113,11 +115,18 @@ function isInside(root: string, path: string): boolean {
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
+/** Font delle slide incorporati, preparati una volta sola (export e video dall'idea). */
+export function slideFontFaceCss(): Promise<string> {
+  fontFaceCss ??= embeddedFontFaceCss(SLIDE_FONT_FILES);
+  return fontFaceCss;
+}
+
 export function registerIpcHandlers(
   video: VideoService,
   transcription: TranscriptionService,
   render: RenderService,
   filmcraft: FilmcraftService,
+  ideaVideo: IdeaVideoService,
 ): void {
   ipcMain.handle(IPC.getSettings, () => getSettingsView());
   ipcMain.handle(IPC.saveSettings, (_event, input: unknown) =>
@@ -134,8 +143,10 @@ export function registerIpcHandlers(
   });
   ipcMain.handle(IPC.exportCarousel, async (_event, input: unknown) => {
     const request = ExportCarouselRequestSchema.parse(input);
-    fontFaceCss ??= embeddedFontFaceCss(SLIDE_FONT_FILES);
-    return exportCarousel(request, { rootDir: exportsRoot(), fontFaceCss: await fontFaceCss });
+    return exportCarousel(request, {
+      rootDir: exportsRoot(),
+      fontFaceCss: await slideFontFaceCss(),
+    });
   });
   ipcMain.handle(IPC.uploadFile, (_event, input: unknown) => {
     const request = UploadFileRequestSchema.parse(input);
@@ -162,6 +173,9 @@ export function registerIpcHandlers(
     transcription.cancel(id);
     video.removeProject(id);
   });
+  ipcMain.handle(IPC.generateVideo, (_event, input: unknown) =>
+    ideaVideo.generate(GenerateVideoRequestSchema.parse(input)),
+  );
   ipcMain.handle(IPC.createShort, (_event, input: unknown) =>
     video.createShort(CreateShortRequestSchema.parse(input)),
   );
@@ -178,6 +192,7 @@ export function registerIpcHandlers(
     transcription.cancel(id);
     render.cancel(id);
     filmcraft.cancel(id);
+    ideaVideo.cancel(id);
   });
   ipcMain.handle(IPC.filmcraftStatus, (_event, input: unknown) =>
     filmcraft.status(VideoProjectIdSchema.parse(input)),
