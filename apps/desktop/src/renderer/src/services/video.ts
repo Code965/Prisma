@@ -35,6 +35,11 @@ export function musicFolderLabel(
   return count === 0 ? 'Nessun brano' : count === 1 ? '1 brano' : `${count} brani`;
 }
 
+/** B-roll (cartella dell'utente o cache di Pixabay): il main serve solo quelli. */
+export function brollUrl(key: string): string {
+  return `prisma-media://broll/${encodeURIComponent(key)}`;
+}
+
 /** Brano della cartella della musica: il main serve solo i file di quella cartella. */
 export function musicUrl(fileName: string): string {
   return `prisma-media://musica/${encodeURIComponent(fileName)}`;

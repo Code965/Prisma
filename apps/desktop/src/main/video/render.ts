@@ -1,7 +1,11 @@
 import { isTrackInFolder } from './music.js';
 import {
+  DEFAULT_BRAND_KIT,
   VIDEO_FORMAT_INFO,
   buildCaptions,
+  editedTimeMs,
+  type BrandKit,
+  type CarouselTemplate,
   cropRect,
   editedDurationMs,
   keptRanges,
@@ -17,6 +21,7 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
+import { renderOverlayCardHtml } from '@prisma-app/templates';
 import {
   buildFilterGraph,
   ffmpegRenderArgs,
@@ -25,6 +30,7 @@ import {
   mixLoudnessArgs,
   mixLoudnessGraph,
   voiceGainFromLoudnorm,
+  type VideoLayer,
 } from './render-plan.js';
 import type { LocalStore } from './store.js';
 import { ffmpegProgress } from './whisper.js';
@@ -45,6 +51,27 @@ export interface RenderDeps {
   measureDurationMs?: (path: string) => Promise<number>;
   /** Cartella della musica: il render usa solo brani che stanno lì (6b). */
   musicDir?: () => Promise<string | null>;
+  /** Schede di testo in PNG trasparente (finestra offscreen, 6d). */
+  captureCard?: (html: string, width: number, height: number) => Promise<Buffer>;
+  fontFaceCss?: () => Promise<string>;
+  /** Il B-roll sta nella cartella dell'utente o nella cache di Pixabay (6d). */
+  brollAllowed?: (path: string) => Promise<boolean>;
+}
+
+/** Brand kit e template con cui disegnare le schede; senza, quelli predefiniti. */
+export interface RenderLook {
+  kit: BrandKit;
+  template: CarouselTemplate;
+}
+
+/** Tempi sul video montato (secondi) di un intervallo del sorgente; null se è tutto tagliato. */
+export function editedWindow(
+  cuts: VideoProject['edit']['cuts'],
+  range: { startMs: number; endMs: number },
+): { startS: number; endS: number } | null {
+  const startS = editedTimeMs(cuts, range.startMs) / 1000;
+  const endS = editedTimeMs(cuts, range.endMs) / 1000;
+  return endS - startS >= 0.3 ? { startS, endS } : null;
 }
 
 export function sha256Hex(text: string): string {
@@ -77,7 +104,7 @@ export function createRenderService(deps: RenderDeps) {
   const running = new Map<string, AbortController>();
   const now = deps.now ?? (() => new Date());
 
-  async function render(projectId: string): Promise<VideoProject> {
+  async function render(projectId: string, look?: RenderLook): Promise<VideoProject> {
     const project = deps.store.getProject(projectId);
     if (!project) throw new Error('Progetto video non trovato');
     if (running.has(projectId)) throw new Error('Esportazione già in corso per questo video');
@@ -87,6 +114,13 @@ export function createRenderService(deps: RenderDeps) {
       throw new Error('Il brano non è nella cartella della musica: sceglilo di nuovo nell’editor');
     }
     const { source, edit } = project;
+    for (const item of edit.broll) {
+      if (!(await deps.brollAllowed?.(item.media.path))) {
+        throw new Error(
+          `Il B-roll «${item.media.fileName}» non è più disponibile: sceglilo di nuovo nell’editor`,
+        );
+      }
+    }
     const kept = keptRanges(edit.cuts, source.durationMs);
     const info = VIDEO_FORMAT_INFO[edit.format];
     const duration = editedDurationMs(edit.cuts, source.durationMs);
@@ -146,6 +180,40 @@ export function createRenderService(deps: RenderDeps) {
         );
         if (measured.code === 0) mixGainDb = voiceGainFromLoudnorm(lines.join('\n'));
       }
+      // B-roll sotto, schede sopra; si saltano quelli caduti in parti tagliate.
+      const layers: VideoLayer[] = [];
+      for (const item of edit.broll) {
+        const window = editedWindow(edit.cuts, item);
+        if (window) {
+          layers.push({
+            kind: item.media.kind === 'video' ? 'broll-video' : 'broll-image',
+            file: item.media.path,
+            ...window,
+          });
+        }
+      }
+      if (edit.overlays.length > 0) {
+        if (!deps.captureCard) throw new Error('Schede di testo non disponibili');
+        const fontFaceCss = (await deps.fontFaceCss?.()) ?? '';
+        for (const [i, overlay] of edit.overlays.entries()) {
+          const window = editedWindow(edit.cuts, overlay);
+          if (!window) continue;
+          const html = renderOverlayCardHtml({
+            overlay,
+            kit: look?.kit ?? DEFAULT_BRAND_KIT,
+            template: look?.template ?? 'scuro',
+            width: info.width,
+            height: info.height,
+            fontFaceCss,
+          });
+          const file = `scheda-${i + 1}.png`;
+          await writeFile(
+            join(workDir, file),
+            await deps.captureCard(html, info.width, info.height),
+          );
+          layers.push({ kind: 'card', file, ...window });
+        }
+      }
       await writeFile(
         join(workDir, 'filtri.txt'),
         buildFilterGraph({
@@ -156,6 +224,8 @@ export function createRenderService(deps: RenderDeps) {
           hasAudio: source.hasAudio,
           subtitles,
           audio: { ...edit.audio, voiceGainDb, mixGainDb },
+          layers,
+          firstLayerInput: edit.audio.music ? 2 : 1,
         }),
         'utf8',
       );
@@ -169,6 +239,7 @@ export function createRenderService(deps: RenderDeps) {
           output,
           hasAudio: source.hasAudio,
           music: edit.audio.music?.path ?? null,
+          layers,
         }),
         {
           cwd: workDir,

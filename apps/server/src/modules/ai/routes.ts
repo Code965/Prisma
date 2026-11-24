@@ -6,6 +6,7 @@ import {
   GenerateShortsRequestSchema,
   AutoEditRequestSchema,
   VideoScriptRequestSchema,
+  EnrichRequestSchema,
 } from '@prisma-app/shared';
 import type { FastifyInstance } from 'fastify';
 import { parseId } from '../../http/params.js';
@@ -14,6 +15,7 @@ import type { AiService } from './service.js';
 import type { ShortsAiService } from './shorts.js';
 import type { AutoEditService } from './auto-edit.js';
 import type { VideoScriptService } from './video-script.js';
+import type { EnrichService } from './enrich.js';
 
 export function aiRoutes(
   app: FastifyInstance,
@@ -22,6 +24,7 @@ export function aiRoutes(
   shorts: ShortsAiService,
   autoEdit: AutoEditService,
   videoScript: VideoScriptService,
+  enrich: EnrichService,
 ): void {
   app.post('/contents/generate', async (request, reply) => {
     const content = await ai.generate(GenerateContentSchema.parse(request.body));
@@ -47,6 +50,9 @@ export function aiRoutes(
   app.post('/video/auto-edit', (request) =>
     autoEdit.plan(AutoEditRequestSchema.parse(request.body)),
   );
+
+  // «Aggiungi B-roll e testi»: solo la proposta, il desktop cerca i file e la applica.
+  app.post('/video/enrich', (request) => enrich.plan(EnrichRequestSchema.parse(request.body)));
 
   // «Crea video dall'idea»: solo il copione, il desktop crea il video.
   app.post('/video/script', (request) =>

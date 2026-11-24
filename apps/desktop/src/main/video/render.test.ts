@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { assText, assTime, buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
-import { createRenderService, renderFileName } from './render.js';
+import { createRenderService, editedWindow, renderFileName } from './render.js';
 import {
   buildFilterGraph,
   ffmpegRenderArgs,
@@ -227,6 +227,8 @@ describe('servizio di render', () => {
   it('in caso di errore non lascia file a metà e non tocca il progetto', async () => {
     let output = '';
     const run: ProcessRunner = async (_command, args) => {
+      // Prima passa la misura del volume (`-f null -`): non scrive file.
+      if (args.includes('misura.txt')) return { code: 0, stderrTail: '' };
       output = args[args.length - 1]!;
       writeFileSync(output, 'a metà');
       return { code: 1, stderrTail: 'Error initializing filter subtitles' };
@@ -403,5 +405,77 @@ describe('audio del render (6b)', () => {
     expect(graph).toContain('concat=n=1:v=1:a=0[vc];');
     expect(graph).toContain('[musica]alimiter=limit=0.95:level=false[aout]');
     expect(graph).not.toContain('[voce]');
+  });
+});
+
+describe('B-roll e schede nel render (6d)', () => {
+  const parts = [{ startMs: 0, endMs: 10_000, scale: 1 }];
+  const crop = { x: 0, y: 0, width: 1080, height: 1920 };
+
+  it('livelli sopra il video montato, poi i sottotitoli', () => {
+    const layers = [
+      { kind: 'broll-video' as const, file: 'C:\\B\\server.mp4', startS: 2, endS: 5.5 },
+      { kind: 'broll-image' as const, file: 'C:\\B\\citta.jpg', startS: 6, endS: 8 },
+      { kind: 'card' as const, file: 'scheda-1.png', startS: 0.5, endS: 3 },
+    ];
+    const graph = buildFilterGraph({
+      parts,
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: true,
+      subtitles: 'sottotitoli.ass',
+      layers,
+      firstLayerInput: 2,
+    });
+    expect(graph).toContain(
+      '[2:v]trim=duration=3.500,setpts=PTS-STARTPTS,fps=30,scale=1080:1920:force_original_aspect_ratio=increase',
+    );
+    expect(graph).toContain('setpts=PTS-STARTPTS+2.000/TB[l0]');
+    expect(graph).toContain(
+      "[vc][l0]overlay=0:0:eof_action=pass:enable='between(t,2.000,5.500)'[o0]",
+    );
+    expect(graph).toContain('[3:v]scale=2160:3840');
+    expect(graph).toContain('zoompan=');
+    expect(graph).toContain(
+      '[4:v]format=rgba,fade=t=in:st=0:d=0.250:alpha=1,fade=t=out:st=2.250:d=0.250:alpha=1',
+    );
+    expect(graph).toContain('[o2]subtitles=filename=sottotitoli.ass[vout]');
+    const args = ffmpegRenderArgs({
+      source: 'v.mp4',
+      graphFile: 'filtri.txt',
+      output: 'o.mp4',
+      hasAudio: true,
+      music: 'm.mp3',
+      layers,
+    });
+    expect(args.slice(2, 22)).toEqual([
+      '-i',
+      'v.mp4',
+      '-stream_loop',
+      '-1',
+      '-i',
+      'm.mp3',
+      '-stream_loop',
+      '-1',
+      '-i',
+      'C:\\B\\server.mp4',
+      '-loop',
+      '1',
+      '-framerate',
+      '30',
+      '-t',
+      '2.000',
+      '-i',
+      'C:\\B\\citta.jpg',
+      '-loop',
+      '1',
+    ]);
+  });
+
+  it('porta i tempi sul video montato e salta ciò che è tagliato', () => {
+    const cuts = [{ startMs: 1000, endMs: 3000 }];
+    expect(editedWindow(cuts, { startMs: 4000, endMs: 6000 })).toEqual({ startS: 2, endS: 4 });
+    expect(editedWindow(cuts, { startMs: 1200, endMs: 2800 })).toBeNull();
   });
 });

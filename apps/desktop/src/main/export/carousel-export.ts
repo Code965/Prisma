@@ -85,9 +85,10 @@ function describe(
  * Finestra invisibile che non può navigare né aprire altre finestre. Per le immagini è offscreen:
  * una finestra nascosta normale non produce fotogrammi da catturare.
  */
-function renderWindow(offscreen: boolean): BrowserWindow {
+function renderWindow(offscreen: boolean, transparent = false): BrowserWindow {
   const window = new BrowserWindow({
     show: false,
+    ...(transparent ? { transparent: true, backgroundColor: '#00000000' } : {}),
     width: SLIDE_SIZE.width,
     height: SLIDE_SIZE.height,
     useContentSize: true,
@@ -122,28 +123,47 @@ async function load(window: BrowserWindow, html: string): Promise<void> {
  * ristretta all'altezza dello schermo e su un portatile 1350 px non ci stanno, mentre le
  * metriche emulate fissano la pagina a 1080×1350 con densità 1, qualunque sia lo schermo.
  */
-export async function captureJpeg(html: string): Promise<Buffer> {
-  const window = renderWindow(true);
+export function captureJpeg(html: string): Promise<Buffer> {
+  return captureImage(html, { ...SLIDE_SIZE, format: 'jpeg' });
+}
+
+/**
+ * Cattura con il protocollo DevTools, come Puppeteer: la finestra (anche offscreen) viene
+ * ristretta all'altezza dello schermo e su un portatile 1350 px non ci stanno, mentre le
+ * metriche emulate fissano la pagina alle misure chieste con densità 1, qualunque sia lo schermo.
+ * In PNG lo sfondo è trasparente (schede sopra il video, fase 6d).
+ */
+export async function captureImage(
+  html: string,
+  options: { width: number; height: number; format: 'jpeg' | 'png' },
+): Promise<Buffer> {
+  const { width, height, format } = options;
+  const window = renderWindow(true, format === 'png');
   const cdp = window.webContents.debugger;
   try {
     cdp.attach('1.3');
     await withTimeout(load(window, html), 'caricamento');
     await withTimeout(
       cdp.sendCommand('Emulation.setDeviceMetricsOverride', {
-        width: SLIDE_SIZE.width,
-        height: SLIDE_SIZE.height,
+        width,
+        height,
         deviceScaleFactor: 1,
         mobile: false,
       }),
       'emulazione',
     );
+    if (format === 'png') {
+      await cdp.sendCommand('Emulation.setDefaultBackgroundColorOverride', {
+        color: { r: 0, g: 0, b: 0, a: 0 },
+      });
+    }
     const { data } = (await withTimeout(
       cdp.sendCommand('Page.captureScreenshot', {
-        // Qualità alta: il testo resta nitido e un file sta sotto i 300 KB (Instagram: max 8 MB).
-        format: 'jpeg',
-        quality: 92,
+        // JPEG di qualità alta: il testo resta nitido e un file sta sotto i 300 KB (Instagram: max 8 MB).
+        format,
+        ...(format === 'jpeg' ? { quality: 92 } : {}),
         captureBeyondViewport: true,
-        clip: { x: 0, y: 0, width: SLIDE_SIZE.width, height: SLIDE_SIZE.height, scale: 1 },
+        clip: { x: 0, y: 0, width, height, scale: 1 },
       }),
       'cattura',
     )) as { data: string };

@@ -46,6 +46,8 @@ const KEEP = [
   'video-creati',
   'video-tools.json',
   'musica.json',
+  'broll.json',
+  'broll-pixabay',
   'settings.json',
   'filmcraft',
   'esportazioni',

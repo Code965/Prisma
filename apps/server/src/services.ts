@@ -39,6 +39,8 @@ import {
 import { createSocialAccountService } from './modules/social-accounts/service.js';
 import { createTagService } from './modules/tags/service.js';
 import { createVideoScriptService } from './modules/ai/video-script.js';
+import { createStockService, type StockConfig } from './modules/stock/service.js';
+import { createEnrichService } from './modules/ai/enrich.js';
 import { createAutoEditService } from './modules/ai/auto-edit.js';
 import { createAiSettingsService, type AiSettingsConfig } from './modules/ai-settings/service.js';
 import {
@@ -61,6 +63,8 @@ export interface ServiceOptions {
   aiSettings?: AiSettingsConfig | null;
   /** Credenziali delle app delle piattaforme e di R2 (Impostazioni › Account); assenti → 503. */
   appCredentials?: AppCredentialsConfig | null;
+  /** Archivio di B-roll (Pixabay): cifratura della chiave; assente → 503. */
+  stock?: StockConfig | null;
   prompts?: PromptLibrary;
   /** Assente senza credenziali LinkedIn: il collegamento dell'account risponde 503. */
   linkedinOAuth?: LinkedInOAuthConfig | null;
@@ -110,6 +114,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
     analytics,
     aiSettings,
     appCredentials: createAppCredentialsService({ db, config: options.appCredentials ?? null }),
+    stock: createStockService({ db, config: options.stock ?? null }),
     insights: createInsightsService({
       db,
       llm,
@@ -160,6 +165,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       voice: brandKit.voicePrompt,
     }),
     autoEdit: createAutoEditService({ llm, prompts, brands, voice: brandKit.voicePrompt }),
+    enrich: createEnrichService({ llm, prompts, brands, voice: brandKit.voicePrompt }),
     videoScript: createVideoScriptService({
       db,
       llm,

@@ -15,7 +15,11 @@ import type {
 } from '../main/ipc-contract.js';
 import type { UpdateState } from '../main/update-state.js';
 import type { MusicStatus } from '../main/video/music.js';
+import type { BrollStatus } from '../main/video/broll.js';
+import type { RenderLook } from '../main/video/render.js';
 import type {
+  BrollMedia,
+  StockItem,
   ToolsStatus,
   TranscriptLanguage,
   VideoEdit,
@@ -49,6 +53,10 @@ const CHANNELS = {
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
+  brollStatus: 'broll:status',
+  brollPick: 'broll:pick',
+  brollClear: 'broll:clear',
+  brollDownload: 'broll:download',
   filmcraftStatus: 'filmcraft:status',
   filmcraftOpen: 'filmcraft:open',
   filmcraftExport: 'filmcraft:export',
@@ -131,6 +139,15 @@ const api = {
     pick: (): Promise<MusicStatus | null> => ipcRenderer.invoke(CHANNELS.musicPick),
     clear: (): Promise<MusicStatus> => ipcRenderer.invoke(CHANNELS.musicClear),
   },
+  /** B-roll (6d): cartella dell'utente e file scaricati da Pixabay. */
+  broll: {
+    status: (): Promise<BrollStatus> => ipcRenderer.invoke(CHANNELS.brollStatus),
+    pick: (): Promise<BrollStatus | null> => ipcRenderer.invoke(CHANNELS.brollPick),
+    clear: (): Promise<BrollStatus> => ipcRenderer.invoke(CHANNELS.brollClear),
+    /** Scarica un risultato di Pixabay nella cache dell'app. */
+    download: (item: StockItem): Promise<BrollMedia> =>
+      ipcRenderer.invoke(CHANNELS.brollDownload, item),
+  },
   video: {
     list: (): Promise<VideoProject[]> => ipcRenderer.invoke(CHANNELS.listVideos),
     /** null se l'utente annulla la scelta del file. */
@@ -142,8 +159,9 @@ const api = {
       ipcRenderer.invoke(CHANNELS.cancelVideoJob, projectId),
     saveEdit: (projectId: string, edit: VideoEdit): Promise<VideoProject> =>
       ipcRenderer.invoke(CHANNELS.saveVideoEdit, { projectId, edit }),
-    render: (projectId: string): Promise<VideoProject> =>
-      ipcRenderer.invoke(CHANNELS.renderVideo, projectId),
+    /** `look`: brand kit e template delle schede di testo (6d). */
+    render: (projectId: string, look?: RenderLook): Promise<VideoProject> =>
+      ipcRenderer.invoke(CHANNELS.renderVideo, look ? { projectId, look } : projectId),
     renderStatus: (projectId: string): Promise<{ upToDate: boolean }> =>
       ipcRenderer.invoke(CHANNELS.renderStatus, projectId),
     createShort: (input: CreateShortRequest): Promise<VideoProject> =>

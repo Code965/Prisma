@@ -913,3 +913,110 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* --- B-roll e schede (6d) -------------------------------------------------------------------- */
+
+.layers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.brollMedia {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brollImage {
+  animation: brollZoom 8s linear forwards;
+}
+
+@keyframes brollZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.cardFrame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 0;
+  background: transparent;
+  transform-origin: 0 0;
+  color-scheme: normal;
+}
+
+.layerItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.layerTime {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.layerTime:hover {
+  color: var(--accent);
+}
+
+.layerName {
+  flex: 1 1 200px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.layerText {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.layerTrack {
+  position: relative;
+  height: 26px;
+  cursor: pointer;
+}
+
+.layerBlock {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  border-radius: 4px;
+  background: var(--trOver);
+  color: var(--trText);
+  font-size: 11px;
+  line-height: 26px;
+  padding: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.layerBlockBroll {
+  background: var(--trVideo);
+  opacity: 0.85;
+}

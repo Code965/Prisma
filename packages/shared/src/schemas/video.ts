@@ -183,10 +183,19 @@ export interface VideoJobProgress {
   percent: number | null;
 }
 
-/** L'audio dei progetti di prima della 6b non entra nella chiave: i render già fatti restano validi. */
+/**
+ * I campi aggiunti dopo (audio della 6b, schede e B-roll della 6d) entrano nella chiave solo se
+ * usati: i render dei progetti di prima restano validi.
+ */
 function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['edit']> {
-  if (!isLegacyAudio(edit.audio)) return edit;
-  return Object.fromEntries(Object.entries(edit).filter(([key]) => key !== 'audio'));
+  return Object.fromEntries(
+    Object.entries(edit).filter(
+      ([key]) =>
+        !(key === 'audio' && isLegacyAudio(edit.audio)) &&
+        !(key === 'overlays' && edit.overlays.length === 0) &&
+        !(key === 'broll' && edit.broll.length === 0),
+    ),
+  );
 }
 
 /**

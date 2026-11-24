@@ -41,6 +41,10 @@ export const IPC = {
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
+  brollStatus: 'broll:status',
+  brollPick: 'broll:pick',
+  brollClear: 'broll:clear',
+  brollDownload: 'broll:download',
   filmcraftStatus: 'filmcraft:status',
   filmcraftOpen: 'filmcraft:open',
   filmcraftExport: 'filmcraft:export',
@@ -128,6 +132,8 @@ const EXTERNAL_PREFIXES = [
   'https://console.cloud.google.com/apis/credentials',
   'https://developers.tiktok.com/apps',
   'https://dash.cloudflare.com/',
+  // Chiave gratuita per il B-roll (6d).
+  'https://pixabay.com/api/docs/',
 ];
 
 export const ExternalUrlSchema = z
@@ -202,6 +208,16 @@ export const CreateShortRequestSchema = z
   })
   .refine((r) => r.endMs > r.startMs, { message: 'Fine prima dell’inizio' });
 export type CreateShortRequest = z.infer<typeof CreateShortRequestSchema>;
+
+/** Export del video: brand kit e template servono a disegnare le schede di testo (6d). */
+export const RenderRequestSchema = z.union([
+  z.uuid().transform((projectId) => ({ projectId, look: undefined })),
+  z.object({
+    projectId: z.uuid(),
+    look: z.object({ kit: BrandKitSchema, template: z.enum(CAROUSEL_TEMPLATES) }).optional(),
+  }),
+]);
+export type RenderRequest = z.input<typeof RenderRequestSchema>;
 
 /** «Crea video dall'idea»: copione dell'AI, template e brand kit per le slide. */
 export const GenerateVideoRequestSchema = z.object({

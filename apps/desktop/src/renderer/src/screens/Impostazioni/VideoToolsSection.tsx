@@ -9,6 +9,7 @@ import {
 } from '../../hooks/useVideo';
 import { errorMessage } from '../../services/api/client';
 import { TOOL_HINTS, canUseVideo, musicFolderLabel } from '../../services/video';
+import { BrollSettings } from './BrollSettings';
 import styles from './Impostazioni.module.css';
 
 const SOURCE_LABEL: Record<ToolStatus['source'], string> = {
@@ -119,6 +120,7 @@ export function VideoToolsSection() {
           )}
         </div>
       )}
+      {canUseVideo() && <BrollSettings />}
       {status.error || pick.error || reset.error ? (
         <p role="alert" className={styles.error}>
           {errorMessage(status.error ?? pick.error ?? reset.error)}

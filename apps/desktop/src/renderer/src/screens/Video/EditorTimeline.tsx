@@ -1,6 +1,7 @@
 import type { VideoProject } from '@prisma-app/shared';
 import type { PointerEvent } from 'react';
 import { musicTrackLabel } from '../../services/audio';
+import { layerBlocks } from '../../services/layers';
 import { rulerLabels, type EditorSegment } from '../../services/video-editor';
 import styles from './VideoEditor.module.css';
 
@@ -18,6 +19,7 @@ interface EditorTimelineProps {
 export function EditorTimeline({ project, segments, currentMs, onSeek }: EditorTimelineProps) {
   const duration = project.source.durationMs;
   const items = segments.length > 0 ? segments : null;
+  const blocks = layerBlocks(project.edit.overlays, project.edit.broll, duration);
 
   function seek(event: PointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -84,9 +86,24 @@ export function EditorTimeline({ project, segments, currentMs, onSeek }: EditorT
 
           <div className={styles.trackRow}>
             <span className={styles.trackName}>Testi e overlay</span>
-            <div className={styles.emptyTrack}>
-              Titoli e riquadri di codice: arrivano con il render
-            </div>
+            {blocks.length > 0 ? (
+              <div className={styles.layerTrack} onPointerDown={seek}>
+                {blocks.map((block) => (
+                  <div
+                    key={block.id}
+                    className={`${styles.layerBlock} ${block.kind === 'broll' ? styles.layerBlockBroll : ''}`}
+                    style={{ left: `${block.left}%`, width: `${block.width}%` }}
+                    title={block.label}
+                  >
+                    {block.label}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.emptyTrack}>
+                Nessuna scheda né B-roll: «Aggiungi B-roll e testi» li propone
+              </div>
+            )}
           </div>
 
           <div className={styles.trackRow}>

@@ -8,7 +8,7 @@ import { SPLASH_BACKGROUND, SPLASH_MIN_MS, SPLASH_SIZE, splashDataUrl } from './
 import { registerUpdates } from './updates.js';
 import { startCore, type Core } from './core.js';
 import { setupBackground, startedHidden } from './background.js';
-import { captureJpeg } from './export/carousel-export.js';
+import { captureImage, captureJpeg } from './export/carousel-export.js';
 import { registerIpcHandlers, setCore, slideFontFaceCss } from './ipc.js';
 import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
@@ -20,6 +20,7 @@ import { createFilmcraftService } from './video/filmcraft/service.js';
 import { createIdeaVideoService } from './video/idea-video.js';
 import { readAnsiCodePage } from './video/tts.js';
 import { createMusicLibrary } from './video/music.js';
+import { createBrollLibrary } from './video/broll.js';
 import { runProcess } from './video/process.js';
 import { createRenderService } from './video/render.js';
 import { createTranscriptionService } from './video/transcription.js';
@@ -149,10 +150,19 @@ void app.whenReady().then(async () => {
     settingsFile: join(userDataDir, 'musica.json'),
     ffprobe: () => video.requireTool('ffprobe').catch(() => null),
   });
-  handleMediaProtocol(video.sourcePathOf, async (fileName) => {
-    const dir = await music.dir();
-    return dir ? join(dir, fileName) : null;
+  const broll = createBrollLibrary({
+    settingsFile: join(userDataDir, 'broll.json'),
+    cacheDir: join(userDataDir, 'broll-pixabay'),
+    ffprobe: () => video.requireTool('ffprobe').catch(() => null),
   });
+  handleMediaProtocol(
+    video.sourcePathOf,
+    async (fileName) => {
+      const dir = await music.dir();
+      return dir ? join(dir, fileName) : null;
+    },
+    (key) => broll.pathOf(key),
+  );
   // L'avanzamento va a tutte le finestre: ognuna mostra quello dei suoi progetti.
   const emitProgress = (progress: VideoJobProgress) => {
     for (const window of BrowserWindow.getAllWindows()) {
@@ -177,6 +187,9 @@ void app.whenReady().then(async () => {
     measureDurationMs: async (path) =>
       (await probeVideo(await video.requireTool('ffprobe'), path)).durationMs,
     musicDir: () => music.dir(),
+    captureCard: (html, width, height) => captureImage(html, { width, height, format: 'png' }),
+    fontFaceCss: slideFontFaceCss,
+    brollAllowed: (path) => broll.isAllowed(path),
   });
   const filmcraft = createFilmcraftService({
     store,
@@ -203,7 +216,7 @@ void app.whenReady().then(async () => {
     // Il video ha già una musica, da cambiare o togliere nell'editor.
     pickMusic: async () => pickTrack((await music.status()).tracks, Math.random()),
   });
-  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music);
+  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music, broll);
   const updates = registerUpdates();
 
   // L'intro resta almeno SPLASH_MIN_MS, poi lascia il posto alla finestra principale.

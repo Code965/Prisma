@@ -18,6 +18,7 @@ import type { TikTokOAuthConfig } from '../../src/modules/oauth/tiktok-service.j
 import type { AccessTokenResolver } from '../../src/modules/social-accounts/tokens.js';
 import type { BlogConnectionConfig } from '../../src/modules/blog-connection/service.js';
 import type { LinkedInOAuthConfig } from '../../src/modules/oauth/linkedin-service.js';
+import type { StockConfig } from '../../src/modules/stock/service.js';
 import { createServices } from '../../src/services.js';
 
 /**
@@ -82,6 +83,7 @@ export async function withRollback(
     accessToken?: AccessTokenResolver;
     aiSettings?: AiSettingsConfig;
     appCredentials?: AppCredentialsConfig;
+    stock?: StockConfig;
   } = {},
 ): Promise<void> {
   const now = options.now ?? NOW;
@@ -103,6 +105,7 @@ export async function withRollback(
           accessToken: options.accessToken ?? null,
           aiSettings: options.aiSettings ?? null,
           appCredentials: options.appCredentials ?? null,
+          stock: options.stock ?? null,
         }),
       });
       try {

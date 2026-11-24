@@ -8,3 +8,9 @@ export {
   renderSlideHtml,
   type SlideContext,
 } from './slide.js';
+export {
+  overlayPlacement,
+  overlayTemplate,
+  renderOverlayCardHtml,
+  type OverlayCardContext,
+} from './overlay.js';

@@ -40,6 +40,27 @@ describe('shortEdit', () => {
       keywords: [21_000],
       hook: { text: 'Titolo del video lungo', durationMs: 2500 },
       audio: DEFAULT_VIDEO_AUDIO,
+      overlays: [
+        {
+          id: 'a',
+          kind: 'title' as const,
+          title: 'Dentro',
+          body: '',
+          code: '',
+          startMs: 15_000,
+          endMs: 18_000,
+        },
+        {
+          id: 'b',
+          kind: 'title' as const,
+          title: 'Fuori',
+          body: '',
+          code: '',
+          startMs: 45_000,
+          endMs: 48_000,
+        },
+      ],
+      broll: [],
     };
     expect(shortEdit(parent, 60_000, { startMs: 10_000, endMs: 40_000 })).toEqual({
       format: '9:16',
@@ -54,6 +75,18 @@ describe('shortEdit', () => {
       keywords: [21_000],
       hook: null,
       audio: DEFAULT_VIDEO_AUDIO,
+      overlays: [
+        {
+          id: 'a',
+          kind: 'title',
+          title: 'Dentro',
+          body: '',
+          code: '',
+          startMs: 15_000,
+          endMs: 18_000,
+        },
+      ],
+      broll: [],
     });
   });
 

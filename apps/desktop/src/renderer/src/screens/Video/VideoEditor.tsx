@@ -7,8 +7,9 @@ import {
 } from '@prisma-app/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAutoEdit, useGenerateShorts, useSaveVideoEdit } from '../../hooks/useVideo';
+import { useAutoEdit, useEnrich, useGenerateShorts, useSaveVideoEdit } from '../../hooks/useVideo';
 import { autoEditToast } from '../../services/auto-edit';
+import { enrichToast, withEnrichment } from '../../services/enrich';
 import { errorMessage } from '../../services/api/client';
 import { shortsToast } from '../../services/shorts';
 import { editorSegments, removeSilences, secondsLabel } from '../../services/video-editor';
@@ -34,6 +35,9 @@ export function VideoEditor({ project }: { project: VideoProject }) {
   const save = useSaveVideoEdit(project.id);
   const shorts = useGenerateShorts(project);
   const autoEdit = useAutoEdit(project);
+  const enrich = useEnrich(project);
+  // Modifiche di prima di «Aggiungi B-roll e testi», per «Annulla».
+  const [beforeEnrich, setBeforeEnrich] = useState<VideoEdit | null>(null);
   // Modifiche di prima di «Monta con l'AI», per tornare indietro con «Annulla».
   const [beforeAutoEdit, setBeforeAutoEdit] = useState<VideoEdit | null>(null);
   const first = useRef(true);
@@ -75,10 +79,30 @@ export function VideoEditor({ project }: { project: VideoProject }) {
           plan,
         );
         setBeforeAutoEdit(edit);
+        setBeforeEnrich(null);
         setEdit(result.edit);
         setToast(autoEditToast(result.summary));
       },
     });
+  }
+
+  function handleEnrich() {
+    setToast(null);
+    enrich.mutate(edit.format, {
+      onSuccess: (result) => {
+        setBeforeEnrich(edit);
+        setBeforeAutoEdit(null);
+        setEdit(withEnrichment(edit, result.overlays, result.broll));
+        setToast(enrichToast(result.summary));
+      },
+    });
+  }
+
+  function undoEnrich() {
+    if (!beforeEnrich) return;
+    setEdit(beforeEnrich);
+    setBeforeEnrich(null);
+    setToast('B-roll e testi annullati.');
   }
 
   function undoAutoEdit() {
@@ -134,6 +158,34 @@ export function VideoEditor({ project }: { project: VideoProject }) {
               <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
             </svg>
             {autoEdit.isPending ? 'Monto il video…' : 'Monta con l’AI'}
+          </button>
+          <button
+            type="button"
+            className={styles.action}
+            disabled={!enrich.available || enrich.isPending}
+            title={
+              enrich.available
+                ? 'Schede di testo con il brand kit e B-roll dalla tua cartella o da Pixabay'
+                : 'Prima trascrivi il video'
+            }
+            aria-busy={enrich.isPending}
+            onClick={handleEnrich}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 15l5-5 4 4 3-3 6 6" />
+            </svg>
+            {enrich.isPending ? 'Cerco B-roll e testi…' : 'Aggiungi B-roll e testi'}
           </button>
           <button
             type="button"
@@ -201,6 +253,11 @@ export function VideoEditor({ project }: { project: VideoProject }) {
             <path d="M20 6L9 17l-5-5" />
           </svg>
           {toast}
+          {beforeEnrich && (
+            <button type="button" className={styles.toastUndo} onClick={undoEnrich}>
+              Annulla
+            </button>
+          )}
           {beforeAutoEdit && (
             <button type="button" className={styles.toastUndo} onClick={undoAutoEdit}>
               Annulla
@@ -208,6 +265,11 @@ export function VideoEditor({ project }: { project: VideoProject }) {
           )}
         </div>
       )}
+      {enrich.error ? (
+        <p role="alert" className={styles.error}>
+          {errorMessage(enrich.error)}
+        </p>
+      ) : null}
       {autoEdit.error ? (
         <p role="alert" className={styles.error}>
           {errorMessage(autoEdit.error)}

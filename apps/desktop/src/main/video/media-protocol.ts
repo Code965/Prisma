@@ -1,5 +1,6 @@
 import { net, protocol } from 'electron';
 import { pathToFileURL } from 'node:url';
+import { brollKeyFromUrl } from './broll.js';
 import { musicFileFromUrl } from './music.js';
 
 /**
@@ -36,11 +37,20 @@ export function handleMediaProtocol(
   sourcePathOf: (projectId: string) => string | null,
   /** Brani della cartella della musica (`prisma-media://musica/<nome>`), solo quella cartella. */
   musicPathOf: (fileName: string) => Promise<string | null>,
+  /** B-roll (`prisma-media://broll/<chiave>`): cartella dell'utente o cache di Pixabay. */
+  brollPathOf: (key: string) => Promise<string | null>,
 ): void {
   protocol.handle(MEDIA_SCHEME, async (request) => {
     const id = projectIdFromUrl(request.url);
     const music = id ? null : musicFileFromUrl(request.url);
-    const path = id ? sourcePathOf(id) : music ? await musicPathOf(music) : null;
+    const broll = id || music ? null : brollKeyFromUrl(request.url);
+    const path = id
+      ? sourcePathOf(id)
+      : music
+        ? await musicPathOf(music)
+        : broll
+          ? await brollPathOf(broll)
+          : null;
     if (!path) return new Response('Non trovato', { status: 404 });
     // Si inoltrano gli header (Range compreso): il caricamento dei file gestisce gli intervalli.
     return net.fetch(pathToFileURL(path).toString(), { headers: request.headers });

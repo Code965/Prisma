@@ -41,6 +41,10 @@ export function buildFilterGraph(options: {
   subtitles: string | null;
   /** Voce ripulita, volume uniforme e musica (6b); assente = audio montato così com'è. */
   audio?: MixOptions;
+  /** B-roll e schede sopra il video montato (6d), nell'ordine in cui si sovrappongono. */
+  layers?: readonly VideoLayer[];
+  /** Indice del primo ingresso dei livelli (dopo il sorgente e l'eventuale musica). */
+  firstLayerInput?: number;
 }): string {
   const { parts: ranges, crop, width, height, hasAudio } = options;
   if (ranges.length === 0) {
@@ -73,8 +77,17 @@ export function buildFilterGraph(options: {
     `${inputs.join('')}concat=n=${ranges.length}:v=1:a=${audio}[vc]${hasAudio ? voiceLabel : ''}`,
   );
   parts.push(...mix);
+  let current = 'vc';
+  (options.layers ?? []).forEach((layer, i) => {
+    const input = (options.firstLayerInput ?? 1) + i;
+    parts.push(`[${input}:v]${layerChain(layer, width, height)}[l${i}]`);
+    parts.push(
+      `[${current}][l${i}]overlay=0:0:eof_action=pass:enable='between(t,${layer.startS.toFixed(3)},${layer.endS.toFixed(3)})'[o${i}]`,
+    );
+    current = `o${i}`;
+  });
   const video = options.subtitles ? `subtitles=filename=${options.subtitles}` : 'null';
-  parts.push(`[vc]${video}[vout]`);
+  parts.push(`[${current}]${video}[vout]`);
   return `${parts.join(';\n')}\n`;
 }
 
@@ -283,6 +296,60 @@ export function audioMix(audio: MixOptions, hasAudio: boolean, durationMs: numbe
   return parts;
 }
 
+/**
+ * Un livello sopra il video montato, con i tempi del video montato (secondi): spezzone o
+ * immagine di B-roll (copre tutto il riquadro) o scheda di testo (PNG trasparente).
+ */
+export interface VideoLayer {
+  kind: 'broll-video' | 'broll-image' | 'card';
+  /** File nella cartella di lavoro (schede) o percorso assoluto (B-roll). */
+  file: string;
+  startS: number;
+  endS: number;
+}
+
+const FPS = 30;
+
+/** Argomenti d'ingresso di un livello: lo spezzone si ripete se è corto, immagini e schede durano quanto serve. */
+export function layerInputArgs(layer: VideoLayer): string[] {
+  const duration = (layer.endS - layer.startS).toFixed(3);
+  return layer.kind === 'broll-video'
+    ? ['-stream_loop', '-1', '-i', layer.file]
+    : ['-loop', '1', '-framerate', String(FPS), '-t', duration, '-i', layer.file];
+}
+
+/**
+ * Filtri del livello: lo spezzone riempie il riquadro (ritaglio al centro), l'immagine si
+ * avvicina piano (ingrandita a 2× prima di `zoompan`, perché non tremi), la scheda entra ed
+ * esce in dissolvenza. Tutto spostato all'istante d'inizio con `setpts`.
+ */
+export function layerChain(layer: VideoLayer, width: number, height: number): string {
+  const duration = layer.endS - layer.startS;
+  const shift = `setpts=PTS-STARTPTS+${layer.startS.toFixed(3)}/TB`;
+  const fill = (w: number, h: number) =>
+    `scale=${w}:${h}:force_original_aspect_ratio=increase:flags=lanczos,crop=${w}:${h}`;
+  switch (layer.kind) {
+    case 'broll-video':
+      return `trim=duration=${duration.toFixed(3)},setpts=PTS-STARTPTS,fps=${FPS},${fill(width, height)},setsar=1,format=yuv420p,${shift}`;
+    case 'broll-image': {
+      const frames = Math.max(1, Math.round(duration * FPS));
+      const step = (0.08 / frames).toFixed(6);
+      return (
+        `${fill(width * 2, height * 2)},` +
+        `zoompan=z='min(1+${step}*on\\,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=${width}x${height}:fps=${FPS},` +
+        `setsar=1,format=yuv420p,${shift}`
+      );
+    }
+    case 'card': {
+      const fade = Math.min(0.25, duration / 4).toFixed(3);
+      return (
+        `format=rgba,fade=t=in:st=0:d=${fade}:alpha=1,` +
+        `fade=t=out:st=${Math.max(0, duration - Number(fade)).toFixed(3)}:d=${fade}:alpha=1,${shift}`
+      );
+    }
+  }
+}
+
 /** Argomenti di FFmpeg: H.264 + AAC in MP4 con `faststart` (si riproduce mentre si scarica). */
 export function ffmpegRenderArgs(options: {
   source: string;
@@ -291,6 +358,8 @@ export function ffmpegRenderArgs(options: {
   hasAudio: boolean;
   /** Brano della musica (ingresso 1, ripetuto se più corto del video). */
   music?: string | null;
+  /** B-roll e schede, dopo sorgente e musica. */
+  layers?: readonly VideoLayer[];
 }): string[] {
   const withAudio = options.hasAudio || Boolean(options.music);
   return [
@@ -299,6 +368,7 @@ export function ffmpegRenderArgs(options: {
     '-i',
     options.source,
     ...(options.music ? ['-stream_loop', '-1', '-i', options.music] : []),
+    ...(options.layers ?? []).flatMap(layerInputArgs),
     '-/filter_complex',
     options.graphFile,
     '-map',

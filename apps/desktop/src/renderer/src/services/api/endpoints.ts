@@ -1,5 +1,10 @@
 import {
   AutoEditPlanSchema,
+  EnrichPlanSchema,
+  StockSearchResultSchema,
+  StockStatusSchema,
+  type EnrichRequest,
+  type StockSearchQuery,
   VideoScriptSchema,
   type VideoScriptRequest,
   type AutoEditRequest,
@@ -178,6 +183,17 @@ export const api = {
     apiRequest('POST', `/publications/${publicationId}/metrics`, PublicationMetricsSchema, input),
   videoScript: (input: VideoScriptRequest) =>
     apiRequest('POST', '/video/script', VideoScriptSchema, input),
+  enrichPlan: (input: EnrichRequest) =>
+    apiRequest('POST', '/video/enrich', EnrichPlanSchema, input),
+  stockStatus: () => apiRequest('GET', '/stock/status', StockStatusSchema),
+  saveStockKey: (apiKey: string) => apiRequest('PUT', '/stock/key', StockStatusSchema, { apiKey }),
+  removeStockKey: () => apiRequest('DELETE', '/stock/key', StockStatusSchema),
+  stockSearch: (query: StockSearchQuery) => {
+    const params = new URLSearchParams(
+      Object.entries(query).map(([key, value]) => [key, String(value)]),
+    );
+    return apiRequest('GET', `/stock/search?${params}`, StockSearchResultSchema);
+  },
   autoEditPlan: (input: AutoEditRequest) =>
     apiRequest('POST', '/video/auto-edit', AutoEditPlanSchema, input),
   generateShorts: (input: GenerateShortsRequest) =>

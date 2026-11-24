@@ -372,6 +372,55 @@ Scelte (proposte e confermate): filtri integrati di FFmpeg (niente modelli da sc
   cartella dei dati a parte: brano scelto dal menu e salvato, anteprima da `prisma-media://musica/…` (volume 0,071
   mentre si parla), export 1080×1920 in 4 s.
 
+### B-roll e testi in sovrimpressione (6d)
+
+Scelte (proposte e confermate): B-roll dalla cartella dell'utente più un archivio gratuito, schede disegnate con il
+brand kit, proposta con un pulsante a parte. Pexels è stato scartato: a novembre 2026 pexels.com/api dice «New API
+key issuance is currently paused»; si usa **Pixabay** (chiave gratuita con un account).
+
+- **Modifiche** (`packages/shared/src/schemas/video-overlays.ts`, campi `edit.overlays` ed `edit.broll` con default
+  vuoti, che `videoRenderKey` conta solo se usati): schede `title`/`code`/`list` (titolo ≤ 80, punti ≤ 4, codice ≤ 8
+  righe) e B-roll con il file (`BrollMedia`: chiave `cartella/<nome>` o `pixabay/<file>`, percorso, video o
+  immagine, misure, durata, fonte e crediti). Tempi del sorgente. Gli Short tengono schede e B-roll del momento.
+- **Proposta dell'AI** (`POST /video/enrich`, `modules/ai/enrich.ts`, `video-enrich.{system,user}.md`, schemi in
+  `video-enrich.ts`): il modello legge le frasi numerate e propone schede (codice solo se detto, mai inventato) e
+  ricerche di B-roll in inglese (2–4 parole visive). `enrichPlanSchema` controlla frasi esistenti, niente B-roll sulla
+  frase 0, una scheda per frase, codice ed elenchi non vuoti, al massimo una scheda ogni 12 s e un B-roll ogni 8 s.
+  `enrichOverlays` mette le schede (titolo all'inizio della frase per ≤ 3,5 s, codice ed elenchi per tutta la frase,
+  1,5–10 s) e le ricerche (la frase, 1,5–8 s).
+- **Pixabay** (`modules/stock/`, verificato su pixabay.com/api/docs, novembre 2026): chiave salvata cifrata nella
+  tabella `app_credentials` (riga `pixabay`, provata con una ricerca prima di salvarla, mai restituita);
+  `GET /stock/status`, `PUT/DELETE /stock/key`, `GET /stock/search?q=&kind=video|image&orientation=&lang=` con
+  `safesearch`, 30 risultati e cache di 24 ore (lo chiede Pixabay). Video: il file `medium` (Full HD), poi gli
+  altri; foto: `largeImageURL` (lato lungo 1280 px). 429 → «troppe ricerche». Limite 100 richieste al minuto.
+- **B-roll sul computer** (`src/main/video/broll.ts`): cartella scelta in **Impostazioni › Strumenti video**
+  (`userData/broll.json`, video MP4/MOV/WebM/MKV/M4V e immagini JPG/PNG/WebP, misure e durata da ffprobe) e cache
+  `userData/broll-pixabay/pixabay-<id>.<ext>`: si scarica solo da `cdn.pixabay.com`/`pixabay.com` in https, una
+  volta sola (file `.part` rinominato a fine download). `prisma-media://broll/<chiave>` e il render usano solo file
+  di questi due posti.
+- **Ricerca** (`useEnrich`, `services/enrich.ts`): per ogni ricerca prima un file della cartella il cui nome contiene
+  le parole (`filenameScore`, prima i video lunghi abbastanza), poi Pixabay se c'è la chiave: video con
+  l'orientamento del formato e lungo abbastanza (`bestStockItem`), altrimenti una foto. L'avviso dice quanti dalla
+  cartella, quanti da Pixabay e quante ricerche sono rimaste senza file; «Annulla» rimette le modifiche di prima.
+- **Schede** (`packages/templates/src/overlay.ts`, `renderOverlayCardHtml`): pagina trasparente grande quanto il
+  video con la scheda (colori del template, codice sempre «Terminale», misure proporzionate al lato corto): in 9:16
+  titolo in alto (10%) e codice/elenchi a metà, sopra i sottotitoli; in 16:9 titolo a sinistra e il resto a destra.
+  Catturata in PNG trasparente dalla finestra offscreen (`captureImage` con
+  `Emulation.setDefaultBackgroundColorOverride` trasparente); il renderer passa brand kit e template all'export.
+- **Render** (`render-plan.ts`, `layerChain`): ingressi dopo sorgente e musica; spezzone con `-stream_loop -1`,
+  `trim`, riempimento del riquadro (scala e ritaglio al centro); immagine ingrandita 2× e `zoompan` lento fino a
+  1,08; scheda con dissolvenza alfa di 0,25 s. Ogni livello spostato con `setpts` all'istante sul video montato
+  (`editedWindow`, saltato se tagliato) e sovrapposto con `overlay` attivo solo in quell'intervallo; poi i
+  sottotitoli. FilmCraft non riceve schede né B-roll.
+- **Editor**: «Aggiungi B-roll e testi» accanto a «Monta con l'AI»; anteprima nel riquadro (`LayersPreview`: lo stesso
+  HTML del render in un iframe scalato, spezzone al passo col player); pannello «Testi e B-roll» (titolo, punti e
+  codice modificabili, «Togli», orario cliccabile, «+ Titolo/+ Codice/+ Elenco» all'istante del player, crediti
+  «Video di … da Pixabay»); timeline «Testi e overlay» con schede e B-roll.
+- Provato con FFmpeg 9.1 (spezzone, immagine e scheda trasparente: fotogrammi giusti, durata invariata) e nell'app
+  vera su una cartella dei dati a parte con un servizio AI finto e una cartella di B-roll sintetica: scheda «Perché uso
+  Rust» e B-roll `server-room-lights.mp4` trovato per nome, anteprima, export 1080×1920 in 18 s con scheda e B-roll nei
+  fotogrammi. La parte di Pixabay è provata con un Pixabay finto: da provare con una chiave vera.
+
 ### «Crea video dall'idea» (6c)
 
 - **Copione** (`POST /video/script` con `ideaId` o `variantId`, `modules/ai/video-script.ts`,
@@ -1045,7 +1094,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 6c. «Crea video dall'idea»: copione dell'AI, voce locale, slide animate del brand kit, sottotitoli parola per
       parola
 - [x] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
-- [ ] 6d. B-roll e testi in sovrimpressione
+- [x] 6d. B-roll (cartella dell'utente e Pixabay) e schede di testo in sovrimpressione
 - [ ] 6e. Inquadratura che segue il volto
 - [ ] 6f. Registrazione nell'app (webcam, schermo, microfono)
 

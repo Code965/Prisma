@@ -110,6 +110,7 @@ export async function createPrismaRuntime(baseEnv: Env, options: RuntimeOptions 
 
   const services = createServices(db, {
     aiSettings: { cipher, env: envProviderConfig(env), timeoutMs: env.DEEPSEEK_TIMEOUT_MS },
+    stock: { cipher },
     appCredentials: {
       cipher,
       env: baseEnv,

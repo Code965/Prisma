@@ -19,6 +19,8 @@ import { zoomedOverlay } from '../../services/auto-edit';
 import { mediaUrl } from '../../services/video';
 import { clockLabel, cropOverlay, draggedOffset, sourceTimeMs } from '../../services/video-editor';
 import { AudioPanel } from './AudioPanel';
+import { LayersPanel } from './LayersPanel';
+import { LayersPreview } from './LayersPreview';
 import styles from './VideoEditor.module.css';
 
 interface PlayerPanelProps {
@@ -205,6 +207,7 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
                 Zoom ×{zoom.toFixed(2).replace('.', ',')}
               </span>
             )}
+            <LayersPreview edit={edit} sourceMs={sourceMs} playing={playing} />
             {caption && (
               <Subtitle styleId={edit.subtitles} caption={caption} keywords={edit.keywords} />
             )}
@@ -270,6 +273,18 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
           ))}
         </div>
       </div>
+
+      <LayersPanel
+        project={project}
+        edit={edit}
+        onChange={onChange}
+        sourceMs={sourceMs}
+        onSeek={(ms) => {
+          if (video.current) video.current.currentTime = ms / 1000;
+          setSourceMs(ms);
+          onTime(ms);
+        }}
+      />
 
       <AudioPanel
         project={project}

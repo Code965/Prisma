@@ -7,6 +7,8 @@ import { isR2UploadUrl, uploadFile } from './export/upload.js';
 import type { FilmcraftService } from './video/filmcraft/service.js';
 import type { IdeaVideoService } from './video/idea-video.js';
 import type { MusicLibrary } from './video/music.js';
+import type { BrollLibrary } from './video/broll.js';
+import { StockItemSchema } from '@prisma-app/shared';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
 import type { VideoService } from './video/video-service.js';
@@ -14,6 +16,7 @@ import {
   ApiRequestSchema,
   CreateShortRequestSchema,
   GenerateVideoRequestSchema,
+  RenderRequestSchema,
   FilmcraftOpenSchema,
   ExportCarouselRequestSchema,
   SaveVideoEditSchema,
@@ -129,7 +132,22 @@ export function registerIpcHandlers(
   filmcraft: FilmcraftService,
   ideaVideo: IdeaVideoService,
   music: MusicLibrary,
+  broll: BrollLibrary,
 ): void {
+  ipcMain.handle(IPC.brollStatus, () => broll.status());
+  ipcMain.handle(IPC.brollClear, () => broll.setDir(null));
+  ipcMain.handle(IPC.brollPick, async (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const options = { properties: ['openDirectory' as const] };
+    const result = window
+      ? await dialog.showOpenDialog(window, options)
+      : await dialog.showOpenDialog(options);
+    if (result.canceled || !result.filePaths[0]) return null;
+    return broll.setDir(result.filePaths[0]);
+  });
+  ipcMain.handle(IPC.brollDownload, (_event, input: unknown) =>
+    broll.download(StockItemSchema.parse(input)),
+  );
   ipcMain.handle(IPC.musicStatus, () => music.status());
   ipcMain.handle(IPC.musicClear, () => music.setDir(null));
   ipcMain.handle(IPC.musicPick, async (event) => {
@@ -220,9 +238,10 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.filmcraftUseReturn, (_event, input: unknown) =>
     filmcraft.useReturn(VideoProjectIdSchema.parse(input)),
   );
-  ipcMain.handle(IPC.renderVideo, (_event, input: unknown) =>
-    render.render(VideoProjectIdSchema.parse(input)),
-  );
+  ipcMain.handle(IPC.renderVideo, (_event, input: unknown) => {
+    const { projectId, look } = RenderRequestSchema.parse(input);
+    return render.render(projectId, look);
+  });
   ipcMain.handle(IPC.renderStatus, (_event, input: unknown) => {
     const project = video.getProject(VideoProjectIdSchema.parse(input));
     return { upToDate: project ? render.isUpToDate(project) : false };

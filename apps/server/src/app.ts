@@ -15,6 +15,7 @@ import { analyticsRoutes } from './modules/analytics/routes.js';
 import { blogConnectionRoutes } from './modules/blog-connection/routes.js';
 import { aiSettingsRoutes } from './modules/ai-settings/routes.js';
 import { appCredentialsRoutes } from './modules/app-credentials/routes.js';
+import { stockRoutes } from './modules/stock/routes.js';
 import { OAUTH_CALLBACK_PATHS, oauthRoutes } from './modules/oauth/routes.js';
 import type { Services } from './services.js';
 
@@ -72,6 +73,7 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
     services.shortsAi,
     services.autoEdit,
     services.videoScript,
+    services.enrich,
   );
   oauthRoutes(app, {
     linkedin: services.linkedinOAuth,
@@ -82,4 +84,5 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   blogConnectionRoutes(app, services.blogConnection);
   aiSettingsRoutes(app, services.aiSettings);
   appCredentialsRoutes(app, services.appCredentials);
+  stockRoutes(app, services.stock);
 }

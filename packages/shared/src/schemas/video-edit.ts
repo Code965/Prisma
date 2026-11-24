@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { TranscriptWord } from './transcript.js';
 import { DEFAULT_VIDEO_AUDIO, LEGACY_VIDEO_AUDIO, VideoAudioSchema } from './video-audio.js';
+import { BROLL_LIMITS, BrollSchema, OVERLAY_LIMITS, OverlaySchema } from './video-overlays.js';
 
 /**
  * Modifiche di un progetto video (editor del passo 3c): parti tagliate, formato con posizione
@@ -81,6 +82,10 @@ export const VideoEditSchema = z.object({
   hook: HookSchema.nullable().default(null),
   /** Voce ripulita, volume uniforme e musica (6b). */
   audio: VideoAudioSchema.default(LEGACY_VIDEO_AUDIO),
+  /** Schede di testo in sovrimpressione (6d). */
+  overlays: z.array(OverlaySchema).max(OVERLAY_LIMITS.max).default([]),
+  /** Spezzoni o immagini che coprono il video mentre la voce continua (6d). */
+  broll: z.array(BrollSchema).max(BROLL_LIMITS.max).default([]),
 });
 export type VideoEdit = z.infer<typeof VideoEditSchema>;
 
@@ -93,6 +98,8 @@ export const DEFAULT_VIDEO_EDIT: VideoEdit = {
   keywords: [],
   hook: null,
   audio: DEFAULT_VIDEO_AUDIO,
+  overlays: [],
+  broll: [],
 };
 
 // --- Tagli -----------------------------------------------------------------------------------

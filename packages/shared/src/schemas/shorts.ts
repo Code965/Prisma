@@ -105,6 +105,9 @@ export function shortEdit(parent: VideoEdit, durationMs: number, moment: TimeRan
     cropOffset: parent.format === '9:16' ? parent.cropOffset : 0.5,
     // Zoom e parole chiave del momento restano; il titolo d'apertura era del video lungo.
     zooms: parent.zooms.filter((z) => z.endMs > moment.startMs && z.startMs < moment.endMs),
+    // Schede e B-roll del momento restano, come gli zoom.
+    overlays: parent.overlays.filter((o) => o.startMs >= moment.startMs && o.endMs <= moment.endMs),
+    broll: parent.broll.filter((b) => b.startMs >= moment.startMs && b.endMs <= moment.endMs),
     hook: null,
   };
 }
