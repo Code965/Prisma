@@ -1223,7 +1223,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 Fase 2 completata. Da provare con le credenziali reali: bucket R2 (chiavi e indirizzo pubblico), app Instagram
 (account professionale, OAuth e primo post), caroselli PDF su LinkedIn.
 
-### Decisioni prese per default (da confermare)
+### Decisioni prese per default (confermate il 25 novembre 2026)
 
 - Nome app: **Prisma**.
 - Dashboard inclusa nella fase 1 con i dati reali disponibili.
