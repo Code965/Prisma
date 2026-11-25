@@ -1,6 +1,7 @@
 import {
   AutoEditPlanSchema,
   EnrichPlanSchema,
+  StorageCleanupSchema,
   StockSearchResultSchema,
   StockStatusSchema,
   type EnrichRequest,
@@ -172,6 +173,7 @@ export const api = {
       input,
     ),
   storageStatus: () => apiRequest('GET', '/storage/status', StorageStatusSchema),
+  cleanupStorage: () => apiRequest('POST', '/storage/cleanup', StorageCleanupSchema),
   generateCarousel: (variantId: number, expectedVersion: number) =>
     apiRequest('POST', `/variants/${variantId}/carousel/generate`, VariantSchema, {
       expectedVersion,

@@ -57,3 +57,10 @@ export function pendingUploads(assets: readonly VariantAsset[]): VariantAsset[] 
     (a) => a.role === 'media' && a.upToDate && a.remoteKey === null && a.localPath !== null,
   );
 }
+
+/** «Tolti 3 file superati (12 MB).» dopo la pulizia di R2. */
+export function cleanupLabel(result: { deleted: number; freedBytes: number }): string {
+  if (result.deleted === 0) return 'Niente da togliere.';
+  const mb = Math.max(1, Math.round(result.freedBytes / (1024 * 1024)));
+  return `Tolti ${result.deleted} ${result.deleted === 1 ? 'file superato' : 'file superati'} (${mb} MB).`;
+}

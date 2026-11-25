@@ -9,16 +9,22 @@ import {
 } from '@prisma-app/shared';
 
 /** Parte del kit modificata nel pannello «Brand kit» (le regole della voce si salvano subito). */
-export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo'>;
+export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'videoTemplate'>;
 
 export function kitDraft(kit: BrandKit): KitDraft {
-  return { colors: { ...kit.colors }, handle: kit.handle, logo: kit.logo };
+  return {
+    colors: { ...kit.colors },
+    handle: kit.handle,
+    logo: kit.logo,
+    videoTemplate: kit.videoTemplate,
+  };
 }
 
 export function isDraftChanged(draft: KitDraft, kit: BrandKit): boolean {
   return (
     draft.handle.trim().replace(/^@+/, '') !== kit.handle ||
     draft.logo !== kit.logo ||
+    draft.videoTemplate !== kit.videoTemplate ||
     BRAND_COLOR_ROLES.some((role) => draft.colors[role].toUpperCase() !== kit.colors[role])
   );
 }

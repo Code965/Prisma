@@ -289,7 +289,10 @@ export function createRenderService(deps: RenderDeps) {
           composition: composition(
             project,
             (edit.audio.music ? 2 : 1) + layers.length,
-            ffmpegColor(templatePalette('scuro', (look?.kit ?? DEFAULT_BRAND_KIT).colors).bg),
+            ffmpegColor(
+              templatePalette(look?.template ?? 'scuro', (look?.kit ?? DEFAULT_BRAND_KIT).colors)
+                .bg,
+            ),
           ),
         }),
         'utf8',

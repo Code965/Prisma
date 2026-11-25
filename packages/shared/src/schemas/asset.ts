@@ -104,3 +104,14 @@ export const StorageStatusSchema = z.object({
   publicUrls: z.boolean(),
 });
 export type StorageStatus = z.infer<typeof StorageStatusSchema>;
+
+/** Pulizia di R2: oggetti controllati, eliminati e spazio liberato. */
+export const StorageCleanupSchema = z.object({
+  checked: z.int().nonnegative(),
+  deleted: z.int().nonnegative(),
+  freedBytes: z.int().nonnegative(),
+});
+export type StorageCleanup = z.infer<typeof StorageCleanupSchema>;
+
+/** Gli oggetti superati restano almeno così prima di essere tolti (un caricamento in corso non si tocca). */
+export const STORAGE_CLEANUP_GRACE_DAYS = 7;

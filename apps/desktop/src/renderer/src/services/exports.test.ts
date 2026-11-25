@@ -1,6 +1,6 @@
 import type { VariantAsset } from '@prisma-app/shared';
 import { describe, expect, it } from 'vitest';
-import { exportSummaries, formatSize, pendingUploads } from './exports';
+import { cleanupLabel, exportSummaries, formatSize, pendingUploads } from './exports';
 
 const asset = (patch: Partial<VariantAsset>): VariantAsset => ({
   assetId: 1,
@@ -68,5 +68,15 @@ describe('pendingUploads', () => {
       asset({ assetId: 4, localPath: null }),
     ];
     expect(pendingUploads(list).map((a) => a.assetId)).toEqual([1]);
+  });
+});
+
+describe('pulizia di R2', () => {
+  it('riassume quanto è stato tolto', () => {
+    expect(cleanupLabel({ deleted: 0, freedBytes: 0 })).toBe('Niente da togliere.');
+    expect(cleanupLabel({ deleted: 3, freedBytes: 12 * 1024 * 1024 })).toBe(
+      'Tolti 3 file superati (12 MB).',
+    );
+    expect(cleanupLabel({ deleted: 1, freedBytes: 100 })).toBe('Tolti 1 file superato (1 MB).');
   });
 });

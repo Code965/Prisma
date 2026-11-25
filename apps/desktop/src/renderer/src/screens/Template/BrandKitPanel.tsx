@@ -1,4 +1,4 @@
-import type { BrandKit } from '@prisma-app/shared';
+import { CAROUSEL_TEMPLATES, CAROUSEL_TEMPLATE_LABELS, type BrandKit } from '@prisma-app/shared';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/Button/Button';
 import { useBrand } from '../../hooks/brand';
@@ -145,6 +145,27 @@ export function BrandKitPanel({ kit, draft, onChange }: BrandKitPanelProps) {
             onChange={(event) => onChange({ ...draft, handle: event.target.value })}
           />
         </div>
+      </div>
+
+      <div className={styles.group}>
+        <span className={styles.groupLabel}>Template dei video</span>
+        <div role="group" aria-label="Template dei video" className={styles.videoTemplates}>
+          {CAROUSEL_TEMPLATES.map((template) => (
+            <button
+              key={template}
+              type="button"
+              aria-pressed={draft.videoTemplate === template}
+              className={`${styles.videoTemplate} ${draft.videoTemplate === template ? styles.videoTemplateOn : ''}`}
+              onClick={() => onChange({ ...draft, videoTemplate: template })}
+            >
+              {CAROUSEL_TEMPLATE_LABELS[template]}
+            </button>
+          ))}
+        </div>
+        <span className={styles.hint}>
+          Slide di «Crea video», schede di testo e fondo attorno allo schermo registrato. Il codice
+          usa sempre «Terminale».
+        </span>
       </div>
 
       <div className={styles.saveRow}>

@@ -110,6 +110,45 @@ describe.skipIf(!databaseUrl)('caricamento dei file su R2 (MySQL, storage finto)
     );
   });
 
+  it('la pulizia toglie solo i file superati da più di 7 giorni', async () => {
+    const storage = new FakeStorage();
+    await withRollback(
+      async (ctx) => {
+        const { variant, asset } = await exportedPdf(ctx);
+        const base = `/variants/${variant.id}/assets/${asset.assetId}/upload`;
+        const target = (await ctx.call({ method: 'POST', url: base })).json<UploadTarget>();
+        storage.put(target.key, PDF, 'application/pdf');
+        await ctx.call({ method: 'POST', url: `${base}/complete` });
+        // Rispetto all'orologio dei test (21 novembre 2026): uno superato da anni, uno ancora recente.
+        storage.put(
+          'brand-1/superato.pdf',
+          Buffer.from('vecchio'),
+          'application/pdf',
+          new Date('1989-01-01T00:00:00Z'),
+        );
+        storage.put(
+          'brand-1/appena.pdf',
+          Buffer.from('nuovo'),
+          'application/pdf',
+          new Date('2099-01-01T00:00:00Z'),
+        );
+        storage.put(
+          'altro/estraneo.pdf',
+          Buffer.from('x'),
+          'application/pdf',
+          new Date('1980-01-01T00:00:00Z'),
+        );
+
+        const res = await ctx.call({ method: 'POST', url: '/storage/cleanup' });
+        expect(res.json()).toEqual({ checked: 3, deleted: 1, freedBytes: 7 });
+        expect([...storage.objects.keys()].sort()).toEqual(
+          ['altro/estraneo.pdf', 'brand-1/appena.pdf', target.key].sort(),
+        );
+      },
+      { storage },
+    );
+  });
+
   it('senza R2 configurato risponde 503 e lo dice nello stato', async () => {
     await withRollback(async (ctx) => {
       const { variant, asset } = await exportedPdf(ctx);

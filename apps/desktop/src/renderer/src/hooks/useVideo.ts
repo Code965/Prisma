@@ -27,11 +27,7 @@ import {
   pickStockItem,
   type EnrichSummary,
 } from '../services/enrich';
-import {
-  DEFAULT_VIDEO_TEMPLATE,
-  scriptRequest,
-  type CreateVideoSource,
-} from '../services/create-video';
+import { scriptRequest, type CreateVideoSource } from '../services/create-video';
 import { shortsRequest } from '../services/shorts';
 import { canUseVideo, mediaUrl } from '../services/video';
 import { buildFaceTrack } from '../services/face';
@@ -187,7 +183,7 @@ export function useRenderVideo(projectId: string) {
   const kit = useBrandKit().data;
   const start = useMutation({
     mutationFn: () =>
-      bridge().video.render(projectId, kit ? { kit, template: DEFAULT_VIDEO_TEMPLATE } : undefined),
+      bridge().video.render(projectId, kit ? { kit, template: kit.videoTemplate } : undefined),
     onMutate: () => setProgress(null),
     onSuccess: (updated) => {
       replace(updated);
@@ -289,7 +285,7 @@ export function useCreateVideo() {
         jobId: id,
         script,
         source,
-        template: DEFAULT_VIDEO_TEMPLATE,
+        template: kit.videoTemplate,
         kit,
         initials: brand?.initials ?? '',
       });

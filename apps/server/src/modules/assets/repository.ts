@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import type { DbExecutor } from '../../db/executor.js';
 import { assets, variantAssets } from '../../db/schema.js';
 
@@ -110,4 +110,13 @@ export async function setRemote(
   remoteUrl: string | null,
 ): Promise<void> {
   await db.update(assets).set({ remoteKey, remoteUrl }).where(eq(assets.id, assetId));
+}
+
+/** Chiavi R2 dei file esportati ancora registrati (quelli superati sono già stati tolti). */
+export async function listRemoteKeys(db: DbExecutor): Promise<string[]> {
+  const rows = await db
+    .select({ key: assets.remoteKey })
+    .from(assets)
+    .where(isNotNull(assets.remoteKey));
+  return rows.flatMap((row) => (row.key ? [row.key] : []));
 }

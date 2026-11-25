@@ -14,6 +14,8 @@ import {
   isAppConfigured,
 } from '../../services/app-credentials';
 import { errorMessage } from '../../services/api/client';
+import { useCleanupStorage } from '../../hooks/useExport';
+import { cleanupLabel } from '../../services/exports';
 import { AppCredentialsForm } from './AppCredentialsForm';
 import { BlogConnectionForm } from './BlogConnectionForm';
 import styles from './Impostazioni.module.css';
@@ -23,6 +25,7 @@ import styles from './Impostazioni.module.css';
  * Impostazioni e nella configurazione guidata del primo avvio.
  */
 export function AccountsSection() {
+  const cleanup = useCleanupStorage();
   const { brand } = useBrand();
   const accounts = useSocialAccounts();
   const connect = useConnectAccount();
@@ -174,6 +177,21 @@ export function AccountsSection() {
           </div>
           {openApp === 'r2' && appView('r2') && (
             <AppCredentialsForm view={appView('r2')!} onDone={() => setOpenApp(null)} />
+          )}
+          {isAppConfigured(appView('r2')) && (
+            <p className={styles.sectionHint}>
+              Ogni giorno Prisma toglie dal bucket i file di export superati da più di 7 giorni.{' '}
+              <button
+                type="button"
+                className={styles.inlineLink}
+                disabled={cleanup.isPending}
+                onClick={() => cleanup.mutate()}
+              >
+                {cleanup.isPending ? 'Pulisco…' : 'Pulisci ora'}
+              </button>
+              {cleanup.data ? ` ${cleanupLabel(cleanup.data)}` : ''}
+              {cleanup.error ? ` ${errorMessage(cleanup.error)}` : ''}
+            </p>
           )}
         </section>
       )}

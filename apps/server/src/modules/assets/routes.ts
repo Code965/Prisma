@@ -31,4 +31,5 @@ export function assetRoutes(app: FastifyInstance, assets: AssetService): void {
   });
 
   app.get('/storage/status', () => assets.storageStatus());
+  app.post('/storage/cleanup', () => assets.cleanupStorage());
 }

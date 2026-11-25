@@ -1,15 +1,35 @@
 import { Readable } from 'node:stream';
-import type { ObjectStorage, PresignedUpload, StoredObject } from '../../src/storage/types.js';
+import type {
+  ListedObject,
+  ObjectStorage,
+  PresignedUpload,
+  StoredObject,
+} from '../../src/storage/types.js';
 
 /** Storage finto in memoria: `put` simula il caricamento fatto dal desktop con l'URL firmato. */
 export class FakeStorage implements ObjectStorage {
-  readonly objects = new Map<string, { bytes: Buffer; contentType: string }>();
+  readonly objects = new Map<string, { bytes: Buffer; contentType: string; at: Date }>();
   readonly signed: string[] = [];
 
   constructor(private readonly publicBase: string | null = 'https://media.test') {}
 
-  put(key: string, bytes: Buffer, contentType: string): void {
-    this.objects.set(key, { bytes, contentType });
+  put(
+    key: string,
+    bytes: Buffer,
+    contentType: string,
+    at = new Date('2020-01-01T00:00:00Z'),
+  ): void {
+    this.objects.set(key, { bytes, contentType, at });
+  }
+
+  async list(prefix: string): Promise<ListedObject[]> {
+    return [...this.objects.entries()]
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([key, o]) => ({ key, sizeBytes: o.bytes.length, lastModified: o.at }));
+  }
+
+  async remove(keys: readonly string[]): Promise<void> {
+    for (const key of keys) this.objects.delete(key);
   }
 
   async presignPut(key: string, contentType: string): Promise<PresignedUpload> {

@@ -1,4 +1,6 @@
 import {
+  STORAGE_CLEANUP_GRACE_DAYS,
+  type StorageCleanup,
   InvalidTransitionError,
   PLATFORM_LABELS,
   VIDEO_VARIANT_FORMAT,
@@ -231,7 +233,33 @@ export function createAssetService(
     return { variant: toVariant(updated!), assets: await list(variantId) };
   }
 
-  return { list, registerExport, registerVideo, startUpload, completeUpload, storageStatus };
+  /**
+   * Toglie da R2 i file di export superati: oggetti sotto `brand-` a cui nessun file esportato fa
+   * più riferimento (un nuovo export sostituisce il vecchio), più vecchi di 7 giorni.
+   */
+  async function cleanupStorage(): Promise<StorageCleanup> {
+    if (!storage) throw new NotConfiguredError('Archivio R2 non configurato');
+    const referenced = new Set(await repo.listRemoteKeys(db));
+    const objects = await storage.list('brand-');
+    const limit = now().getTime() - STORAGE_CLEANUP_GRACE_DAYS * 86_400_000;
+    const stale = objects.filter((o) => !referenced.has(o.key) && o.lastModified.getTime() < limit);
+    await storage.remove(stale.map((o) => o.key));
+    return {
+      checked: objects.length,
+      deleted: stale.length,
+      freedBytes: stale.reduce((total, o) => total + o.sizeBytes, 0),
+    };
+  }
+
+  return {
+    list,
+    registerExport,
+    registerVideo,
+    startUpload,
+    completeUpload,
+    storageStatus,
+    cleanupStorage,
+  };
 }
 
 export type AssetService = ReturnType<typeof createAssetService>;

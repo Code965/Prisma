@@ -49,6 +49,11 @@ export async function uploadPending(
  * variant (rifiutandoli se nel frattempo slide o brand kit sono cambiati) e, se R2 è
  * configurato, vengono caricati subito.
  */
+/** «Pulisci ora»: toglie da R2 i file di export superati da più di 7 giorni. */
+export function useCleanupStorage() {
+  return useMutation({ mutationFn: () => api.cleanupStorage() });
+}
+
 export function useExportCarousel(variant: Variant) {
   const { brand } = useBrand();
   const kit = useBrandKit().data;

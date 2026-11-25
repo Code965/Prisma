@@ -1,7 +1,6 @@
 import {
   VIDEO_JOB_STAGE_LABELS,
   VIDEO_VARIANT_FORMAT,
-  type CarouselTemplate,
   type Platform,
   type VideoJobProgress,
   type VideoProject,
@@ -15,9 +14,6 @@ import {
  */
 
 export type CreateVideoSource = { kind: 'idea' | 'variant'; id: number };
-
-/** Template delle slide del video: come i caroselli, «Tech scuro» se la bozza non ne ha uno. */
-export const DEFAULT_VIDEO_TEMPLATE: CarouselTemplate = 'scuro';
 
 export function scriptRequest(source: CreateVideoSource): VideoScriptRequest {
   return source.kind === 'idea' ? { ideaId: source.id } : { variantId: source.id };

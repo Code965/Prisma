@@ -164,6 +164,17 @@ export async function createPrismaRuntime(baseEnv: Env, options: RuntimeOptions 
     timers.push(setInterval(() => void refreshInstagram(), 6 * 60 * 60_000));
     void refreshInstagram();
 
+    // Pulizia di R2 una volta al giorno (file di export superati da più di 7 giorni).
+    if (storage) {
+      const cleanup = () =>
+        services.assets
+          .cleanupStorage()
+          .then((result) => result.deleted && app.log.info(result, 'Pulizia di R2'))
+          .catch((error: unknown) => app.log.warn({ err: error }, 'Pulizia di R2 non riuscita'));
+      timers.push(setInterval(() => void cleanup(), 24 * 60 * 60_000));
+      timers.push(setTimeout(() => void cleanup(), 5 * 60_000));
+    }
+
     if (env.SCHEDULER_ENABLED) scheduler.start(env.SCHEDULER_POLL_MS);
     if (env.ANALYTICS_ENABLED) {
       collector.start(env.ANALYTICS_POLL_MS);

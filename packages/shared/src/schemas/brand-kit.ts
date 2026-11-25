@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PlatformSchema } from '../domain/platforms.js';
+import { CAROUSEL_TEMPLATES } from './carousel.js';
 import { IdSchema, InstantSchema } from './common.js';
 
 /**
@@ -55,6 +56,11 @@ export const BrandKitSchema = z.object({
     .transform((h) => h.replace(/^@+/, '')),
   logo: LogoSchema.nullable(),
   voiceRules: z.array(z.string().trim().min(1).max(80)).max(20),
+  /**
+   * Template dei video: slide di «Crea video», schede di testo e fondo attorno allo schermo
+   * (il codice usa sempre «Terminale»). Assente nei kit salvati prima: «Tech scuro».
+   */
+  videoTemplate: z.enum(CAROUSEL_TEMPLATES).default('scuro'),
 });
 export type BrandKit = z.infer<typeof BrandKitSchema>;
 
@@ -70,6 +76,7 @@ export const DEFAULT_BRAND_KIT: BrandKit = {
   handle: '',
   logo: null,
   voiceRules: [],
+  videoTemplate: 'scuro',
 };
 
 export const VoiceExampleInputSchema = z.object({

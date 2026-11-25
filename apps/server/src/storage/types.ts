@@ -26,6 +26,16 @@ export interface ObjectStorage {
   readStream(key: string, start?: number, end?: number): Promise<Readable>;
   /** Indirizzo pubblico dell'oggetto, se il bucket ne ha uno. */
   publicUrl(key: string): string | null;
+  /** Oggetti con la chiave che inizia per `prefix`, con dimensione e data (tutte le pagine). */
+  list(prefix: string): Promise<ListedObject[]>;
+  /** Elimina gli oggetti indicati (a gruppi di 1.000, come vuole S3). */
+  remove(keys: readonly string[]): Promise<void>;
+}
+
+export interface ListedObject {
+  key: string;
+  sizeBytes: number;
+  lastModified: Date;
 }
 
 const EXTENSIONS: Record<string, string> = {

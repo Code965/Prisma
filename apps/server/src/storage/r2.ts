@@ -1,5 +1,7 @@
 import {
+  DeleteObjectsCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   HeadObjectCommand,
   NotFound,
   PutObjectCommand,
@@ -9,7 +11,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'node:stream';
 import type { Env } from '../config/env.js';
-import type { ObjectStorage, PresignedUpload, StoredObject } from './types.js';
+import type { ListedObject, ObjectStorage, PresignedUpload, StoredObject } from './types.js';
 
 /**
  * Cloudflare R2 con l'SDK S3 (developers.cloudflare.com/r2, verificato novembre 2026):
@@ -101,6 +103,44 @@ export function createR2Storage(
     publicUrl(key: string): string | null {
       if (!config.publicBaseUrl) return null;
       return `${config.publicBaseUrl}/${key.split('/').map(encodeURIComponent).join('/')}`;
+    },
+
+    async list(prefix: string): Promise<ListedObject[]> {
+      const found: ListedObject[] = [];
+      let token: string | undefined;
+      do {
+        const page = await client.send(
+          new ListObjectsV2Command({ Bucket, Prefix: prefix, ContinuationToken: token }),
+        );
+        for (const item of page.Contents ?? []) {
+          if (!item.Key) continue;
+          found.push({
+            key: item.Key,
+            sizeBytes: item.Size ?? 0,
+            lastModified: item.LastModified ?? new Date(0),
+          });
+        }
+        token = page.IsTruncated ? page.NextContinuationToken : undefined;
+      } while (token);
+      return found;
+    },
+
+    async remove(keys: readonly string[]): Promise<void> {
+      for (let i = 0; i < keys.length; i += 1000) {
+        const batch = keys.slice(i, i + 1000);
+        const result = await client.send(
+          new DeleteObjectsCommand({
+            Bucket,
+            Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true },
+          }),
+        );
+        if (result.Errors?.length) {
+          const first = result.Errors[0]!;
+          throw new Error(
+            `R2 non ha eliminato ${result.Errors.length} oggetti: ${first.Key} ${first.Message ?? ''}`,
+          );
+        }
+      }
     },
   };
 }

@@ -10,7 +10,6 @@ import { renderOverlayCardHtml } from '@prisma-app/templates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { slideFontFaceCss } from '../../components/SlideFrame/slide-fonts';
 import { useBrandKit } from '../../hooks/useBrandKit';
-import { DEFAULT_VIDEO_TEMPLATE } from '../../services/create-video';
 import { brollPreviewSeconds } from '../../services/layers';
 import { brollUrl } from '../../services/video';
 import styles from './VideoEditor.module.css';
@@ -49,7 +48,7 @@ export function LayersPreview({ edit, sourceMs, playing }: LayersPreviewProps) {
         ? renderOverlayCardHtml({
             overlay: card,
             kit,
-            template: DEFAULT_VIDEO_TEMPLATE,
+            template: kit.videoTemplate,
             width: info.width,
             height: info.height,
             fontFaceCss,

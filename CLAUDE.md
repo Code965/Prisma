@@ -727,6 +727,9 @@ pnpm --filter @prisma-app/server db:import-mysql  # una volta: dati dal vecchio 
 
 - `brands.kit` (JSON, null = `DEFAULT_BRAND_KIT` coi colori del mockup) e tabella `voice_examples`; migrazione
   `0002_brand_kit`. Schemi in `@prisma-app/shared` (`BrandKitSchema`, `VoiceExampleInputSchema`).
+- `videoTemplate` (Tech scuro/Minimal chiaro/Terminale, default scuro): template dei video (slide di «Crea video»,
+  schede di testo, fondo attorno allo schermo registrato), scelto nel pannello Brand kit; non entra nella chiave
+  degli export dei caroselli.
 - Colori con ruolo fisso (`ink`, `paper`, `accent`, `accentSoft`, `code`) perché i template sappiano quale usare;
   handle salvato senza «@»; logo come data URL validato (tipo e dimensione), così le slide esportate non dipendono
   da file esterni.
@@ -801,8 +804,13 @@ Verificato sulla documentazione ufficiale (developers.cloudflare.com/r2, novembr
   variabili `R2_*` lo storage è `null`: il caricamento risponde 503 e i caroselli LinkedIn restano bloccati in coda.
 - URL firmati PUT validi 15 minuti, con `Content-Type` firmato (`signableHeaders`, altrimenti l'SDK non lo firma).
   Funzionano solo sull'endpoint S3, non sui domini pubblici. I caricamenti dal main di Electron non chiedono CORS.
-- Chiave ricavata dal contenuto: `brand-<id>/<sha256>.<ext>`. Ricaricare lo stesso file non crea doppioni. Gli
-  oggetti di export superati restano sul bucket: una pulizia periodica è da fare.
+- Chiave ricavata dal contenuto: `brand-<id>/<sha256>.<ext>`. Ricaricare lo stesso file non crea doppioni.
+- **Pulizia** (`cleanupStorage` nel servizio degli asset, `POST /storage/cleanup`, verificato su
+  developers.cloudflare.com/r2/api/s3/api: ListObjectsV2 e DeleteObjects supportati): ogni giorno (5 minuti dopo l'avvio,
+  poi ogni 24 ore) e con «Pulisci ora» in Impostazioni › Account › Archivio file si tolgono gli oggetti sotto `brand-`
+  a cui nessun file esportato fa più riferimento (`listRemoteKeys`) e più vecchi di 7 giorni
+  (`STORAGE_CLEANUP_GRACE_DAYS`: un caricamento in corso non si tocca). `ObjectStorage` ha `list(prefix)` (tutte le
+  pagine) e `remove(keys)` (a gruppi di 1.000).
 - `POST /variants/:id/assets/:assetId/upload` → `{ key, url, headers, expiresAt }`;
   `POST …/upload/complete` controlla con HEAD che l'oggetto esista con la dimensione attesa, poi salva
   `remote_key` e `remote_url` (`R2_PUBLIC_BASE_URL`; r2.dev è limitato e va bene solo per le prove).
@@ -870,10 +878,8 @@ Worker e recupero considerano solo le piattaforme con un adapter registrato in `
 le altre pubblicazioni restano `programmato` finché l'adapter non esiste.
 
 Test: `scheduler.int.test.ts` (rollback, orologio nel 1990) e `scheduler-concurrency.int.test.ts`
-(3 worker su connessioni diverse, dati salvati davvero con orologio al 2000 e piattaforma TikTok, ripuliti
-alla fine). Le date nel passato garantiscono che i test non vedano mai pubblicazioni reali.
-Ora che l'adapter TikTok esiste conviene spostare i test su un database dedicato (vedi la sezione TikTok).
-I file di test girano in sequenza (`fileParallelism: false`) per non bloccarsi righe a vicenda.
+(3 worker sullo stesso database SQLite in memoria creato dal test, con orologio al 2000): ogni file di test ha il suo
+database in memoria, quindi i test non vedono mai dati veri né lo scheduler di un server acceso.
 
 ### API (tutte con `Authorization: Bearer <API_TOKEN>`)
 
@@ -997,9 +1003,6 @@ privato, e le linee guida escludono dall'audit «un'utilità per caricare conten
   «didascalia e privacy le scegli tu nell'app».
 - **Desktop**: «Collega» nelle Impostazioni (URL di TikTok ammesso nell'IPC); nel log della coda «Inviato a
   TikTok» al posto di «Pubblicato», istruzioni e «Copia didascalia» (`socialCaption` in shared: testo + hashtag).
-- Con tutte le piattaforme dotate di adapter, uno scheduler del server di sviluppo acceso durante i test di
-  concorrenza potrebbe vedere le righe di prova (TikTok, anno 2000): non pubblica nulla, perché i token di prova
-  sono cifrati con una chiave casuale, ma i test possono fallire. Meglio un database dedicato ai test.
 
 ### Metriche (`modules/analytics/`, fase 4)
 
