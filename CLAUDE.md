@@ -270,6 +270,16 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   cliccabile con il selettore nativo), font fissi, logo (data URL ≤ 256 KB, PNG/JPEG/WebP/SVG, anteprima su fondo
   scuro e chiaro), handle; «Salva brand kit» solo se qualcosa è cambiato. Pannello Voce: regole a etichette salvate
   subito nel kit, esempi di post con piattaforma e nota. Logica pura in `services/brand-kit.ts`.
+- **Elenco dei contenuti** (`screens/Studio/ContentList.tsx`, logica in `services/content-list.ts`): «Studio contenuto» senza
+  un contenuto aperto elenca tutti i contenuti del brand (anche nati da idee eliminate, «senza idea») con lo stato per
+  piattaforma, filtri con conteggi (Tutti, Bozze, Approvati, In coda, Pubblicati, Errori: un contenuto è in ogni filtro
+  in cui ricade una sua variant) ed «Elimina» solo per quelli mai usciti (il server rifiuta comunque quelli con
+  pubblicazioni, anche annullate, per lo storico e le metriche).
+- **Eliminare un'idea** (`DELETE /ideas/:id`, `removeIdea` nel servizio dei contenuti): eliminare l'idea non tocca i
+  contenuti (`idea_id` diventa null) salvo `?contenuti=bozze`, che nella stessa transazione elimina anche quelli nati
+  dall'idea senza pubblicazioni; risponde con `removedContents` e `keptContents`. Nelle Idee due domande
+  (`deleteIdeaQuestions`): l'idea, poi «Eliminare anche N contenuti mai usciti?» (con «Annulla» restano nello Studio);
+  pubblicati e in coda restano sempre.
 - **Studio** (`screens/Studio/`): tab per piattaforma con stato, anteprima nel feed per le 4 piattaforme (i media
   sono riquadri con i colori fissi del mockup), campi specifici con contatori (`TEXT_LIMITS`: LinkedIn verificato,
   gli altri da riverificare con i rispettivi adapter), hashtag, chat «Modifica scrivendo» con diff riga per riga

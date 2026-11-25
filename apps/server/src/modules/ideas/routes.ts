@@ -1,9 +1,17 @@
 import { IdeaInputSchema, IdeaListQuerySchema, IdeaUpdateSchema } from '@prisma-app/shared';
 import type { FastifyInstance } from 'fastify';
 import { parseBrandId, parseId } from '../../http/params.js';
+import { z } from 'zod';
+import type { ContentService } from '../contents/service.js';
 import type { IdeaService } from './service.js';
 
-export function ideaRoutes(app: FastifyInstance, ideas: IdeaService): void {
+const DeleteIdeaQuerySchema = z.object({ contenuti: z.enum(['bozze']).optional() });
+
+export function ideaRoutes(
+  app: FastifyInstance,
+  ideas: IdeaService,
+  contents: ContentService,
+): void {
   app.get('/brands/:brandId/ideas', (request) =>
     ideas.list(parseBrandId(request.params), IdeaListQuerySchema.parse(request.query)),
   );
@@ -22,8 +30,11 @@ export function ideaRoutes(app: FastifyInstance, ideas: IdeaService): void {
     ideas.update(parseId(request.params), IdeaUpdateSchema.parse(request.body)),
   );
 
+  // `?contenuti=bozze`: con l'idea spariscono anche i suoi contenuti mai usciti (nessuna
+  // pubblicazione); quelli pubblicati o in coda restano. Senza: si elimina solo l'idea.
   app.delete('/ideas/:id', async (request, reply) => {
-    await ideas.remove(parseId(request.params));
-    return reply.code(204).send();
+    const { contenuti } = DeleteIdeaQuerySchema.parse(request.query);
+    const result = await contents.removeIdea(parseId(request.params), contenuti === 'bozze');
+    return reply.code(200).send(result);
   });
 }

@@ -67,15 +67,20 @@ export function useDeleteIdea() {
   const key = queryKeys.ideas(brand?.id ?? 0);
 
   return useMutation({
-    mutationFn: (id: number) => api.deleteIdea(id),
-    onMutate: async (id) => {
+    mutationFn: ({ id, withDrafts }: { id: number; withDrafts: boolean }) =>
+      api.deleteIdea(id, withDrafts),
+    onMutate: async ({ id }) => {
       await client.cancelQueries({ queryKey: key });
       const previous = client.getQueryData<Idea[]>(key);
       client.setQueryData<Idea[]>(key, (ideas) => ideas?.filter((idea) => idea.id !== id));
       return { previous };
     },
-    onError: (_error, _id, context) => client.setQueryData(key, context?.previous),
-    onSettled: () => client.invalidateQueries({ queryKey: key }),
+    onError: (_error, _vars, context) => client.setQueryData(key, context?.previous),
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: key });
+      // Con l'idea possono sparire anche i suoi contenuti mai usciti.
+      void client.invalidateQueries({ queryKey: queryKeys.contents(brand?.id ?? 0) });
+    },
   });
 }
 

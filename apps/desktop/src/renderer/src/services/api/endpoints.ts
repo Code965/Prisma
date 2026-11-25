@@ -96,7 +96,14 @@ export const api = {
     apiRequest('POST', `/brands/${brandId}/ideas`, IdeaSchema, input),
   updateIdea: (id: number, input: IdeaUpdate) =>
     apiRequest('PATCH', `/ideas/${id}`, IdeaSchema, input),
-  deleteIdea: (id: number) => apiCommand('DELETE', `/ideas/${id}`),
+  /** `withDrafts`: elimina anche i contenuti dell'idea mai usciti (il server tiene gli altri). */
+  deleteIdea: (id: number, withDrafts = false) =>
+    apiRequest(
+      'DELETE',
+      `/ideas/${id}${withDrafts ? '?contenuti=bozze' : ''}`,
+      z.object({ removedContents: z.int(), keptContents: z.int() }),
+    ),
+  deleteContent: (id: number) => apiCommand('DELETE', `/contents/${id}`),
 
   generateContent: (input: GenerateContent): Promise<Content> =>
     apiRequest('POST', '/contents/generate', ContentSchema, input),

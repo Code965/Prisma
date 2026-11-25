@@ -16,6 +16,16 @@ export function usePublications() {
   });
 }
 
+/** Elimina un contenuto mai uscito (il server rifiuta quelli con pubblicazioni). */
+export function useDeleteContent() {
+  const { brand } = useBrand();
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteContent(id),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.contents(brand?.id ?? 0) }),
+  });
+}
+
 export function useContents() {
   const { brand } = useBrand();
   return useQuery({

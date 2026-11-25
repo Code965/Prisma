@@ -60,7 +60,7 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   brandKitRoutes(app, services.brandKit);
   assetRoutes(app, services.assets);
   tagRoutes(app, services.tags);
-  ideaRoutes(app, services.ideas);
+  ideaRoutes(app, services.ideas, services.contents);
   socialAccountRoutes(app, services.accounts);
   contentRoutes(app, services.contents);
   variantRoutes(app, services.variants);

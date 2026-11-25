@@ -6,6 +6,7 @@ import { Panel } from '../../components/Panel/Panel';
 import { useContent, useIdea } from '../../hooks/useStudio';
 import { errorMessage } from '../../services/api/client';
 import { sortVariants } from '../../services/studio';
+import { ContentList } from './ContentList';
 import { StudioBody } from './StudioBody';
 import styles from './Studio.module.css';
 
@@ -18,7 +19,9 @@ export function StudioScreen() {
   const idea = useIdea(content.data?.ideaId ?? null);
   const [platform, setPlatform] = useState<Platform | null>(null);
 
-  if (!validId || content.error || !content.data) {
+  // Senza un contenuto aperto: l'elenco di tutti i contenuti (anche di idee eliminate).
+  if (!validId) return <ContentList />;
+  if (content.error || !content.data) {
     return (
       <Page
         title="Studio contenuto"
@@ -27,11 +30,7 @@ export function StudioScreen() {
       >
         <Panel label="Stato">
           <p className={styles.note}>
-            {!validId
-              ? 'Apri un contenuto da Idee con «Genera contenuti».'
-              : content.error
-                ? errorMessage(content.error)
-                : 'Carico il contenuto…'}
+            {content.error ? errorMessage(content.error) : 'Carico il contenuto…'}
           </p>
         </Panel>
       </Page>

@@ -57,10 +57,3 @@ export function togglePlatform(selected: readonly Platform[], platform: Platform
 export function toggleId(selected: readonly number[], id: number): number[] {
   return selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
 }
-
-/** Testo della conferma prima di eliminare un'idea. */
-export function deleteIdeaConfirm(idea: Idea): string {
-  const text = idea.text.length > 80 ? `${idea.text.slice(0, 79)}…` : idea.text;
-  const linked = idea.status === 'nuova' ? '' : ' I contenuti già generati restano nello Studio.';
-  return `Eliminare l'idea «${text}»?${linked}`;
-}

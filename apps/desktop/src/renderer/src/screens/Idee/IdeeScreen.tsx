@@ -11,12 +11,13 @@ import {
   useUpdateIdea,
 } from '../../hooks/useIdeas';
 import { useNow } from '../../hooks/useNow';
+import { useContents } from '../../hooks/useCalendar';
+import { deleteIdeaQuestions, ideaContents } from '../../services/content-list';
 import { useCreateVideo } from '../../hooks/useVideo';
 import { createVideoLabel } from '../../services/create-video';
 import { canUseVideo } from '../../services/video';
 import { errorMessage } from '../../services/api/client';
 import {
-  deleteIdeaConfirm,
   filterIdeas,
   tagFilterOptions,
   togglePlatform,
@@ -36,6 +37,7 @@ export function IdeeScreen() {
   const updateIdea = useUpdateIdea();
   const generate = useGenerateContent();
   const deleteIdea = useDeleteIdea();
+  const contents = useContents();
   const createVideo = useCreateVideo();
   const videoFor = (ideaId: number) =>
     createVideo.variables?.kind === 'idea' && createVideo.variables.id === ideaId;
@@ -122,8 +124,16 @@ export function IdeeScreen() {
                 { onSuccess: (content) => navigate(`/studio/${content.id}`) },
               )
             }
-            deleting={deleteIdea.isPending && deleteIdea.variables === idea.id}
-            onDelete={() => window.confirm(deleteIdeaConfirm(idea)) && deleteIdea.mutate(idea.id)}
+            deleting={deleteIdea.isPending && deleteIdea.variables?.id === idea.id}
+            onDelete={() => {
+              const questions = deleteIdeaQuestions(
+                idea,
+                ideaContents(contents.data ?? [], idea.id),
+              );
+              if (!window.confirm(questions.idea)) return;
+              const withDrafts = questions.drafts !== null && window.confirm(questions.drafts);
+              deleteIdea.mutate({ id: idea.id, withDrafts });
+            }}
             video={
               canUseVideo()
                 ? {

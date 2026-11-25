@@ -14,6 +14,7 @@ import {
   listVariantsOfContents,
 } from '../variants/repository.js';
 import * as repo from './repository.js';
+import * as ideaRepo from '../ideas/repository.js';
 
 export function createContentService(db: DbExecutor, brands: BrandService, ideas: IdeaService) {
   async function get(id: number): Promise<Content> {
@@ -79,7 +80,36 @@ export function createContentService(db: DbExecutor, brands: BrandService, ideas
     await repo.deleteContent(db, id);
   }
 
-  return { get, list, create, update, remove };
+  /**
+   * Elimina un'idea e, se richiesto, i contenuti nati da lei che non sono mai usciti (nessuna
+   * pubblicazione, nemmeno annullata). Quelli pubblicati o in coda restano, senza l'idea.
+   * Tutto in una transazione.
+   */
+  async function removeIdea(
+    ideaId: number,
+    withDrafts: boolean,
+  ): Promise<{ removedContents: number; keptContents: number }> {
+    const idea = await ideas.get(ideaId);
+    const rows = (await repo.listContentRows(db, idea.brandId)).filter((r) => r.ideaId === ideaId);
+    const variants = await listVariantsOfContents(
+      db,
+      rows.map((r) => r.id),
+    );
+    const removable: number[] = [];
+    if (withDrafts) {
+      for (const row of rows) {
+        const ids = (variants.get(row.id) ?? []).map((v) => v.id);
+        if ((await countPublicationsOfVariants(db, ids)) === 0) removable.push(row.id);
+      }
+    }
+    await db.transaction(async (tx) => {
+      for (const id of removable) await repo.deleteContent(tx, id);
+      await ideaRepo.deleteIdea(tx, ideaId);
+    });
+    return { removedContents: removable.length, keptContents: rows.length - removable.length };
+  }
+
+  return { get, list, create, update, remove, removeIdea };
 }
 
 export type ContentService = ReturnType<typeof createContentService>;

@@ -1,7 +1,6 @@
 import type { Idea, Tag } from '@prisma-app/shared';
 import { describe, expect, it } from 'vitest';
 import {
-  deleteIdeaConfirm,
   filterIdeas,
   ideaMeta,
   platformCountLabel,
@@ -73,16 +72,5 @@ describe('lista idee', () => {
   it('aggiunge e toglie id', () => {
     expect(toggleId([1, 2], 2)).toEqual([1]);
     expect(toggleId([1], 3)).toEqual([1, 3]);
-  });
-});
-
-describe('conferma di eliminazione', () => {
-  const base = { id: 1, text: 'Idea breve', status: 'nuova' } as Idea;
-  it('cita il testo e avvisa dei contenuti già generati', () => {
-    expect(deleteIdeaConfirm(base)).toBe("Eliminare l'idea «Idea breve»?");
-    expect(deleteIdeaConfirm({ ...base, status: 'in_lavorazione' })).toContain(
-      'restano nello Studio',
-    );
-    expect(deleteIdeaConfirm({ ...base, text: 'x'.repeat(200) })).toContain('x…»');
   });
 });
