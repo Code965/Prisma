@@ -4,6 +4,7 @@ export {
   SLIDE_SIZE,
   escapeHtml,
   renderCarouselPdfHtml,
+  kitFonts,
   renderInputKey,
   renderSlideHtml,
   type SlideContext,

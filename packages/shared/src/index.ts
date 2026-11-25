@@ -13,6 +13,7 @@ export * from './domain/status-display.js';
 export * from './schemas/common.js';
 export * from './schemas/brand.js';
 export * from './schemas/brand-kit.js';
+export * from './schemas/fonts.js';
 export * from './schemas/idea.js';
 export * from './schemas/carousel.js';
 export * from './schemas/asset.js';

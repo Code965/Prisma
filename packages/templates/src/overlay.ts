@@ -3,9 +3,11 @@ import {
   type BrandKit,
   type CarouselTemplate,
   type Overlay,
+  SLIDE_FONTS,
+  fontStack,
 } from '@prisma-app/shared';
 import { templatePalette } from './palette.js';
-import { escapeHtml } from './slide.js';
+import { escapeHtml, kitFonts } from './slide.js';
 
 /**
  * Schede di testo sopra il video (fase 6d): stessi colori e font delle slide dei caroselli, su
@@ -56,6 +58,8 @@ export function renderOverlayCardHtml(context: OverlayCardContext): string {
   // Misure in proporzione al lato corto: la stessa scheda va bene in 9:16, 1:1 e 16:9.
   const unit = Math.min(width, height) / 1080;
   const px = (value: number) => `${Math.round(value * unit)}px`;
+  const fonts = kitFonts(kit);
+  const mono = fontStack(fonts.code);
   const title = `<h1>${escapeHtml(overlay.title)}</h1>`;
   const content =
     overlay.kind === 'list'
@@ -72,13 +76,13 @@ export function renderOverlayCardHtml(context: OverlayCardContext): string {
   const css = `
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:transparent;width:${width}px;height:${height}px;overflow:hidden}
-.card{position:absolute;left:${Math.round(place.left * width)}px;top:${Math.round(place.top * height)}px;width:${Math.round(place.width * width)}px;padding:${px(40)} ${px(46)};border-radius:${px(28)};background:${palette.bg};color:${palette.fg};font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;box-shadow:0 ${px(18)} ${px(60)} rgba(0,0,0,.35);display:flex;flex-direction:column;gap:${px(24)}}
+.card{position:absolute;left:${Math.round(place.left * width)}px;top:${Math.round(place.top * height)}px;width:${Math.round(place.width * width)}px;padding:${px(40)} ${px(46)};border-radius:${px(28)};background:${palette.bg};color:${palette.fg};font-family:${fontStack(fonts.body)};-webkit-font-smoothing:antialiased;box-shadow:0 ${px(18)} ${px(60)} rgba(0,0,0,.35);display:flex;flex-direction:column;gap:${px(24)}}
 .card.title{border-left:${px(14)} solid ${palette.accent}}
-h1{margin:0;font-size:${px(overlay.kind === 'title' ? 64 : 48)};font-weight:800;line-height:1.1;letter-spacing:-0.02em;overflow-wrap:break-word}
+h1{margin:0;font-family:${fontStack(fonts.heading)};font-size:${px(overlay.kind === 'title' ? 64 : 48)};font-weight:${SLIDE_FONTS[fonts.heading].titleWeight};line-height:1.1;letter-spacing:-0.02em;overflow-wrap:break-word}
 ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:${px(16)}}
 li{display:flex;gap:${px(22)};align-items:baseline;font-size:${px(40)};line-height:1.35;color:${palette.soft}}
-.num{flex:none;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:${px(32)};color:${palette.accent}}
-pre{margin:0;padding:${px(28)};border-radius:${px(16)};background:${palette.codeBg};color:${palette.codeFg};font-family:'JetBrains Mono',ui-monospace,monospace;font-size:${px(32)};line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;font-variant-ligatures:none}
+.num{flex:none;font-family:${mono};font-size:${px(32)};color:${palette.accent}}
+pre{margin:0;padding:${px(28)};border-radius:${px(16)};background:${palette.codeBg};color:${palette.codeFg};font-family:${mono};font-size:${px(32)};line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;font-variant-ligatures:none}
 `;
   return `<!doctype html>
 <html lang="it">

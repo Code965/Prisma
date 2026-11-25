@@ -1,99 +1,57 @@
-import type { CSSProperties } from 'react';
+import { CAROUSEL_TEMPLATES, CAROUSEL_TEMPLATE_LABELS, type BrandKit } from '@prisma-app/shared';
+import { renderSlideHtml } from '@prisma-app/templates';
+import { useMemo } from 'react';
+import { SlideFrame } from '../../components/SlideFrame/SlideFrame';
+import { slideFontFaceCss } from '../../components/SlideFrame/slide-fonts';
 import { useBrand } from '../../hooks/brand';
-import { GALLERY_TEMPLATES, type GalleryTemplate, type KitDraft } from '../../services/brand-kit';
+import { draftKit, galleryCarousel, type KitDraft } from '../../services/brand-kit';
 import styles from './Template.module.css';
 
+const THUMB_WIDTH = 112;
+
 /**
- * Galleria dei template (V3Template). Le miniature usano i colori del brand kit, così si vede
- * subito l'effetto di una modifica; i template veri arrivano con l'editor carosello.
+ * Galleria degli stili (7a): ogni stile disegnato con il vero renderer delle slide e il kit in
+ * bozza (colori, font, logo, handle), quindi coincide con quello che esce dall'export.
  */
-export function Gallery({ draft }: { draft: KitDraft }) {
-  const { colors } = draft;
-  const style = {
-    '--k-ink': colors.ink,
-    '--k-paper': colors.paper,
-    '--k-accent': colors.accent,
-    '--k-accentSoft': colors.accentSoft,
-    '--k-code': colors.code,
-  } as CSSProperties;
+export function Gallery({ kit, draft }: { kit: BrandKit; draft: KitDraft }) {
+  const { brand } = useBrand();
+  const fontFaceCss = useMemo(() => slideFontFaceCss(), []);
+  const shown = useMemo(() => draftKit(kit, draft), [kit, draft]);
+  const initials = brand?.initials ?? '';
 
   return (
-    <section aria-labelledby="h-gal" className={styles.gallerySection} style={style}>
+    <section aria-labelledby="h-gal" className={styles.gallerySection}>
       <h2 id="h-gal" className={styles.h2}>
         Galleria
       </h2>
       <div className={styles.gallery}>
-        {GALLERY_TEMPLATES.map((template) => (
-          <article key={template.id} className={styles.card}>
-            <div className={styles.well}>
-              <Thumb id={template.id} />
-            </div>
-            <div className={styles.cardText}>
-              <span className={styles.cardName}>{template.name}</span>
-              <span className={`${styles.cardSize} mono`}>{template.size}</span>
-            </div>
-          </article>
-        ))}
+        {CAROUSEL_TEMPLATES.map((template) => {
+          const carousel = galleryCarousel(template);
+          return (
+            <article key={template} className={styles.card}>
+              <div className={styles.well}>
+                {carousel.slides.map((slide, index) => (
+                  <SlideFrame
+                    key={slide.kind}
+                    width={THUMB_WIDTH}
+                    title={`${CAROUSEL_TEMPLATE_LABELS[template]}, slide ${index + 1}`}
+                    html={renderSlideHtml({ carousel, index, kit: shown, initials, fontFaceCss })}
+                  />
+                ))}
+              </div>
+              <div className={styles.cardText}>
+                <span className={styles.cardName}>
+                  {CAROUSEL_TEMPLATE_LABELS[template]}
+                  {draft.videoTemplate === template ? (
+                    <span className={styles.badge}>Video</span>
+                  ) : null}
+                </span>
+                <span className={`${styles.cardSize} mono`}>Caroselli e post · 1080×1350</span>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
-}
-
-function Thumb({ id }: { id: GalleryTemplate['id'] }) {
-  const { brand } = useBrand();
-  const author = brand?.name.split(' ')[0] ?? '';
-  switch (id) {
-    case 'carosello':
-      return (
-        <>
-          <div className={`${styles.thumb} ${styles.tCarousel}`}>
-            <span className={`${styles.tKicker} mono`}>01</span>
-            <span className={styles.tTitle}>Titolo della copertina</span>
-          </div>
-          <div aria-hidden className={styles.tStrip} />
-        </>
-      );
-    case 'post':
-      return (
-        <div className={`${styles.thumb} ${styles.tPost}`}>
-          <span className={styles.tTitle}>Un concetto, una immagine</span>
-          <span className={styles.tBlock} />
-        </div>
-      );
-    case 'citazione':
-      return (
-        <div className={`${styles.thumb} ${styles.tQuote}`}>
-          <span className={styles.tQuoteMark}>“</span>
-          <span className={styles.tQuoteText}>Il primo utente sei tu.</span>
-          <span className={styles.tQuoteAuthor}>— {author}</span>
-        </div>
-      );
-    case 'codice':
-      return (
-        <div className={`${styles.thumb} ${styles.tCode}`}>
-          <span className={styles.tCodeTitle}>Snippet</span>
-          <span className={`${styles.tCodeBox} mono`}>
-            var x =
-            <br />
-            {'  '}Load();
-          </span>
-        </div>
-      );
-    case 'miniatura_yt':
-      return (
-        <div className={`${styles.thumb} ${styles.tYouTube}`}>
-          <span className={styles.tYouTubeTitle}>
-            IL MIO
-            <br />
-            CLIENT DB
-          </span>
-        </div>
-      );
-    case 'copertina_verticale':
-      return (
-        <div className={`${styles.thumb} ${styles.tVertical}`}>
-          <span className={styles.tVerticalTitle}>Una riga, una settimana</span>
-        </div>
-      );
-  }
 }

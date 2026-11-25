@@ -37,7 +37,7 @@
 
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 12px;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .well {
-  height: 180px;
+  height: 190px;
   background: var(--well);
   display: flex;
   align-items: center;
@@ -67,152 +67,25 @@
 }
 
 .cardName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accentSoft);
+  color: var(--accent);
+  font-size: 11px;
   font-weight: 600;
 }
 
 .cardSize {
   font-size: 11px;
   color: var(--muted);
-}
-
-.thumb {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  border-radius: 3px;
-}
-
-.tTitle {
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.tCarousel {
-  height: 140px;
-  aspect-ratio: 4 / 5;
-  padding: 10px;
-  justify-content: space-between;
-  background: var(--k-ink);
-  color: var(--k-paper);
-}
-
-.tKicker {
-  font-size: 11px;
-  color: color-mix(in srgb, var(--k-paper) 60%, var(--k-ink));
-}
-
-.tStrip {
-  height: 124px;
-  width: 16px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--k-ink) 88%, var(--k-paper));
-}
-
-.tPost {
-  height: 140px;
-  aspect-ratio: 4 / 5;
-  padding: 12px;
-  justify-content: center;
-  gap: 6px;
-  background: var(--k-paper);
-  color: var(--k-ink);
-  border: 1px solid color-mix(in srgb, var(--k-ink) 12%, var(--k-paper));
-}
-
-.tPost .tTitle {
-  font-size: 14px;
-}
-
-.tBlock {
-  height: 36px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--k-accent) 10%, var(--k-paper));
-}
-
-.tQuote {
-  height: 130px;
-  aspect-ratio: 1;
-  padding: 14px;
-  justify-content: center;
-  gap: 8px;
-  background: var(--k-accent);
-  color: var(--k-paper);
-}
-
-.tQuoteMark {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 0.6;
-}
-
-.tQuoteText {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.tQuoteAuthor {
-  font-size: 10px;
-  opacity: 0.85;
-}
-
-.tCode {
-  height: 140px;
-  aspect-ratio: 4 / 5;
-  padding: 10px;
-  gap: 6px;
-  background: var(--k-ink);
-}
-
-.tCodeTitle {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--k-paper);
-}
-
-.tCodeBox {
-  flex: 1;
-  border-radius: 3px;
-  padding: 6px;
-  font-size: 11px;
-  line-height: 1.5;
-  background: color-mix(in srgb, var(--k-ink) 70%, black);
-  color: var(--k-code);
-}
-
-.tYouTube {
-  width: 170px;
-  aspect-ratio: 16 / 9;
-  padding: 10px;
-  justify-content: flex-end;
-  background: var(--k-ink);
-  color: var(--k-paper);
-}
-
-.tYouTubeTitle {
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.tVertical {
-  height: 150px;
-  aspect-ratio: 9 / 16;
-  padding: 8px;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-radius: 4px;
-  background: var(--k-ink);
-  color: var(--k-paper);
-}
-
-.tVerticalTitle {
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.15;
 }
 
 /* --- Pannelli ------------------------------------------------------------------------------ */
@@ -300,25 +173,6 @@
 .colorHex {
   font-size: 11px;
   color: var(--muted);
-}
-
-.fontRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  background: var(--panel2);
-}
-
-.fontSans {
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.fontMono {
-  font-size: 18px;
 }
 
 .logoRow {
@@ -567,4 +421,77 @@
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
+}
+
+/* Scelta dei font (7a) */
+.fontPick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fontPickHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fontRole {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fontOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 6px;
+}
+
+.fontOption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fontOption:hover {
+  border-color: var(--line2);
+}
+
+.fontOptionOn {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  color: var(--text);
+}
+
+.fontSample {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.fontSampleCode {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.fontName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
 }

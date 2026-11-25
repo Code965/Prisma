@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm.cmd",
       "runtimeArgs": ["--filter", "@prisma-app/desktop", "dev:web"],
       "port": 5174
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATABASE_PATH=%TEMP%\\prisma-prova\\prisma.db&& pnpm.cmd dev"],
+      "port": 4000
     }
   ]
 }

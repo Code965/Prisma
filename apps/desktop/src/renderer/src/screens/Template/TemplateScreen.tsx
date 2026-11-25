@@ -40,7 +40,7 @@ function TemplateBody({ kit }: { kit: BrandKit }) {
   const [draft, setDraft] = useState<KitDraft>(() => kitDraft(kit));
   return (
     <>
-      <Gallery draft={draft} />
+      <Gallery kit={kit} draft={draft} />
       <div className={styles.columns}>
         <BrandKitPanel kit={kit} draft={draft} onChange={setDraft} />
         <VoicePanel kit={kit} />

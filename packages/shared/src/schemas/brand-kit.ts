@@ -1,3 +1,4 @@
+import { BrandFontsSchema, DEFAULT_BRAND_FONTS } from './fonts.js';
 import { z } from 'zod';
 import { PlatformSchema } from '../domain/platforms.js';
 import { CAROUSEL_TEMPLATES } from './carousel.js';
@@ -61,6 +62,8 @@ export const BrandKitSchema = z.object({
    * (il codice usa sempre «Terminale»). Assente nei kit salvati prima: «Tech scuro».
    */
   videoTemplate: z.enum(CAROUSEL_TEMPLATES).default('scuro'),
+  /** Font di titoli, testo e codice (fase 7a). Assenti nei kit salvati prima: Inter e JetBrains Mono. */
+  fonts: BrandFontsSchema.default(DEFAULT_BRAND_FONTS),
 });
 export type BrandKit = z.infer<typeof BrandKitSchema>;
 
@@ -77,6 +80,7 @@ export const DEFAULT_BRAND_KIT: BrandKit = {
   logo: null,
   voiceRules: [],
   videoTemplate: 'scuro',
+  fonts: DEFAULT_BRAND_FONTS,
 };
 
 export const VoiceExampleInputSchema = z.object({

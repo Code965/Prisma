@@ -72,7 +72,9 @@ async function showSplash(): Promise<BrowserWindow> {
   splash.once('ready-to-show', () => splash.show());
   // Solo i pesi usati nell'intro: Inter 700 per il nome, 400 per il resto, JetBrains Mono.
   const fonts = SLIDE_FONT_FILES.filter(
-    (font) => font.family !== 'Inter' || font.weight === 400 || font.weight === 700,
+    (font) =>
+      font.font === 'jetbrains-mono' ||
+      (font.font === 'inter' && (font.weight === 400 || font.weight === 700)),
   );
   const fontFaceCss = await embeddedFontFaceCss(fonts).catch(() => '');
   await splash.loadURL(splashDataUrl({ version: app.getVersion(), fontFaceCss }));

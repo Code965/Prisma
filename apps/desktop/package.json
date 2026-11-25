@@ -16,8 +16,17 @@
     "dist": "electron-vite build && electron-builder --win --publish never"
   },
   "devDependencies": {
+    "@fontsource/dm-serif-display": "5.3.0",
+    "@fontsource/fira-code": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans": "5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/manrope": "5.3.0",
+    "@fontsource/playfair-display": "5.3.0",
+    "@fontsource/poppins": "5.3.0",
+    "@fontsource/sora": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
     "@mediapipe/tasks-vision": "1.2.3",
     "@prisma-app/server": "workspace:*",
     "@prisma-app/shared": "workspace:*",

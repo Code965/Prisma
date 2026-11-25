@@ -1,8 +1,10 @@
-import { DEFAULT_BRAND_KIT, type VoiceExample } from '@prisma-app/shared';
+import { CarouselSchema, DEFAULT_BRAND_KIT, type VoiceExample } from '@prisma-app/shared';
 import { describe, expect, it } from 'vitest';
 import {
   addRule,
   colorRows,
+  draftKit,
+  galleryCarousel,
   isDraftChanged,
   kitDraft,
   logoFileError,
@@ -49,5 +51,26 @@ describe('brand kit', () => {
     expect(logoFileError({ type: 'image/gif', size: 10 })).toMatch(/PNG/);
     expect(logoFileError({ type: 'image/png', size: 300 * 1024 })).toMatch(/256 KB/);
     expect(logoFileError({ type: 'image/svg+xml', size: 1000 })).toBeNull();
+  });
+});
+
+describe('font e galleria (7a)', () => {
+  it('rileva il cambio di un font', () => {
+    const draft = kitDraft(DEFAULT_BRAND_KIT);
+    expect(isDraftChanged(draft, DEFAULT_BRAND_KIT)).toBe(false);
+    expect(
+      isDraftChanged({ ...draft, fonts: { ...draft.fonts, heading: 'sora' } }, DEFAULT_BRAND_KIT),
+    ).toBe(true);
+  });
+
+  it('mostra nella galleria il kit con le modifiche in bozza', () => {
+    const draft = { ...kitDraft(DEFAULT_BRAND_KIT), handle: '@marta' };
+    expect(draftKit(DEFAULT_BRAND_KIT, draft)).toMatchObject({ handle: 'marta', voiceRules: [] });
+  });
+
+  it('il carosello di prova è valido per ogni stile', () => {
+    for (const template of ['scuro', 'chiaro', 'codice'] as const) {
+      expect(CarouselSchema.parse(galleryCarousel(template)).slides).toHaveLength(3);
+    }
   });
 });

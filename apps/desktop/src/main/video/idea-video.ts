@@ -12,6 +12,7 @@ import {
   type VideoProject,
   type VideoSource,
   type VideoTool,
+  type BrandFonts,
 } from '@prisma-app/shared';
 import { renderSlideHtml, templatePalette } from '@prisma-app/templates';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -40,7 +41,8 @@ export interface IdeaVideoDeps {
   emit: (progress: VideoJobProgress) => void;
   /** Slide in JPEG 1080×1350 (finestra offscreen, come l'export dei caroselli). */
   captureSlide: (html: string) => Promise<Buffer>;
-  fontFaceCss: () => Promise<string>;
+  /** Font del kit incorporati (fase 7a). */
+  fontFaceCss: (fonts?: BrandFonts) => Promise<string>;
   probe: (ffprobe: string, path: string) => Promise<VideoSource>;
   /** Trascrizione con whisper.cpp, se c'è: tempi delle parole più precisi della stima. */
   transcribe: (projectId: string) => Promise<VideoProject>;
@@ -115,7 +117,7 @@ export function createIdeaVideoService(deps: IdeaVideoDeps) {
 
       // 2. Slide con il brand kit.
       const carousel = scriptCarousel(script, request.template);
-      const fontFaceCss = await deps.fontFaceCss();
+      const fontFaceCss = await deps.fontFaceCss(request.kit.fonts);
       for (let i = 0; i < carousel.slides.length; i++) {
         emit('slide', Math.round((i / carousel.slides.length) * 100));
         if (controller.signal.aborted) throw new Error('Annullato');

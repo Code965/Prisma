@@ -1,12 +1,22 @@
-import { CAROUSEL_TEMPLATES, CAROUSEL_TEMPLATE_LABELS, type BrandKit } from '@prisma-app/shared';
-import { useRef, useState, type ChangeEvent } from 'react';
+import {
+  CAROUSEL_TEMPLATES,
+  CAROUSEL_TEMPLATE_LABELS,
+  SLIDE_FONTS,
+  fontStack,
+  type BrandKit,
+} from '@prisma-app/shared';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/Button/Button';
+import { slideFontFaceCss } from '../../components/SlideFrame/slide-fonts';
 import { useBrand } from '../../hooks/brand';
 import { useSaveBrandKit } from '../../hooks/useBrandKit';
 import { errorMessage } from '../../services/api/client';
 import {
+  FONT_ROLES,
+  FONT_ROLE_INFO,
   LOGO_TYPES,
   colorRows,
+  fontSample,
   isDraftChanged,
   kitDraft,
   logoFileError,
@@ -28,6 +38,8 @@ export function BrandKitPanel({ kit, draft, onChange }: BrandKitPanelProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
   const changed = isDraftChanged(draft, kit);
+  // I font delle slide anche nella pagina, per mostrare ogni nome scritto nel suo font.
+  const fontFaces = useMemo(() => slideFontFaceCss(), []);
 
   async function pickLogo(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -72,14 +84,51 @@ export function BrandKitPanel({ kit, draft, onChange }: BrandKitPanelProps) {
 
       <div className={styles.group}>
         <span className={styles.groupLabel}>Font</span>
-        <div className={styles.fontRow}>
-          <span className={styles.fontSans}>Inter</span>
-          <span className={styles.hint}>titoli e testo</span>
-        </div>
-        <div className={styles.fontRow}>
-          <span className={`${styles.fontMono} mono`}>JetBrains Mono</span>
-          <span className={styles.hint}>codice ed etichette</span>
-        </div>
+        <style>{fontFaces}</style>
+        {FONT_ROLES.map((role) => {
+          const info = FONT_ROLE_INFO[role];
+          return (
+            <div key={role} className={styles.fontPick}>
+              <div className={styles.fontPickHead}>
+                <span className={styles.fontRole}>{info.label}</span>
+                <span className={styles.hint}>{info.use}</span>
+              </div>
+              <div
+                role="radiogroup"
+                aria-label={`Font: ${info.label}`}
+                className={styles.fontOptions}
+              >
+                {info.options.map((id) => {
+                  const on = draft.fonts[role] === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      className={`${styles.fontOption} ${on ? styles.fontOptionOn : ''}`}
+                      onClick={() => onChange({ ...draft, fonts: { ...draft.fonts, [role]: id } })}
+                    >
+                      <span
+                        className={`${styles.fontSample} ${role === 'code' ? styles.fontSampleCode : ''}`}
+                        style={{
+                          fontFamily: fontStack(id),
+                          fontWeight: role === 'heading' ? SLIDE_FONTS[id].titleWeight : 400,
+                        }}
+                      >
+                        {fontSample(role)}
+                      </span>
+                      <span className={styles.fontName}>{SLIDE_FONTS[id].label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        <span className={styles.hint}>
+          Font open source inclusi nell’app: valgono per caroselli, schede e slide dei video.
+        </span>
       </div>
 
       <div className={styles.group}>

@@ -9,7 +9,13 @@ import type { IdeaVideoService } from './video/idea-video.js';
 import type { MusicLibrary } from './video/music.js';
 import type { BrollLibrary } from './video/broll.js';
 import type { RecordingService } from './recording.js';
-import { StockItemSchema } from '@prisma-app/shared';
+import {
+  DEFAULT_BRAND_FONTS,
+  StockItemSchema,
+  usedFontIds,
+  type BrandFonts,
+  type SlideFontId,
+} from '@prisma-app/shared';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
 import type { DictationService } from './video/dictation.js';
@@ -120,17 +126,27 @@ function exportsRoot(): string {
   return join(app.getPath('userData'), 'esportazioni');
 }
 
-let fontFaceCss: Promise<string> | null = null;
+const fontFaces = new Map<SlideFontId, Promise<string>>();
 
 function isInside(root: string, path: string): boolean {
   const rel = relative(root, path);
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
-/** Font delle slide incorporati, preparati una volta sola (export e video dall'idea). */
-export function slideFontFaceCss(): Promise<string> {
-  fontFaceCss ??= embeddedFontFaceCss(SLIDE_FONT_FILES);
-  return fontFaceCss;
+/**
+ * Font delle slide incorporati (export, schede e video dall'idea): solo quelli del kit, ognuno
+ * preparato una volta sola.
+ */
+export async function slideFontFaceCss(fonts: BrandFonts = DEFAULT_BRAND_FONTS): Promise<string> {
+  const faces = usedFontIds(fonts).map((id) => {
+    let css = fontFaces.get(id);
+    if (!css) {
+      css = embeddedFontFaceCss(SLIDE_FONT_FILES.filter((file) => file.font === id));
+      fontFaces.set(id, css);
+    }
+    return css;
+  });
+  return (await Promise.all(faces)).join('');
 }
 
 export function registerIpcHandlers(
@@ -210,7 +226,7 @@ export function registerIpcHandlers(
     const request = ExportCarouselRequestSchema.parse(input);
     return exportCarousel(request, {
       rootDir: exportsRoot(),
-      fontFaceCss: await slideFontFaceCss(),
+      fontFaceCss: await slideFontFaceCss(request.kit.fonts),
     });
   });
   ipcMain.handle(IPC.uploadFile, (_event, input: unknown) => {

@@ -1,15 +1,20 @@
 import {
   BRAND_COLOR_LABELS,
   BRAND_COLOR_ROLES,
+  CODE_FONT_IDS,
   LOGO_MAX_BYTES,
   PLATFORM_LABELS,
+  TEXT_FONT_IDS,
   type BrandColorRole,
   type BrandKit,
+  type Carousel,
+  type CarouselTemplate,
+  type SlideFontId,
   type VoiceExample,
 } from '@prisma-app/shared';
 
 /** Parte del kit modificata nel pannello «Brand kit» (le regole della voce si salvano subito). */
-export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'videoTemplate'>;
+export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'videoTemplate' | 'fonts'>;
 
 export function kitDraft(kit: BrandKit): KitDraft {
   return {
@@ -17,6 +22,7 @@ export function kitDraft(kit: BrandKit): KitDraft {
     handle: kit.handle,
     logo: kit.logo,
     videoTemplate: kit.videoTemplate,
+    fonts: { ...kit.fonts },
   };
 }
 
@@ -25,8 +31,27 @@ export function isDraftChanged(draft: KitDraft, kit: BrandKit): boolean {
     draft.handle.trim().replace(/^@+/, '') !== kit.handle ||
     draft.logo !== kit.logo ||
     draft.videoTemplate !== kit.videoTemplate ||
+    FONT_ROLES.some((role) => draft.fonts[role] !== kit.fonts[role]) ||
     BRAND_COLOR_ROLES.some((role) => draft.colors[role].toUpperCase() !== kit.colors[role])
   );
+}
+
+/** Ruoli dei font nel kit, con il nome mostrato e i font fra cui scegliere. */
+export const FONT_ROLES = ['heading', 'body', 'code'] as const;
+export type FontRole = (typeof FONT_ROLES)[number];
+
+export const FONT_ROLE_INFO: Record<
+  FontRole,
+  { label: string; use: string; options: readonly SlideFontId[] }
+> = {
+  heading: { label: 'Titoli', use: 'copertine e titoli delle slide', options: TEXT_FONT_IDS },
+  body: { label: 'Testo', use: 'testo, elenchi e handle', options: TEXT_FONT_IDS },
+  code: { label: 'Codice', use: 'codice, numeri ed etichette', options: CODE_FONT_IDS },
+};
+
+/** Testo di prova di un font: «Aa» per i titoli, una riga di codice per il codice. */
+export function fontSample(role: FontRole): string {
+  return role === 'code' ? '{ 0O1l }' : 'Aa';
 }
 
 export interface ColorRow {
@@ -70,18 +95,38 @@ export function logoFileError(file: { type: string; size: number }): string | nu
   return null;
 }
 
-/** Template della galleria (V3Template), con le dimensioni di uscita. */
-export interface GalleryTemplate {
-  id: 'carosello' | 'post' | 'citazione' | 'codice' | 'miniatura_yt' | 'copertina_verticale';
-  name: string;
-  size: string;
+/**
+ * Carosello di prova della galleria (7a): copertina, elenco e codice, disegnati con il vero
+ * renderer delle slide, così colori, font, logo e handle del kit si vedono come nell'export.
+ */
+export function galleryCarousel(template: CarouselTemplate): Carousel {
+  return {
+    template,
+    kicker: 'prisma',
+    slides: [
+      {
+        kind: 'cover',
+        title: 'Un’idea, quattro piattaforme',
+        body: 'Come scrivo una volta sola',
+        code: '',
+      },
+      {
+        kind: 'list',
+        title: 'Tre regole che uso',
+        body: 'Una idea per post\nEsempi dal lavoro vero\nSempre una domanda finale',
+        code: '',
+      },
+      {
+        kind: 'code',
+        title: 'Il trucco',
+        body: 'Una riga al giorno.',
+        code: 'const post = await idea\n  .toDraft("linkedin");',
+      },
+    ],
+  };
 }
 
-export const GALLERY_TEMPLATES: readonly GalleryTemplate[] = [
-  { id: 'carosello', name: 'Carosello', size: '1080×1350 · 3–10 slide' },
-  { id: 'post', name: 'Post singolo', size: '1080×1350' },
-  { id: 'citazione', name: 'Citazione', size: '1080×1080' },
-  { id: 'codice', name: 'Snippet di codice', size: '1080×1350' },
-  { id: 'miniatura_yt', name: 'Miniatura YouTube', size: '1280×720' },
-  { id: 'copertina_verticale', name: 'Copertina Reel / TikTok', size: '1080×1920 · zone sicure' },
-];
+/** Il kit mostrato nella galleria: quello salvato con le modifiche ancora in bozza. */
+export function draftKit(kit: BrandKit, draft: KitDraft): BrandKit {
+  return { ...kit, ...draft, handle: draft.handle.trim().replace(/^@+/, '') };
+}

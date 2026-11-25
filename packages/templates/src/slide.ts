@@ -1,4 +1,14 @@
-import { slideListItems, type BrandKit, type Carousel, type Slide } from '@prisma-app/shared';
+import {
+  DEFAULT_BRAND_FONTS,
+  SLIDE_FONTS,
+  fontStack,
+  isDefaultFonts,
+  slideListItems,
+  type BrandFonts,
+  type BrandKit,
+  type Carousel,
+  type Slide,
+} from '@prisma-app/shared';
 import { templatePalette, type Palette } from './palette.js';
 
 /** Formato delle slide: 4:5, quello consigliato per i caroselli di Instagram e LinkedIn. */
@@ -12,7 +22,7 @@ export interface SlideContext {
   /** Iniziali del brand, usate al posto del logo se manca. */
   initials: string;
   /**
-   * Regole `@font-face` per Inter e JetBrains Mono, fornite da chi disegna (renderer o main di
+   * Regole `@font-face` per i font del kit (`kit.fonts`), fornite da chi disegna (renderer o main di
    * Electron) con gli indirizzi dei font inclusi nell'app. Senza, si usano i font di sistema.
    */
   fontFaceCss?: string;
@@ -39,7 +49,7 @@ export function renderSlideHtml(context: SlideContext): string {
   const singleCss = 'html,body{overflow:hidden}';
   return documentHtml(
     context.fontFaceCss,
-    slideCss(palette) + singleCss,
+    slideCss(palette, kitFonts(kit)) + singleCss,
     slideMarkup(context, index),
   );
 }
@@ -54,7 +64,11 @@ export function renderCarouselPdfHtml(context: Omit<SlideContext, 'index'>): str
     slideMarkup({ ...context, index }, index),
   );
   const pageCss = `@page{size:${SLIDE_SIZE.width}px ${SLIDE_SIZE.height}px;margin:0}.slide{break-after:page}.slide:last-child{break-after:auto}`;
-  return documentHtml(context.fontFaceCss, slideCss(palette) + pageCss, pages.join(''));
+  return documentHtml(
+    context.fontFaceCss,
+    slideCss(palette, kitFonts(context.kit)) + pageCss,
+    pages.join(''),
+  );
 }
 
 /**
@@ -78,6 +92,8 @@ export function renderInputKey(carousel: Carousel, kit: BrandKit, initials: stri
     handle: kit.handle,
     logo: kit.logo,
     initials: initials.slice(0, 3),
+    // Solo se cambiati: gli export fatti prima della scelta dei font restano aggiornati.
+    ...(isDefaultFonts(kitFonts(kit)) ? {} : { fonts: kitFonts(kit) }),
   });
 }
 
@@ -144,14 +160,23 @@ function handle(kit: BrandKit): string {
   return kit.handle ? `<span class="handle">@${escapeHtml(kit.handle)}</span>` : '';
 }
 
-function slideCss(p: Palette): string {
+/** Font del kit (quelli di sempre per i kit senza scelta). */
+export function kitFonts(kit: Pick<BrandKit, 'fonts'>): BrandFonts {
+  return kit.fonts ?? DEFAULT_BRAND_FONTS;
+}
+
+function slideCss(p: Palette, fonts: BrandFonts): string {
+  const heading = fontStack(fonts.heading);
+  const body = fontStack(fonts.body);
+  const mono = fontStack(fonts.code);
+  const weight = SLIDE_FONTS[fonts.heading].titleWeight;
   return `
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:${p.bg}}
-.slide{width:${SLIDE_SIZE.width}px;height:${SLIDE_SIZE.height}px;padding:100px 90px 70px;display:flex;flex-direction:column;gap:45px;overflow:hidden;background:${p.bg};color:${p.fg};font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-.kicker{min-height:38px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:30px;color:${p.muted}}
+.slide{width:${SLIDE_SIZE.width}px;height:${SLIDE_SIZE.height}px;padding:100px 90px 70px;display:flex;flex-direction:column;gap:45px;overflow:hidden;background:${p.bg};color:${p.fg};font-family:${body};-webkit-font-smoothing:antialiased}
+.kicker{min-height:38px;font-family:${mono};font-size:30px;color:${p.muted}}
 .content{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:40px}
-.title{margin:0;font-size:75px;font-weight:800;line-height:1.1;letter-spacing:-0.02em;overflow-wrap:break-word}
+.title{margin:0;font-family:${heading};font-size:75px;font-weight:${weight};line-height:1.1;letter-spacing:-0.02em;overflow-wrap:break-word}
 .body{margin:0;font-size:42px;line-height:1.5;color:${p.soft};white-space:pre-line;overflow-wrap:break-word}
 .cover .title{font-size:100px;line-height:1.05;letter-spacing:-0.03em}
 .cover .body{line-height:1.4;color:${p.accent}}
@@ -161,13 +186,13 @@ html,body{margin:0;padding:0;background:${p.bg}}
 .cta .body{line-height:1.4}
 .items{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:30px}
 .items li{display:flex;gap:30px;align-items:baseline;font-size:42px;line-height:1.4;color:${p.soft}}
-.num{flex:none;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:35px;color:${p.accent}}
-.code pre,.content pre{margin:0;padding:35px;border-radius:20px;background:${p.codeBg};color:${p.codeFg};font-family:'JetBrains Mono',ui-monospace,monospace;font-size:32px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;font-variant-ligatures:none}
-.arrow{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:38px;color:${p.accent}}
+.num{flex:none;font-family:${mono};font-size:35px;color:${p.accent}}
+.code pre,.content pre{margin:0;padding:35px;border-radius:20px;background:${p.codeBg};color:${p.codeFg};font-family:${mono};font-size:32px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;font-variant-ligatures:none}
+.arrow{font-family:${mono};font-size:38px;color:${p.accent}}
 footer{display:flex;align-items:center;gap:25px}
-.mark{width:70px;height:70px;flex:none;border-radius:18px;background:${p.fg};color:${p.bg};display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:28px;font-weight:500}
+.mark{width:70px;height:70px;flex:none;border-radius:18px;background:${p.fg};color:${p.bg};display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:${mono};font-size:28px;font-weight:500}
 .mark img{width:100%;height:100%;object-fit:contain}
 .handle{font-size:32px;font-weight:600}
-.count{margin-left:auto;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:30px;color:${p.muted}}
+.count{margin-left:auto;font-family:${mono};font-size:30px;color:${p.muted}}
 `;
 }

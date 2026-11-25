@@ -1217,7 +1217,23 @@ Scelte (proposte e confermate il 25 novembre 2026): più stili pronti e un edito
 libero), font open source inclusi nell'app, galleria con anteprime vere, template predefinito per formato, «Duplica e
 modifica».
 
-- [ ] 7a. Font open inclusi (scelta per titoli, testo e codice nel brand kit) e galleria con anteprime vere
+- [x] 7a. Font open inclusi (scelta per titoli, testo e codice nel brand kit) e galleria con anteprime vere
+- **Font** (`packages/shared/src/schemas/fonts.ts`): catalogo `SLIDE_FONTS` di 11 font @fontsource (OFL-1.1, solo
+  latino e i pesi usati): Inter, Space Grotesk, Poppins, Manrope, IBM Plex Sans, Sora, Playfair Display, DM Serif
+  Display per titoli e testo; JetBrains Mono, IBM Plex Mono, Fira Code per codice, numeri, etichette e iniziali. Nel kit
+  `fonts: { heading, body, code }` (default Inter/Inter/JetBrains Mono, anche per i kit salvati prima); `titleWeight`
+  per font (DM Serif ha solo il 400). `renderInputKey` conta i font solo se diversi da quelli di sempre, così gli export
+  già fatti restano aggiornati. Slide, schede dei video e slide di «Crea video» usano `fontStack`.
+- File: renderer `components/SlideFrame/slide-fonts.ts` (`?url`, tutte le `@font-face`: il browser scarica solo
+  quelle usate), main `export/font-files.ts` (`?asset`); `slideFontFaceCss(kit.fonts)` nel main incorpora come data URL
+  solo i font del kit, ognuno preparato una volta.
+- **Brand kit**: tre gruppi «Titoli / Testo / Codice» con ogni nome scritto nel suo font. **Galleria**: un riquadro per
+  stile (Tech scuro, Minimal chiaro, Terminale) con copertina, elenco e codice disegnati da `renderSlideHtml` col kit
+  in bozza (colori, font, logo, handle; `galleryCarousel`, `draftKit`) e il segno «Video» sullo stile dei video. Le
+  vecchie miniature finte (citazione, miniatura YouTube, copertina Reel) sono tolte finché non esistono quei formati.
+- Provato nel browser con il server su un database di prova (configurazione `server` in `.claude/launch.json`, che
+  usa `%TEMP%\prisma-prova`): font scelti caricati nelle slide, salvataggio e ricaricamento, tema scuro; build con i
+  32 file dei font accanto al main.
 - [ ] 7b. Modello del template personalizzato (sfondo, forme decorative, logo e numerazione, tipografia) e nuovi stili
       pronti costruiti con lo stesso modello
 - [ ] 7c. Editor del template con anteprima dal vivo, «Duplica e modifica», template predefinito per formato

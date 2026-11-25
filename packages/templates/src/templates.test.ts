@@ -95,8 +95,36 @@ describe('PDF e chiave di rendering', () => {
       key,
     );
     expect(renderInputKey(carousel, { ...DEFAULT_BRAND_KIT, handle: 'x' }, 'MR')).not.toBe(key);
+    const sora = {
+      ...DEFAULT_BRAND_KIT,
+      fonts: { ...DEFAULT_BRAND_KIT.fonts, heading: 'sora' as const },
+    };
+    expect(renderInputKey(carousel, sora, 'MR')).not.toBe(key);
+    // Un kit salvato prima della scelta dei font (senza `fonts`) dà la stessa chiave di prima.
+    const legacy = {
+      ...DEFAULT_BRAND_KIT,
+      fonts: undefined,
+    } as unknown as typeof DEFAULT_BRAND_KIT;
+    expect(renderInputKey(carousel, legacy, 'MR')).toBe(key);
+    expect(key).not.toContain('fonts');
     expect(
       renderInputKey(carousel, { ...DEFAULT_BRAND_KIT, voiceRules: ['Frasi brevi'] }, 'MR'),
     ).toBe(key);
+  });
+});
+
+describe('font del kit', () => {
+  it('usa i font scelti per titoli, testo e codice', () => {
+    const kit = {
+      ...DEFAULT_BRAND_KIT,
+      fonts: { heading: 'playfair-display', body: 'manrope', code: 'fira-code' } as const,
+    };
+    const html = render(0, {}, kit);
+    expect(html).toContain(
+      "font-family:'Playfair Display',Georgia,serif;font-size:75px;font-weight:700",
+    );
+    expect(html).toContain("font-family:'Manrope',system-ui,sans-serif");
+    expect(html).toContain("'Fira Code',ui-monospace");
+    expect(html).not.toContain('JetBrains');
   });
 });

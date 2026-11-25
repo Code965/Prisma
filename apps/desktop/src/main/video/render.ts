@@ -19,6 +19,7 @@ import {
   type VideoJobProgress,
   type VideoProject,
   type VideoTool,
+  type BrandFonts,
 } from '@prisma-app/shared';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
@@ -64,7 +65,7 @@ export interface RenderDeps {
   musicDir?: () => Promise<string | null>;
   /** Schede di testo in PNG trasparente (finestra offscreen, 6d). */
   captureCard?: (html: string, width: number, height: number) => Promise<Buffer>;
-  fontFaceCss?: () => Promise<string>;
+  fontFaceCss?: (fonts?: BrandFonts) => Promise<string>;
   /** Il B-roll sta nella cartella dell'utente o nella cache di Pixabay (6d). */
   brollAllowed?: (path: string) => Promise<boolean>;
 }
@@ -226,7 +227,7 @@ export function createRenderService(deps: RenderDeps) {
     }
     if (edit.overlays.length > 0) {
       if (!deps.captureCard) throw new Error('Schede di testo non disponibili');
-      const fontFaceCss = (await deps.fontFaceCss?.()) ?? '';
+      const fontFaceCss = (await deps.fontFaceCss?.(look?.kit.fonts)) ?? '';
       for (const [i, overlay] of edit.overlays.entries()) {
         const window = editedWindow(edit.cuts, overlay);
         if (!window) continue;
