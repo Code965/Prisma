@@ -3,6 +3,7 @@ import { IdSchema, InstantSchema } from './common.js';
 import { TranscriptSchema } from './transcript.js';
 import { isLegacyAudio } from './video-audio.js';
 import { FaceTrackSchema } from './video-face.js';
+import { VideoRecordingSchema, VideoScreenSchema } from './video-layout.js';
 import { DEFAULT_VIDEO_EDIT, VIDEO_FORMATS, VideoEditSchema } from './video-edit.js';
 
 /**
@@ -101,6 +102,10 @@ export const VideoProjectSchema = z.object({
   render: VideoRenderSchema.nullable().default(null),
   short: VideoShortOriginSchema.nullable().default(null),
   generated: VideoGeneratedSchema.nullable().default(null),
+  /** Schermo registrato insieme alla webcam (6f): seconda traccia, composta col layout. */
+  screen: VideoScreenSchema.nullable().default(null),
+  /** Registrazione fatta in Prisma (6f). */
+  recording: VideoRecordingSchema.nullable().default(null),
   /** Volti trovati nel sorgente (6e): base dell'inquadratura che segue il volto. */
   faces: FaceTrackSchema.nullable().default(null),
   filmcraft: VideoFilmcraftSchema.nullable().default(null),
@@ -166,6 +171,7 @@ export const VIDEO_JOB_STAGES = [
   'voce',
   'slide',
   'montaggio',
+  'registrazione',
 ] as const;
 export type VideoJobStage = (typeof VIDEO_JOB_STAGES)[number];
 
@@ -177,6 +183,7 @@ export const VIDEO_JOB_STAGE_LABELS: Record<VideoJobStage, string> = {
   voce: 'Leggo il copione con la voce',
   slide: 'Disegno le slide',
   montaggio: 'Monto slide e voce',
+  registrazione: 'Salvo la registrazione',
 };
 
 export interface VideoJobProgress {
@@ -197,7 +204,8 @@ function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['e
         !(key === 'audio' && isLegacyAudio(edit.audio)) &&
         !(key === 'overlays' && edit.overlays.length === 0) &&
         !(key === 'broll' && edit.broll.length === 0) &&
-        !(key === 'followFace' && !edit.followFace),
+        !(key === 'followFace' && !edit.followFace) &&
+        !(key === 'layout' && edit.layout === 'camera'),
     ),
   );
 }
@@ -208,10 +216,14 @@ function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['e
  */
 export function videoRenderKey(
   project: Pick<VideoProject, 'source' | 'edit' | 'transcript'> &
-    Partial<Pick<VideoProject, 'faces'>>,
+    Partial<Pick<VideoProject, 'faces' | 'screen'>>,
 ): string {
   return JSON.stringify({
     // Con l'inquadratura che segue il volto conta anche l'analisi da cui nasce il percorso.
+    // Con un layout che usa lo schermo conta anche il file dello schermo.
+    ...(project.edit.layout !== 'camera' && project.screen
+      ? { screen: [project.screen.path, project.screen.durationMs, project.screen.offsetMs] }
+      : {}),
     ...(project.edit.followFace && project.faces
       ? { faces: [project.faces.intervalMs, project.faces.samples.length, project.faces.createdAt] }
       : {}),

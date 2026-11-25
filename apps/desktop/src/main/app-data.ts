@@ -48,6 +48,7 @@ const KEEP = [
   'musica.json',
   'broll.json',
   'broll-pixabay',
+  'registrazioni',
   'settings.json',
   'filmcraft',
   'esportazioni',

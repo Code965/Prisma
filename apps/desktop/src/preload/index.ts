@@ -17,6 +17,7 @@ import type { UpdateState } from '../main/update-state.js';
 import type { MusicStatus } from '../main/video/music.js';
 import type { BrollStatus } from '../main/video/broll.js';
 import type { RenderLook } from '../main/video/render.js';
+import type { RecordingTrack, ScreenSource } from '../main/recording.js';
 import type {
   BrollMedia,
   FaceTrack,
@@ -52,6 +53,12 @@ const CHANNELS = {
   createShort: 'video:create-short',
   generateVideo: 'video:generate',
   saveFaces: 'video:save-faces',
+  recordSources: 'record:sources',
+  recordChoose: 'record:choose',
+  recordBegin: 'record:begin',
+  recordChunk: 'record:chunk',
+  recordFinish: 'record:finish',
+  recordCancel: 'record:cancel',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -140,6 +147,22 @@ const api = {
     /** null se l'utente annulla la scelta della cartella. */
     pick: (): Promise<MusicStatus | null> => ipcRenderer.invoke(CHANNELS.musicPick),
     clear: (): Promise<MusicStatus> => ipcRenderer.invoke(CHANNELS.musicClear),
+  },
+  /** Registrazione nell'app (6f): i pezzi di MediaRecorder vanno al main man mano. */
+  record: {
+    sources: (): Promise<ScreenSource[]> => ipcRenderer.invoke(CHANNELS.recordSources),
+    /** Schermo o finestra che `getDisplayMedia` riceverà; null = nessuno. */
+    choose: (sourceId: string | null): Promise<void> =>
+      ipcRenderer.invoke(CHANNELS.recordChoose, sourceId),
+    begin: (tracks: RecordingTrack[], audioTrack: RecordingTrack | null): Promise<string> =>
+      ipcRenderer.invoke(CHANNELS.recordBegin, { tracks, audioTrack }),
+    chunk: (id: string, track: RecordingTrack, data: Uint8Array): Promise<void> =>
+      ipcRenderer.invoke(CHANNELS.recordChunk, { id, track, data }),
+    finish: (
+      id: string,
+      startedAt: Partial<Record<RecordingTrack, number>>,
+    ): Promise<VideoProject> => ipcRenderer.invoke(CHANNELS.recordFinish, { id, startedAt }),
+    cancel: (id: string): Promise<void> => ipcRenderer.invoke(CHANNELS.recordCancel, id),
   },
   /** B-roll (6d): cartella dell'utente e file scaricati da Pixabay. */
   broll: {

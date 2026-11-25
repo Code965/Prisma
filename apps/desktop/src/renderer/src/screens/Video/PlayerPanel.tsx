@@ -3,6 +3,8 @@ import {
   SUBTITLE_STYLE_LABELS,
   VIDEO_FORMATS,
   VIDEO_FORMAT_INFO,
+  VIDEO_LAYOUT_LABELS,
+  type VideoLayout,
   buildCaptions,
   captionAt,
   isKeyword,
@@ -20,6 +22,8 @@ import { mediaUrl } from '../../services/video';
 import { clockLabel, cropOverlay, draggedOffset, sourceTimeMs } from '../../services/video-editor';
 import { AudioPanel } from './AudioPanel';
 import { FollowFaceControl } from './FollowFaceControl';
+import { LayoutPreview } from './LayoutPreview';
+import { currentLayout, layoutChoices } from '../../services/layout';
 import { previewCropOffset, previewFollowPath } from '../../services/face';
 import { LayersPanel } from './LayersPanel';
 import { LayersPreview } from './LayersPreview';
@@ -33,6 +37,14 @@ interface PlayerPanelProps {
   /** Richiesta di spostarsi a un istante del sorgente (da trascrizione o timeline). */
   seekTo: { ms: number } | null;
 }
+
+/** Nomi brevi dei layout per i pulsanti (il nome intero sta nel suggerimento). */
+const LAYOUT_SHORT: Record<VideoLayout, string> = {
+  camera: 'Tu',
+  screen: 'Schermo',
+  pip: 'Angolo',
+  split: 'Diviso',
+};
 
 /** Campioni degli stili (mockup): testo e colori fissi, rappresentano il video esportato. */
 const STYLE_SAMPLES: Record<SubtitleStyle, { className: string; text: string }> = {
@@ -172,6 +184,22 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
           ))}
         </div>
         <FollowFaceControl project={project} edit={edit} onChange={onChange} />
+        {project.screen && (
+          <div role="group" aria-label="Layout" className={styles.formats}>
+            {layoutChoices(project, edit).map((layout) => (
+              <button
+                key={layout}
+                type="button"
+                aria-pressed={layout === currentLayout(project, edit)}
+                className={`${styles.format} ${layout === currentLayout(project, edit) ? styles.formatOn : ''}`}
+                title={VIDEO_LAYOUT_LABELS[layout]}
+                onClick={() => onChange({ ...edit, layout })}
+              >
+                {LAYOUT_SHORT[layout]}
+              </button>
+            ))}
+          </div>
+        )}
         <span className={styles.formatNote}>{VIDEO_FORMAT_INFO[edit.format].note}</span>
       </div>
 
@@ -214,6 +242,17 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
               <span className={`${styles.zoomBadge} mono`}>
                 Zoom ×{zoom.toFixed(2).replace('.', ',')}
               </span>
+            )}
+            {currentLayout(project, edit) !== 'camera' && (
+              <LayoutPreview
+                project={project}
+                edit={edit}
+                camera={video}
+                offset={offset}
+                zoom={zoom}
+                sourceMs={sourceMs}
+                playing={playing}
+              />
             )}
             <LayersPreview edit={edit} sourceMs={sourceMs} playing={playing} />
             {caption && (

@@ -10,6 +10,7 @@ import { startCore, type Core } from './core.js';
 import { setupBackground, startedHidden } from './background.js';
 import { captureImage, captureJpeg } from './export/carousel-export.js';
 import { handleAppAssets } from './app-assets.js';
+import { createRecordingService } from './recording.js';
 import { registerIpcHandlers, setCore, slideFontFaceCss } from './ipc.js';
 import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
@@ -164,6 +165,7 @@ void app.whenReady().then(async () => {
       return dir ? join(dir, fileName) : null;
     },
     (key) => broll.pathOf(key),
+    (id) => store.getProject(id)?.screen?.path ?? null,
   );
   // L'avanzamento va a tutte le finestre: ognuna mostra quello dei suoi progetti.
   const emitProgress = (progress: VideoJobProgress) => {
@@ -218,7 +220,17 @@ void app.whenReady().then(async () => {
     // Il video ha già una musica, da cambiare o togliere nell'editor.
     pickMusic: async () => pickTrack((await music.status()).tracks, Math.random()),
   });
-  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music, broll);
+  const recording = createRecordingService({
+    store,
+    rootDir: join(userDataDir, 'registrazioni'),
+    requireTool: video.requireTool,
+    run: runProcess,
+    probe: probeVideo,
+    emit: emitProgress,
+  });
+  // Permessi delle pagine (solo webcam, microfono, schermo, appunti) e schermo per getDisplayMedia.
+  recording.attach();
+  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music, broll, recording);
   const updates = registerUpdates();
 
   // L'intro resta almeno SPLASH_MIN_MS, poi lascia il posto alla finestra principale.

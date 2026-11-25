@@ -35,6 +35,11 @@ export function musicFolderLabel(
   return count === 0 ? 'Nessun brano' : count === 1 ? '1 brano' : `${count} brani`;
 }
 
+/** Schermo registrato insieme alla webcam (6f). */
+export function screenUrl(projectId: string): string {
+  return `prisma-media://schermo/${projectId}`;
+}
+
 /** B-roll (cartella dell'utente o cache di Pixabay): il main serve solo quelli. */
 export function brollUrl(key: string): string {
   return `prisma-media://broll/${encodeURIComponent(key)}`;

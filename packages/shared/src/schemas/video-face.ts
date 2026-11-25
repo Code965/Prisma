@@ -67,12 +67,11 @@ export interface FollowPoint {
 
 /** L'asse su cui il ritaglio si può spostare per questo formato e questa sorgente; null se nessuno. */
 export function freeAxis(
-  format: VideoFormat,
+  format: VideoFormat | number,
   sourceWidth: number,
   sourceHeight: number,
 ): 'x' | 'y' | null {
-  const { width, height } = VIDEO_FORMAT_INFO[format];
-  const target = width / height;
+  const target = aspectOf(format);
   const source = sourceWidth / sourceHeight;
   if (Math.abs(source - target) < 0.01) return null;
   return source > target ? 'x' : 'y';
@@ -86,19 +85,17 @@ export function freeAxis(
  */
 export function followPath(
   track: FaceTrack,
-  format: VideoFormat,
+  format: VideoFormat | number,
   sourceWidth: number,
   sourceHeight: number,
   startOffset = 0.5,
 ): FollowPoint[] {
   const axis = freeAxis(format, sourceWidth, sourceHeight);
   if (!axis || track.samples.length === 0) return [];
-  const { width: fw, height: fh } = VIDEO_FORMAT_INFO[format];
+  const aspect = aspectOf(format);
   // Ampiezza del ritaglio sull'asse libero, in frazioni della sorgente.
   const span =
-    axis === 'x'
-      ? (sourceHeight * (fw / fh)) / sourceWidth
-      : sourceWidth / (fw / fh) / sourceHeight;
+    axis === 'x' ? (sourceHeight * aspect) / sourceWidth : sourceWidth / aspect / sourceHeight;
   const travel = 1 - span;
   const toCenter = (offset: number) => span / 2 + offset * travel;
   const toOffset = (center: number) => clamp01((center - span / 2) / travel);
@@ -219,3 +216,10 @@ export function followSegment(
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+/** Proporzioni (larghezza / altezza) di un formato o di un riquadro qualsiasi (layout della 6f). */
+function aspectOf(format: VideoFormat | number): number {
+  if (typeof format === 'number') return format;
+  const { width, height } = VIDEO_FORMAT_INFO[format];
+  return width / height;
+}

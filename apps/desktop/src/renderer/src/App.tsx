@@ -12,6 +12,7 @@ import { ImpostazioniScreen } from './screens/Impostazioni/ImpostazioniScreen';
 import { StudioScreen } from './screens/Studio/StudioScreen';
 import { CaroselloScreen } from './screens/Carosello/CaroselloScreen';
 import { AnalyticsScreen } from './screens/Analytics/AnalyticsScreen';
+import { RecordScreen } from './screens/Registra/RecordScreen';
 import { VideoScreen } from './screens/Video/VideoScreen';
 import { TemplateScreen } from './screens/Template/TemplateScreen';
 import { ThemeProvider } from './theme/theme';
@@ -36,6 +37,7 @@ export function App() {
                 <Route path="carosello/:contentId/:variantId" element={<CaroselloScreen />} />
                 <Route path="video" element={<VideoScreen />} />
                 <Route path="video/:projectId" element={<VideoScreen />} />
+                <Route path="registra" element={<RecordScreen />} />
                 <Route path="template" element={<TemplateScreen />} />
                 <Route path="analytics" element={<AnalyticsScreen />} />
                 <Route path="impostazioni" element={<ImpostazioniScreen />} />

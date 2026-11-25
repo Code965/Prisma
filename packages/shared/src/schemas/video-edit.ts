@@ -88,6 +88,8 @@ export const VideoEditSchema = z.object({
   broll: z.array(BrollSchema).max(BROLL_LIMITS.max).default([]),
   /** Il ritaglio segue il volto (6e) invece di restare a `cropOffset`; serve `project.faces`. */
   followFace: z.boolean().default(false),
+  /** Come comporre webcam e schermo registrati insieme (6f); senza schermo resta «Solo tu». */
+  layout: z.enum(['camera', 'screen', 'pip', 'split']).default('camera'),
 });
 export type VideoEdit = z.infer<typeof VideoEditSchema>;
 
@@ -103,6 +105,7 @@ export const DEFAULT_VIDEO_EDIT: VideoEdit = {
   overlays: [],
   broll: [],
   followFace: false,
+  layout: 'camera',
 };
 
 // --- Tagli -----------------------------------------------------------------------------------
@@ -253,8 +256,26 @@ export function cropRect(
   sourceHeight: number,
   cropOffset: number,
 ): CropRect {
-  const { width: fw, height: fh } = VIDEO_FORMAT_INFO[format];
-  const target = fw / fh;
+  return cropRectForAspect(formatAspect(format), sourceWidth, sourceHeight, cropOffset);
+}
+
+/** Larghezza / altezza del formato. */
+export function formatAspect(format: VideoFormat): number {
+  const { width, height } = VIDEO_FORMAT_INFO[format];
+  return width / height;
+}
+
+/**
+ * Ritaglio del sorgente con le proporzioni `target` (larghezza / altezza), spostato di
+ * `cropOffset` lungo l'asse libero. Serve anche per i riquadri dei layout (6f), che non hanno le
+ * proporzioni del formato (es. metà inferiore di un 9:16).
+ */
+export function cropRectForAspect(
+  target: number,
+  sourceWidth: number,
+  sourceHeight: number,
+  cropOffset: number,
+): CropRect {
   const source = sourceWidth / sourceHeight;
   const offset = Math.min(1, Math.max(0, cropOffset));
   if (source > target) {
@@ -263,6 +284,25 @@ export function cropRect(
   }
   const height = Math.round(sourceWidth / target);
   return { x: 0, y: Math.round((sourceHeight - height) * offset), width: sourceWidth, height };
+}
+
+/** Dimensione pari (yuv420p non accetta dispari). */
+const even = (value: number) => Math.max(2, Math.round(value / 2) * 2);
+
+/**
+ * Riquadro di una parte con zoom: il ritaglio del formato rimpicciolito di `scale`, centrato.
+ * Poi la scala lo riporta alle dimensioni del video: l'effetto è un ingrandimento («punch-in»).
+ */
+export function zoomedCrop(crop: CropRect, scale: number): CropRect {
+  if (scale <= 1) return crop;
+  const width = even(crop.width / scale);
+  const height = even(crop.height / scale);
+  return {
+    x: crop.x + Math.round((crop.width - width) / 2),
+    y: crop.y + Math.round((crop.height - height) / 2),
+    width,
+    height,
+  };
 }
 
 // --- Sottotitoli -----------------------------------------------------------------------------

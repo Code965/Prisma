@@ -1,6 +1,8 @@
 import {
   AUDIO_LIMITS,
   followSegment,
+  zoomedCrop,
+  type Box,
   type CropRect,
   type FollowPoint,
   type TimeRange,
@@ -17,24 +19,8 @@ import {
 
 const seconds = (ms: number) => (ms / 1000).toFixed(3);
 
-/** Dimensione pari (yuv420p non accetta dispari). */
-const even = (value: number) => Math.max(2, Math.round(value / 2) * 2);
-
-/**
- * Riquadro di una parte con zoom: il ritaglio del formato rimpicciolito di `scale`, centrato.
- * Poi la scala lo riporta alle dimensioni del video: l'effetto è un ingrandimento («punch-in»).
- */
-export function zoomedCrop(crop: CropRect, scale: number): CropRect {
-  if (scale <= 1) return crop;
-  const width = even(crop.width / scale);
-  const height = even(crop.height / scale);
-  return {
-    x: crop.x + Math.round((crop.width - width) / 2),
-    y: crop.y + Math.round((crop.height - height) / 2),
-    width,
-    height,
-  };
-}
+/** Riquadro con lo zoom (in shared: lo usa anche l'anteprima del layout). */
+export { zoomedCrop };
 
 export function buildFilterGraph(options: {
   /** Parti rimaste, in ordine, ciascuna con il suo zoom (`zoomedParts`). */
@@ -53,6 +39,11 @@ export function buildFilterGraph(options: {
   firstLayerInput?: number;
   /** Il ritaglio segue il volto (6e): percorso della posizione e corsa in pixel sull'asse libero. */
   follow?: CropFollow | null;
+  /**
+   * Layout con lo schermo registrato (6f): riquadri della webcam e dello schermo nel video finale
+   * e ingresso dello schermo. Assente = solo la webcam a tutto schermo, come prima.
+   */
+  composition?: Composition | null;
 }): string {
   const { parts: ranges, crop, width, height, hasAudio } = options;
   if (ranges.length === 0) {
@@ -60,6 +51,10 @@ export function buildFilterGraph(options: {
   }
   const parts: string[] = [];
   const inputs: string[] = [];
+  const composition = options.composition ?? null;
+  // La webcam riempie il suo riquadro del layout (tutto il video senza schermo).
+  const composed = isComposed(composition);
+  const cameraSize = (composed && composition?.camera) || { width, height };
   ranges.forEach((range, i) => {
     // Ogni parte si ritaglia (con il suo zoom) e si porta alle dimensioni finali prima di
     // unirle: concat vuole parti tutte uguali.
@@ -70,7 +65,7 @@ export function buildFilterGraph(options: {
     parts.push(
       `[0:v]trim=start=${seconds(range.startMs)}:end=${seconds(range.endMs)},setpts=PTS-STARTPTS,` +
         `crop=w=${box.width}:h=${box.height}:x=${position.x}:y=${position.y},` +
-        `scale=${width}:${height}:flags=lanczos,setsar=1[v${i}]`,
+        `scale=${cameraSize.width}:${cameraSize.height}:flags=lanczos,setsar=1[v${i}]`,
     );
     inputs.push(`[v${i}]`);
     if (hasAudio) {
@@ -85,9 +80,10 @@ export function buildFilterGraph(options: {
   // Con l'audio da lavorare la voce montata esce come [voce]; altrimenti è già [aout].
   const voiceLabel = mix.length > 0 ? '[voce]' : '[aout]';
   parts.push(
-    `${inputs.join('')}concat=n=${ranges.length}:v=1:a=${audio}[vc]${hasAudio ? voiceLabel : ''}`,
+    `${inputs.join('')}concat=n=${ranges.length}:v=1:a=${audio}[${composed ? 'vcam' : 'vc'}]${hasAudio ? voiceLabel : ''}`,
   );
   parts.push(...mix);
+  parts.push(...composeLayout(composition, ranges));
   let current = 'vc';
   (options.layers ?? []).forEach((layer, i) => {
     const input = (options.firstLayerInput ?? 1) + i;
@@ -100,6 +96,68 @@ export function buildFilterGraph(options: {
   const video = options.subtitles ? `subtitles=filename=${options.subtitles}` : 'null';
   parts.push(`[${current}]${video}[vout]`);
   return `${parts.join(';\n')}\n`;
+}
+
+/** Webcam e schermo nel video finale (6f). */
+export interface Composition {
+  layout: 'camera' | 'screen' | 'pip' | 'split';
+  /** Riquadro della webcam; null = non si vede (solo schermo, resta la voce). */
+  camera: Box | null;
+  screen: Box | null;
+  /** Ingresso dello schermo e sincronia con la webcam. */
+  screenInput: number;
+  offsetMs: number;
+  screenDurationMs: number;
+  /** Colore delle bande attorno allo schermo, che entra intero (`0xRRGGBB`). */
+  background: string;
+}
+
+/** C'è davvero da comporre (layout con lo schermo). */
+export function isComposed(composition: Composition | null): composition is Composition {
+  return Boolean(composition && composition.layout !== 'camera' && composition.screen);
+}
+
+/**
+ * Lo schermo segue gli stessi tagli della webcam (spostati di `offsetMs`): ogni parte dura
+ * esattamente come quella della webcam (`tpad` ripete il primo o l'ultimo fotogramma se lo
+ * schermo è partito dopo o finito prima) e lo schermo entra intero nel suo riquadro, con le
+ * bande del colore di fondo. Poi webcam e schermo si compongono in `[vc]`.
+ */
+export function composeLayout(
+  composition: Composition | null,
+  ranges: readonly TimeRange[],
+): string[] {
+  if (!isComposed(composition)) return [];
+  const screen = composition.screen!;
+  const parts: string[] = [];
+  const end = composition.screenDurationMs / 1000;
+  ranges.forEach((range, i) => {
+    const length = (range.endMs - range.startMs) / 1000;
+    const from = (range.startMs - composition.offsetMs) / 1000;
+    const start = Math.min(Math.max(0, from), Math.max(0, end - 0.05));
+    const stop = Math.max(start + 0.05, Math.min(end, from + length));
+    const padStart = Math.max(0, start - from);
+    parts.push(
+      `[${composition.screenInput}:v]trim=start=${start.toFixed(3)}:end=${stop.toFixed(3)},setpts=PTS-STARTPTS,fps=30,` +
+        `tpad=start_mode=clone:start_duration=${padStart.toFixed(3)}:stop_mode=clone:stop_duration=${length.toFixed(3)},` +
+        `trim=duration=${length.toFixed(3)},setpts=PTS-STARTPTS,` +
+        `scale=${screen.width}:${screen.height}:force_original_aspect_ratio=decrease:flags=lanczos,` +
+        `pad=${screen.width}:${screen.height}:(ow-iw)/2:(oh-ih)/2:color=${composition.background},setsar=1[s${i}]`,
+    );
+  });
+  parts.push(`${ranges.map((_, i) => `[s${i}]`).join('')}concat=n=${ranges.length}:v=1:a=0[vscr]`);
+  switch (composition.layout) {
+    case 'screen':
+      parts.push('[vscr]null[vc]', '[vcam]nullsink');
+      break;
+    case 'pip':
+      parts.push(`[vscr][vcam]overlay=x=${composition.camera!.x}:y=${composition.camera!.y}[vc]`);
+      break;
+    case 'split':
+      parts.push('[vscr][vcam]vstack=inputs=2[vc]');
+      break;
+  }
+  return parts;
 }
 
 /** Ritaglio che segue il volto: percorso (istanti del sorgente) e asse su cui si sposta. */
@@ -409,6 +467,8 @@ export function ffmpegRenderArgs(options: {
   music?: string | null;
   /** B-roll e schede, dopo sorgente e musica. */
   layers?: readonly VideoLayer[];
+  /** Schermo registrato (6f): l'ultimo ingresso. */
+  screen?: string | null;
 }): string[] {
   const withAudio = options.hasAudio || Boolean(options.music);
   return [
@@ -418,6 +478,7 @@ export function ffmpegRenderArgs(options: {
     options.source,
     ...(options.music ? ['-stream_loop', '-1', '-i', options.music] : []),
     ...(options.layers ?? []).flatMap(layerInputArgs),
+    ...(options.screen ? ['-i', options.screen] : []),
     '-/filter_complex',
     options.graphFile,
     '-map',

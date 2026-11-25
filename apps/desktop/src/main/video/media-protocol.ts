@@ -34,11 +34,11 @@ export function registerMediaScheme(): void {
   ]);
 }
 
-/** Id del progetto da un indirizzo `prisma-media://video/<uuid>`; null se non è valido. */
-export function projectIdFromUrl(url: string): string | null {
+/** Id del progetto da `prisma-media://video/<uuid>` (o `schermo/<uuid>` con `host`); null se non è valido. */
+export function projectIdFromUrl(url: string, host: 'video' | 'schermo' = 'video'): string | null {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== `${MEDIA_SCHEME}:` || parsed.hostname !== 'video') return null;
+    if (parsed.protocol !== `${MEDIA_SCHEME}:` || parsed.hostname !== host) return null;
     const id = parsed.pathname.replace(/^\/+/, '');
     return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
   } catch {
@@ -52,18 +52,23 @@ export function handleMediaProtocol(
   musicPathOf: (fileName: string) => Promise<string | null>,
   /** B-roll (`prisma-media://broll/<chiave>`): cartella dell'utente o cache di Pixabay. */
   brollPathOf: (key: string) => Promise<string | null>,
+  /** Schermo registrato del progetto (`prisma-media://schermo/<id>`, 6f). */
+  screenPathOf: (projectId: string) => string | null,
 ): void {
   protocol.handle(MEDIA_SCHEME, async (request) => {
     const id = projectIdFromUrl(request.url);
-    const music = id ? null : musicFileFromUrl(request.url);
-    const broll = id || music ? null : brollKeyFromUrl(request.url);
+    const screenOf = id ? null : projectIdFromUrl(request.url, 'schermo');
+    const music = id || screenOf ? null : musicFileFromUrl(request.url);
+    const broll = id || screenOf || music ? null : brollKeyFromUrl(request.url);
     const path = id
       ? sourcePathOf(id)
-      : music
-        ? await musicPathOf(music)
-        : broll
-          ? await brollPathOf(broll)
-          : null;
+      : screenOf
+        ? screenPathOf(screenOf)
+        : music
+          ? await musicPathOf(music)
+          : broll
+            ? await brollPathOf(broll)
+            : null;
     if (!path) return new Response('Non trovato', { status: 404 });
     // Si inoltrano gli header (Range compreso): il caricamento dei file gestisce gli intervalli.
     const response = await net.fetch(pathToFileURL(path).toString(), { headers: request.headers });

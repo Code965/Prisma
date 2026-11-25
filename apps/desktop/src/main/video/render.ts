@@ -3,12 +3,15 @@ import {
   DEFAULT_BRAND_KIT,
   VIDEO_FORMAT_INFO,
   buildCaptions,
+  cropRectForAspect,
   editedTimeMs,
+  effectiveLayout,
   followPath,
+  formatAspect,
   freeAxis,
+  layoutBoxes,
   type BrandKit,
   type CarouselTemplate,
-  cropRect,
   editedDurationMs,
   keptRanges,
   zoomedParts,
@@ -23,7 +26,7 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { buildAss } from './ass.js';
 import type { ProcessRunner } from './process.js';
-import { renderOverlayCardHtml } from '@prisma-app/templates';
+import { renderOverlayCardHtml, templatePalette } from '@prisma-app/templates';
 import {
   buildFilterGraph,
   ffmpegRenderArgs,
@@ -32,9 +35,11 @@ import {
   mixLoudnessArgs,
   mixLoudnessGraph,
   voiceGainFromLoudnorm,
+  type Composition,
   type CropFollow,
   type VideoLayer,
 } from './render-plan.js';
+import { ffmpegColor } from './slideshow.js';
 import type { LocalStore } from './store.js';
 import { ffmpegProgress } from './whisper.js';
 
@@ -67,15 +72,46 @@ export interface RenderLook {
   template: CarouselTemplate;
 }
 
-/** Il ritaglio segue il volto se richiesto, analizzato e se il formato lascia un asse libero. */
+/** Proporzioni del riquadro della webcam: quelle del formato o del suo posto nel layout (6f). */
+export function cameraAspect(project: VideoProject): number {
+  const { edit } = project;
+  const layout = effectiveLayout(edit.layout, edit.format, project.screen !== null);
+  const box = layoutBoxes(layout, edit.format).camera;
+  return box ? box.width / box.height : formatAspect(edit.format);
+}
+
+/** Webcam e schermo nel layout scelto; null senza schermo o con «Solo tu». */
+export function composition(
+  project: VideoProject,
+  screenInput: number,
+  background: string,
+): Composition | null {
+  const { edit, screen } = project;
+  if (!screen) return null;
+  const layout = effectiveLayout(edit.layout, edit.format, true);
+  if (layout === 'camera') return null;
+  const boxes = layoutBoxes(layout, edit.format);
+  return {
+    layout,
+    camera: boxes.camera,
+    screen: boxes.screen,
+    screenInput,
+    offsetMs: screen.offsetMs,
+    screenDurationMs: screen.durationMs,
+    background,
+  };
+}
+
+/** Il ritaglio segue il volto se richiesto, analizzato e se il riquadro lascia un asse libero. */
 export function cropFollow(project: VideoProject): CropFollow | null {
   const { edit, source, faces } = project;
   if (!edit.followFace || !faces) return null;
-  const axis = freeAxis(edit.format, source.width, source.height);
+  const aspect = cameraAspect(project);
+  const axis = freeAxis(aspect, source.width, source.height);
   if (!axis) return null;
-  const crop = cropRect(edit.format, source.width, source.height, 0);
+  const crop = cropRectForAspect(aspect, source.width, source.height, 0);
   return {
-    path: followPath(faces, edit.format, source.width, source.height, edit.cropOffset),
+    path: followPath(faces, aspect, source.width, source.height, edit.cropOffset),
     fallback: edit.cropOffset,
     axis,
     travel: axis === 'x' ? source.width - crop.width : source.height - crop.height,
@@ -236,7 +272,12 @@ export function createRenderService(deps: RenderDeps) {
         join(workDir, 'filtri.txt'),
         buildFilterGraph({
           parts,
-          crop: cropRect(edit.format, source.width, source.height, edit.cropOffset),
+          crop: cropRectForAspect(
+            cameraAspect(project),
+            source.width,
+            source.height,
+            edit.cropOffset,
+          ),
           width: info.width,
           height: info.height,
           hasAudio: source.hasAudio,
@@ -245,6 +286,11 @@ export function createRenderService(deps: RenderDeps) {
           layers,
           firstLayerInput: edit.audio.music ? 2 : 1,
           follow: cropFollow(project),
+          composition: composition(
+            project,
+            (edit.audio.music ? 2 : 1) + layers.length,
+            ffmpegColor(templatePalette('scuro', (look?.kit ?? DEFAULT_BRAND_KIT).colors).bg),
+          ),
         }),
         'utf8',
       );
@@ -259,6 +305,7 @@ export function createRenderService(deps: RenderDeps) {
           hasAudio: source.hasAudio,
           music: edit.audio.music?.path ?? null,
           layers,
+          screen: composition(project, 0, '0x000000') ? project.screen!.path : null,
         }),
         {
           cwd: workDir,

@@ -515,3 +515,77 @@ describe('inquadratura che segue il volto nel render (6e)', () => {
     expect(graph).toContain("crop=w=608:h=1080:x='if(lt(t,1.000)");
   });
 });
+
+describe('layout di webcam e schermo nel render (6f)', () => {
+  const parts = [
+    { startMs: 0, endMs: 2000, scale: 1 },
+    { startMs: 3000, endMs: 5000, scale: 1 },
+  ];
+  const crop = { x: 353, y: 0, width: 1215, height: 1080 };
+  const composition = {
+    layout: 'split' as const,
+    camera: { x: 0, y: 960, width: 1080, height: 960 },
+    screen: { x: 0, y: 0, width: 1080, height: 960 },
+    screenInput: 1,
+    offsetMs: 500,
+    screenDurationMs: 4000,
+    background: '0x101318',
+  };
+
+  it('diviso: lo schermo segue i tagli (spostati), entra intero, poi sopra e sotto', () => {
+    const graph = buildFilterGraph({
+      parts,
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: true,
+      subtitles: null,
+      composition,
+    });
+    expect(graph).toContain('scale=1080:960:flags=lanczos,setsar=1[v0]');
+    expect(graph).toContain('concat=n=2:v=1:a=1[vcam][aout]');
+    // Prima parte: lo schermo parte 0,5 s dopo → mezzo secondo del primo fotogramma ripetuto.
+    expect(graph).toContain('[1:v]trim=start=0.000:end=1.500');
+    expect(graph).toContain('tpad=start_mode=clone:start_duration=0.500');
+    // Seconda parte: oltre la fine dello schermo (4 s) si ripete l'ultimo fotogramma.
+    expect(graph).toContain('[1:v]trim=start=2.500:end=4.000');
+    expect(graph).toContain('pad=1080:960:(ow-iw)/2:(oh-ih)/2:color=0x101318');
+    expect(graph).toContain('[s0][s1]concat=n=2:v=1:a=0[vscr]');
+    expect(graph).toContain('[vscr][vcam]vstack=inputs=2[vc]');
+  });
+
+  it('nell’angolo e solo schermo', () => {
+    const pip = buildFilterGraph({
+      parts,
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: false,
+      subtitles: null,
+      composition: {
+        ...composition,
+        layout: 'pip',
+        camera: { x: 668, y: 44, width: 368, height: 368 },
+        screen: { x: 0, y: 0, width: 1080, height: 1920 },
+      },
+    });
+    expect(pip).toContain('scale=368:368:flags=lanczos');
+    expect(pip).toContain('[vscr][vcam]overlay=x=668:y=44[vc]');
+    const screenOnly = buildFilterGraph({
+      parts,
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: false,
+      subtitles: null,
+      composition: {
+        ...composition,
+        layout: 'screen',
+        camera: null,
+        screen: { x: 0, y: 0, width: 1080, height: 1920 },
+      },
+    });
+    expect(screenOnly).toContain('[vscr]null[vc]');
+    expect(screenOnly).toContain('[vcam]nullsink');
+  });
+});

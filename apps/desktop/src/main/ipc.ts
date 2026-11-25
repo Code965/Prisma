@@ -8,6 +8,7 @@ import type { FilmcraftService } from './video/filmcraft/service.js';
 import type { IdeaVideoService } from './video/idea-video.js';
 import type { MusicLibrary } from './video/music.js';
 import type { BrollLibrary } from './video/broll.js';
+import type { RecordingService } from './recording.js';
 import { StockItemSchema } from '@prisma-app/shared';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
@@ -17,6 +18,10 @@ import {
   CreateShortRequestSchema,
   GenerateVideoRequestSchema,
   SaveFacesSchema,
+  RecordBeginSchema,
+  RecordChunkSchema,
+  RecordFinishSchema,
+  RecordSourceIdSchema,
   RenderRequestSchema,
   FilmcraftOpenSchema,
   ExportCarouselRequestSchema,
@@ -134,7 +139,27 @@ export function registerIpcHandlers(
   ideaVideo: IdeaVideoService,
   music: MusicLibrary,
   broll: BrollLibrary,
+  recording: RecordingService,
 ): void {
+  ipcMain.handle(IPC.recordSources, () => recording.sources());
+  ipcMain.handle(IPC.recordChoose, (_event, input: unknown) =>
+    recording.chooseSource(RecordSourceIdSchema.parse(input)),
+  );
+  ipcMain.handle(IPC.recordBegin, (_event, input: unknown) => {
+    const { tracks, audioTrack } = RecordBeginSchema.parse(input);
+    return recording.begin(tracks, audioTrack);
+  });
+  ipcMain.handle(IPC.recordChunk, (_event, input: unknown) => {
+    const { id, track, data } = RecordChunkSchema.parse(input);
+    recording.chunk(id, track, data);
+  });
+  ipcMain.handle(IPC.recordFinish, (_event, input: unknown) => {
+    const { id, startedAt } = RecordFinishSchema.parse(input);
+    return recording.finish(id, startedAt);
+  });
+  ipcMain.handle(IPC.recordCancel, (_event, input: unknown) =>
+    recording.cancel(VideoProjectIdSchema.parse(input)),
+  );
   ipcMain.handle(IPC.brollStatus, () => broll.status());
   ipcMain.handle(IPC.brollClear, () => broll.setDir(null));
   ipcMain.handle(IPC.brollPick, async (event) => {

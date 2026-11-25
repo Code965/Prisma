@@ -4,6 +4,7 @@ export type ScreenId =
   | 'dashboard'
   | 'idee'
   | 'studio'
+  | 'registra'
   | 'calendario'
   | 'coda'
   | 'carosello'
@@ -41,6 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { id: 'carosello', label: 'Editor carosello', path: '/carosello', icon: 'carosello' },
       { id: 'video', label: 'Editor video', path: '/video', icon: 'video' },
+      { id: 'registra', label: 'Registra', path: '/registra', icon: 'mic' },
       { id: 'template', label: 'Template e brand kit', path: '/template', icon: 'template' },
     ],
   },

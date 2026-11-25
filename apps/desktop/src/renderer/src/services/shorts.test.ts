@@ -25,6 +25,8 @@ const project = (transcript: VideoProject['transcript']): VideoProject => ({
   short: null,
   generated: null,
   faces: null,
+  screen: null,
+  recording: null,
   filmcraft: null,
   createdAt: '2026-11-22T10:00:00.000Z',
   updatedAt: '2026-11-22T10:00:00.000Z',

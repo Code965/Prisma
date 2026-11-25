@@ -40,6 +40,12 @@ export const IPC = {
   createShort: 'video:create-short',
   generateVideo: 'video:generate',
   saveFaces: 'video:save-faces',
+  recordSources: 'record:sources',
+  recordChoose: 'record:choose',
+  recordBegin: 'record:begin',
+  recordChunk: 'record:chunk',
+  recordFinish: 'record:finish',
+  recordCancel: 'record:cancel',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -220,6 +226,27 @@ export const RenderRequestSchema = z.union([
   }),
 ]);
 export type RenderRequest = z.input<typeof RenderRequestSchema>;
+
+/** Registrazione nell'app (6f). */
+const TrackSchema = z.enum(['camera', 'screen']);
+export const RecordBeginSchema = z.object({
+  tracks: z.array(TrackSchema).min(1).max(2),
+  /** Quale traccia porta il microfono (null = senza audio). */
+  audioTrack: TrackSchema.nullable(),
+});
+export const RecordChunkSchema = z.object({
+  id: z.uuid(),
+  track: TrackSchema,
+  data: z
+    .instanceof(Uint8Array)
+    .refine((d) => d.byteLength <= 64 * 1024 * 1024, 'Pezzo troppo grande'),
+});
+export const RecordFinishSchema = z.object({
+  id: z.uuid(),
+  /** Istanti di inizio delle tracce (stesso orologio del renderer, ms): servono alla sincronia. */
+  startedAt: z.object({ camera: z.number().optional(), screen: z.number().optional() }),
+});
+export const RecordSourceIdSchema = z.string().min(1).max(200).nullable();
 
 /** Volti trovati nel video (6e). */
 export const SaveFacesSchema = z.object({ projectId: z.uuid(), faces: FaceTrackSchema });

@@ -98,7 +98,7 @@ Electron 45 + electron-vite 6 + React 19, cartelle standard di electron-vite:
   non hanno header HTTP e in sviluppo Vite inietta script inline.
 - `renderer.config.ts` è condivisa tra Electron e `vite.web.config.ts`, che serve il solo renderer nel browser
   (porta 5174, configurazione `desktop-web` in `.claude/launch.json`) per confrontarlo con il mockup.
-- Schermate pronte: **Dashboard**, **Idee** (inserimento con tag, filtri con conteggi, eliminazione con conferma, piattaforme per idea salvate
+- Schermate pronte (oltre a **Registra**, 6f): **Dashboard**, **Idee** (inserimento con tag, filtri con conteggi, eliminazione con conferma, piattaforme per idea salvate
   subito, «Genera contenuti» che apre lo Studio), **Studio**, **Calendario**, **Coda** e **Impostazioni** (server,
   brand, account con «Collega» per LinkedIn e Instagram e il modulo del blog con indirizzo e chiave), **Template e brand kit** ed
   **Editor carosello** ed **Editor video** (libreria `/video` ed editor `/video/:id`) e **Analytics**.
@@ -458,6 +458,49 @@ Scelte (proposte e confermate): MediaPipe sul computer (nessun servizio esterno)
   dati a parte: WebAssembly e modello caricati da `prisma-app` con la CSP della build, 5 s di video analizzati in 1 s e
   salvati, export 1080×1920 con il ritaglio che segue una traccia di prova. Una faccina emoji non viene riconosciuta
   come volto (BlazeFace è fatto per volti veri): la precisione va provata su un video vero.
+
+### Registrazione nell'app e layout (6f)
+
+Scelte (proposte e confermate): schermo e webcam in due file separati, layout scelto nell'editor, 1080p a 30 fps.
+
+- **Registra** (`screens/Registra/RecordScreen.tsx`, rotta `/registra`, voce «Registra» sotto CREA; hook `useRecording`,
+  `useDevices`; logica in `services/recorder.ts`): webcam e microfono (`getUserMedia`, ideale 1920×1080 a 30 fps, con
+  cancellazione dell'eco e del rumore), schermo o finestra con miniature (`desktopCapturer` dal main, IPC
+  `record:sources`/`record:choose`; su Windows Electron non ha un selettore di sistema, quindi
+  `setDisplayMediaRequestHandler` passa a `getDisplayMedia` la sorgente scelta). Anteprima con la webcam nell'angolo,
+  conto alla rovescia 3-2-1, «REC 00:05», «Ferma e apri nell'editor», «Annulla».
+- **Registrazione** (`SessionRecorder`): un MediaRecorder per traccia (H.264 se c'è, poi VP8; 8 Mb/s webcam, 6 Mb/s
+  schermo), pezzi ogni secondo mandati in ordine al main (`record:chunk`) e scritti su disco in
+  `userData/registrazioni/<id>/{camera,screen}.webm`; il microfono va sulla webcam o, senza webcam, sullo schermo.
+  Gli istanti `onstart` delle due tracce danno la sfasatura.
+- **Salvataggio** (`src/main/recording.ts`): FFmpeg converte in MP4 (H.264 veryfast CRF 20/22, 30 fps, AAC solo dove
+  c'è il microfono: i WebM di MediaRecorder non hanno durata né indice), cancella i WebM, misura con ffprobe e crea il
+  progetto: sorgente `webcam.mp4` (o lo schermo se non c'è la webcam), `project.screen` (`VideoScreenSchema`: file,
+  misure, durata, `offsetMs`), `project.recording`, titolo «Registrazione del 25 nov, 14:06». Con webcam e schermo si
+  parte dal layout «Diviso». Un errore cancella la cartella.
+- **Permessi**: prima Electron concedeva tutto. Ora `setPermissionRequestHandler`/`setPermissionCheckHandler` ammettono
+  solo `media`, `display-capture`, `clipboard-sanitized-write` e `fullscreen` (`isAllowedPermission`). Windows deve
+  permettere webcam e microfono alle app desktop (messaggio in `mediaErrorMessage`).
+- **Layout** (`packages/shared/src/schemas/video-layout.ts`, `edit.layout`, contato da `videoRenderKey` solo se diverso
+  da «Solo tu»): `camera` (Solo tu), `screen` (Solo schermo), `pip` (schermo e webcam quadrata in alto a destra, lato
+  34% del lato corto), `split` (solo 9:16: schermo sopra 1080×960, tu sotto 1080×960). `availableLayouts`,
+  `effectiveLayout`, `layoutBoxes`, `screenTimeMs`. Il ritaglio della webcam prende le proporzioni del suo riquadro
+  (`cropRectForAspect`, anche `freeAxis`/`followPath` accettano proporzioni), così zoom e «Segui il volto» valgono
+  anche nel diviso e nell'angolo. `zoomedCrop` ora sta in shared.
+- **Render** (`composeLayout` in `render-plan.ts`, `composition`/`cameraAspect` in `render.ts`): la webcam si scala al
+  suo riquadro e esce come `[vcam]`; lo schermo (ultimo ingresso) segue gli stessi tagli spostati di `offsetMs`, ogni
+  parte lunga esattamente come quella della webcam (`tpad` ripete il primo o l'ultimo fotogramma), `fps=30`, entra
+  intero nel suo riquadro con le bande del colore di fondo (`pad`), `concat` in `[vscr]`; poi `vstack`, `overlay` o solo
+  schermo (`[vcam]nullsink`) in `[vc]`, e da lì B-roll, schede e sottotitoli come prima. Senza layout il grafo è
+  identico a prima.
+- **Editor**: pulsanti «Tu / Schermo / Angolo / Diviso» accanto a «Segui il volto» (solo con lo schermo);
+  `LayoutPreview` disegna a ogni fotogramma su un canvas lo schermo (`prisma-media://schermo/<id>`, al passo con la
+  sfasatura) e la webcam ritagliata nel suo riquadro, con gli stessi calcoli del render (`services/layout.ts`).
+- Provato con FFmpeg 9.1 (i tre layout, 4 s esatti con lo schermo partito 0,5 s dopo e finito prima) e nell'app vera
+  su una cartella dei dati a parte con la webcam e il microfono finti di Chromium
+  (`--use-fake-device-for-media-stream --use-fake-ui-for-media-stream`) e la finestra di Prisma come schermo: anteprime
+  1920×1080, 5 s registrati, salvati in 2 s, progetto con webcam e schermo (sfasatura 13 ms) e layout «Diviso»,
+  export 1080×1920 uguale all'anteprima, nessun errore in console.
 
 ### «Crea video dall'idea» (6c)
 
@@ -1134,7 +1177,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
 - [x] 6d. B-roll (cartella dell'utente e Pixabay) e schede di testo in sovrimpressione
 - [x] 6e. Inquadratura che segue il volto (MediaPipe sul computer, camera morbida)
-- [ ] 6f. Registrazione nell'app (webcam, schermo, microfono)
+- [x] 6f. Registrazione nell'app (webcam, microfono, schermo) e layout (tu, schermo, angolo, diviso)
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 
