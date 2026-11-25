@@ -192,7 +192,7 @@ describe('archivio locale SQLite', () => {
     reopened.removeProject(project.id);
     expect(reopened.listProjects()).toEqual([]);
     reopened.close();
-  });
+  }, 30_000); // SQLite sul disco: sui server della CI può superare i 5 s predefiniti
 
   it('crea un progetto Short dal video lungo: stesso file, tagli attorno al momento, 9:16', () => {
     dir = mkdtempSync(join(tmpdir(), 'prisma-store-'));
