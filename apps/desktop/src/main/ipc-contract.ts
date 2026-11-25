@@ -46,6 +46,8 @@ export const IPC = {
   recordChunk: 'record:chunk',
   recordFinish: 'record:finish',
   recordCancel: 'record:cancel',
+  dictationTranscribe: 'dictation:transcribe',
+  dictationCancel: 'dictation:cancel',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -204,6 +206,17 @@ export const TranscribeRequestSchema = z.object({
   language: z.enum(TRANSCRIPT_LANGUAGES),
 });
 export type TranscribeRequest = z.infer<typeof TranscribeRequestSchema>;
+
+/** Dettatura di un'idea: l'audio registrato dal microfono (al massimo 5 minuti, ~25 MB). */
+export const DictationRequestSchema = z.object({
+  audio: z
+    .instanceof(Uint8Array)
+    .refine(
+      (d) => d.byteLength > 0 && d.byteLength <= 32 * 1024 * 1024,
+      'Registrazione non valida',
+    ),
+  language: z.enum(TRANSCRIPT_LANGUAGES),
+});
 
 /** Progetto Short ricavato da un video lungo dopo «Genera Short». */
 export const CreateShortRequestSchema = z

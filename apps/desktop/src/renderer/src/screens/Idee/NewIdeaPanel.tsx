@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { Button } from '../../components/Button/Button';
 import { Icon } from '../../components/icons/Icon';
 import { errorMessage } from '../../services/api/client';
+import { useDictation } from '../../hooks/useDictation';
+import { useNow } from '../../hooks/useNow';
+import { appendDictation, micTitle } from '../../services/dictation';
 import { toggleId } from '../../services/ideas';
+import { timerLabel } from '../../services/recorder';
 import styles from './Idee.module.css';
 
 interface NewIdeaPanelProps {
@@ -18,6 +22,9 @@ export function NewIdeaPanel({ tags, saving, error, onSave }: NewIdeaPanelProps)
   const [text, setText] = useState('');
   const [tagIds, setTagIds] = useState<number[]>([]);
   const canSave = text.trim().length > 0 && !saving;
+  const dictation = useDictation((dictated) =>
+    setText((current) => appendDictation(current, dictated)),
+  );
 
   async function save() {
     if (!canSave) return;
@@ -45,10 +52,12 @@ export function NewIdeaPanel({ tags, saving, error, onSave }: NewIdeaPanelProps)
         />
         <button
           type="button"
-          className={styles.mic}
-          disabled
-          aria-label="Detta un'idea"
-          title="Dettatura con Whisper locale: arriva nella fase 3"
+          className={`${styles.mic} ${dictation.phase === 'ascolto' ? styles.micOn : ''}`}
+          disabled={!dictation.available || dictation.phase === 'trascrivo'}
+          aria-pressed={dictation.phase === 'ascolto'}
+          aria-label={dictation.phase === 'ascolto' ? 'Ferma la dettatura' : 'Detta un’idea'}
+          title={micTitle(dictation.phase, dictation.available)}
+          onClick={dictation.toggle}
         >
           <Icon name="mic" size={18} strokeWidth={2} />
         </button>
@@ -74,6 +83,23 @@ export function NewIdeaPanel({ tags, saving, error, onSave }: NewIdeaPanelProps)
           {saving ? 'Salvo…' : 'Salva idea'}
         </Button>
       </div>
+      {dictation.phase !== 'pronto' ? (
+        <p role="status" className={styles.dictationStatus}>
+          {dictation.phase === 'ascolto' && dictation.startedAt !== null ? (
+            <>
+              <span className={styles.recDot} aria-hidden="true" /> In ascolto ·{' '}
+              <DictationTimer startedAt={dictation.startedAt} /> · clic sul microfono per finire
+            </>
+          ) : (
+            'Trascrivo con Whisper sul computer…'
+          )}
+        </p>
+      ) : null}
+      {dictation.error ? (
+        <p role="alert" className={styles.error}>
+          {dictation.error}
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className={styles.error}>
           {errorMessage(error)}
@@ -81,4 +107,10 @@ export function NewIdeaPanel({ tags, saving, error, onSave }: NewIdeaPanelProps)
       ) : null}
     </section>
   );
+}
+
+/** «00:05» dall'inizio dell'ascolto. */
+function DictationTimer({ startedAt }: { startedAt: number }) {
+  const now = useNow(1000);
+  return <span className={styles.timer}>{timerLabel(Math.max(0, now.getTime() - startedAt))}</span>;
 }

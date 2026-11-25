@@ -59,6 +59,8 @@ const CHANNELS = {
   recordChunk: 'record:chunk',
   recordFinish: 'record:finish',
   recordCancel: 'record:cancel',
+  dictationTranscribe: 'dictation:transcribe',
+  dictationCancel: 'dictation:cancel',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -163,6 +165,15 @@ const api = {
       startedAt: Partial<Record<RecordingTrack, number>>,
     ): Promise<VideoProject> => ipcRenderer.invoke(CHANNELS.recordFinish, { id, startedAt }),
     cancel: (id: string): Promise<void> => ipcRenderer.invoke(CHANNELS.recordCancel, id),
+  },
+  /** Dettatura delle idee: audio del microfono trascritto in locale con whisper.cpp. */
+  dictation: {
+    transcribe: (
+      audio: Uint8Array,
+      language: TranscriptLanguage,
+    ): Promise<{ text: string; language: string }> =>
+      ipcRenderer.invoke(CHANNELS.dictationTranscribe, { audio, language }),
+    cancel: (): Promise<void> => ipcRenderer.invoke(CHANNELS.dictationCancel),
   },
   /** B-roll (6d): cartella dell'utente e file scaricati da Pixabay. */
   broll: {

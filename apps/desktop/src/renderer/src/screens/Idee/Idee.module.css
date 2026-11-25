@@ -46,6 +46,12 @@
   cursor: pointer;
 }
 
+.micOn {
+  border-color: var(--s-err);
+  background: var(--s-err);
+  color: #fff;
+}
+
 .mic:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -263,4 +269,26 @@
   font-weight: 600;
   color: var(--accent);
   cursor: pointer;
+}
+
+/* Dettatura */
+.dictationStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text2);
+}
+
+.recDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--s-err);
+}
+
+.timer {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text);
 }

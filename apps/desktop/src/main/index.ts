@@ -26,6 +26,7 @@ import { createBrollLibrary } from './video/broll.js';
 import { runProcess } from './video/process.js';
 import { createRenderService } from './video/render.js';
 import { createTranscriptionService } from './video/transcription.js';
+import { createDictationService } from './video/dictation.js';
 import { createVideoService } from './video/video-service.js';
 
 const isDev = !app.isPackaged;
@@ -232,7 +233,22 @@ void app.whenReady().then(async () => {
   });
   // Permessi delle pagine (solo webcam, microfono, schermo, appunti) e schermo per getDisplayMedia.
   recording.attach();
-  registerIpcHandlers(video, transcription, render, filmcraft, ideaVideo, music, broll, recording);
+  const dictation = createDictationService({
+    requireTool: video.requireTool,
+    workRoot: join(userDataDir, 'video-lavoro'),
+    run: runProcess,
+  });
+  registerIpcHandlers(
+    video,
+    transcription,
+    render,
+    filmcraft,
+    ideaVideo,
+    music,
+    broll,
+    recording,
+    dictation,
+  );
   const updates = registerUpdates();
 
   // L'intro resta almeno SPLASH_MIN_MS, poi lascia il posto alla finestra principale.

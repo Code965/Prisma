@@ -319,7 +319,15 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   iscritti, variazione e copertura della settimana con cosa misura su quella piattaforma).
 - Il drag & drop HTML5 non si completa con il mouse simulato dagli strumenti di automazione: per verificarlo si
   inviano `DragEvent` con un `DataTransfer` dalla console della pagina.
-- La dettatura vocale è disattivata fino alla fase 3 (Whisper). Il brand della sidebar arriva da `/brands`.
+- **Dettatura delle idee** (`src/main/video/dictation.ts`, `hooks/useDictation.ts`, `services/dictation.ts`): il
+  microfono nel pannello «Nuova idea» registra con MediaRecorder (Opus in WebM), al secondo clic (o dopo 5 minuti)
+  l'audio va al main (IPC `dictation:transcribe`, al massimo 32 MB), FFmpeg lo porta a WAV 16 kHz e whisper.cpp lo
+  trascrive con lingua `auto`; il testo si aggiunge a quello scritto. Una dettatura alla volta, file in
+  `userData/video-lavoro/dettatura-<uuid>/` cancellati sempre, annullata uscendo dalla schermata. Servono FFmpeg,
+  whisper.cpp e un modello (Impostazioni › Strumenti video); nel browser il pulsante resta spento. Provato con
+  whisper.cpp vero su voce italiana sintetica (testo esatto, `it` riconosciuto, 6,6 s) e nel renderer con un
+  microfono simulato (stati «In ascolto · 00:02» e «Trascrivo…»).
+- Il brand della sidebar arriva da `/brands`.
 - Nota sul token `--rec`: in `tokens.css` è lo sfondo verde degli slot consigliati; nel mockup Idee lo stesso nome
   è il rosso della registrazione vocale. Per la registrazione servirà un token distinto.
 

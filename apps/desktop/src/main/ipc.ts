@@ -12,10 +12,12 @@ import type { RecordingService } from './recording.js';
 import { StockItemSchema } from '@prisma-app/shared';
 import type { RenderService } from './video/render.js';
 import type { TranscriptionService } from './video/transcription.js';
+import type { DictationService } from './video/dictation.js';
 import type { VideoService } from './video/video-service.js';
 import {
   ApiRequestSchema,
   CreateShortRequestSchema,
+  DictationRequestSchema,
   GenerateVideoRequestSchema,
   SaveFacesSchema,
   RecordBeginSchema,
@@ -140,7 +142,13 @@ export function registerIpcHandlers(
   music: MusicLibrary,
   broll: BrollLibrary,
   recording: RecordingService,
+  dictation: DictationService,
 ): void {
+  ipcMain.handle(IPC.dictationTranscribe, (_event, input: unknown) => {
+    const { audio, language } = DictationRequestSchema.parse(input);
+    return dictation.transcribe(audio, language);
+  });
+  ipcMain.handle(IPC.dictationCancel, () => dictation.cancel());
   ipcMain.handle(IPC.recordSources, () => recording.sources());
   ipcMain.handle(IPC.recordChoose, (_event, input: unknown) =>
     recording.chooseSource(RecordSourceIdSchema.parse(input)),
