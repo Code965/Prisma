@@ -12,7 +12,9 @@ import { changedLines, type DiffLine } from './diff';
 /**
  * Limiti di lunghezza mostrati nei contatori. Verificati sulla documentazione: LinkedIn (step 7),
  * Instagram (2f) e YouTube (3f: titolo 100 caratteri, descrizione 5000 byte, qui contati come
- * caratteri; l'adapter controlla i byte e gli hashtag aggiunti in coda). TikTok va riverificato.
+ * caratteri; l'adapter controlla i byte e gli hashtag aggiunti in coda) e TikTok (Content Posting
+ * API, novembre 2026: didascalia fino a 2200 unità UTF-16, quindi un'emoji può contare due; in
+ * modalità casella la didascalia si incolla nell'app di TikTok).
  */
 export const TEXT_LIMITS = {
   linkedin: { body: 3000 },

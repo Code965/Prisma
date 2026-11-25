@@ -292,8 +292,8 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   (`deleteIdeaQuestions`): l'idea, poi «Eliminare anche N contenuti mai usciti?» (con «Annulla» restano nello Studio);
   pubblicati e in coda restano sempre.
 - **Studio** (`screens/Studio/`): tab per piattaforma con stato, anteprima nel feed per le 4 piattaforme (i media
-  sono riquadri con i colori fissi del mockup), campi specifici con contatori (`TEXT_LIMITS`: LinkedIn verificato,
-  gli altri da riverificare con i rispettivi adapter), hashtag, chat «Modifica scrivendo» con diff riga per riga
+  sono riquadri con i colori fissi del mockup), campi specifici con contatori (`TEXT_LIMITS`, verificati sulla doc: LinkedIn
+  3.000, Instagram e TikTok 2.200, YouTube titolo 100 e descrizione 5.000), hashtag, chat «Modifica scrivendo» con diff riga per riga
   ricostruito dalle revisioni e «annulla» (ripristino della revisione precedente, solo se la modifica è ancora in
   vigore). La bozza locale vive in `StudioBody`, montato con chiave `id:version`: dopo ogni salvataggio riparte dal
   testo salvato. «Approva» esegue `approvalSteps` (salva se serve, `submit`, `approve`): la macchina a stati non
