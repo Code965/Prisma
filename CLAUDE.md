@@ -1211,6 +1211,17 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
 - [x] 6e. Inquadratura che segue il volto (MediaPipe sul computer, camera morbida)
 - [x] 6f. Registrazione nell'app (webcam, microfono, schermo) e layout (tu, schermo, angolo, diviso)
 
+### Fase 7 — Template personalizzabili
+
+Scelte (proposte e confermate il 25 novembre 2026): più stili pronti e un editor per creare i propri (non un canvas
+libero), font open source inclusi nell'app, galleria con anteprime vere, template predefinito per formato, «Duplica e
+modifica».
+
+- [ ] 7a. Font open inclusi (scelta per titoli, testo e codice nel brand kit) e galleria con anteprime vere
+- [ ] 7b. Modello del template personalizzato (sfondo, forme decorative, logo e numerazione, tipografia) e nuovi stili
+      pronti costruiti con lo stesso modello
+- [ ] 7c. Editor del template con anteprima dal vivo, «Duplica e modifica», template predefinito per formato
+
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 
 - [x] 2a. Brand kit e voce: schermata Template e brand kit, API, voce nei prompt
@@ -1229,7 +1240,7 @@ Fase 2 completata. Da provare con le credenziali reali: bucket R2 (chiavi e indi
 - Dashboard inclusa nella fase 1 con i dati reali disponibili.
 - LinkedIn: solo profilo personale.
 - Slot consigliati nel calendario: configurazione fissa per piattaforma fino alla fase 4.
-- Brand kit: font fissi (Inter e JetBrains Mono), 5 colori a ruolo fisso, niente template personalizzati
-  («+ Nuovo template» del mockup non c'è). L'export delle immagini è JPEG, non PNG come nel mockup: Instagram accetta
+- Brand kit: 5 colori a ruolo fisso. Font fissi e niente template personalizzati fino alla fase 7, che li
+  supera (vedi sotto). L'export delle immagini è JPEG, non PNG come nel mockup: Instagram accetta
   solo JPEG e le foto di TikTok non accettano PNG. Il carosello vivrà dentro la variant; «Post singolo» userà lo stesso
   motore con una slide; citazione, miniatura YouTube e copertina Reel restano anteprime fino alla fase 3.
