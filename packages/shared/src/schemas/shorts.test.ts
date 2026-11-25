@@ -61,6 +61,7 @@ describe('shortEdit', () => {
         },
       ],
       broll: [],
+      followFace: false,
     };
     expect(shortEdit(parent, 60_000, { startMs: 10_000, endMs: 40_000 })).toEqual({
       format: '9:16',
@@ -87,6 +88,7 @@ describe('shortEdit', () => {
         },
       ],
       broll: [],
+      followFace: false,
     });
   });
 

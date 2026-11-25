@@ -1,6 +1,7 @@
 import {
   VIDEO_TOOLS,
   shortEdit,
+  type FaceTrack,
   type ToolsStatus,
   type VideoEdit,
   type VideoProject,
@@ -120,6 +121,15 @@ export function createVideoService(options: {
       const project = store.getProject(id);
       if (!project) throw new Error('Progetto video non trovato');
       const updated = { ...project, edit, updatedAt: now.toISOString() };
+      store.updateProject(updated);
+      return updated;
+    },
+
+    /** Volti trovati dal renderer (6e): restano nel progetto, il percorso si calcola da qui. */
+    saveFaces(id: string, faces: FaceTrack, now: Date = new Date()): VideoProject {
+      const project = store.getProject(id);
+      if (!project) throw new Error('Progetto video non trovato');
+      const updated = { ...project, faces, updatedAt: now.toISOString() };
       store.updateProject(updated);
       return updated;
     },

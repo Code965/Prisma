@@ -8,6 +8,7 @@ import type { ProcessRunner } from './process.js';
 import { createRenderService, editedWindow, renderFileName } from './render.js';
 import {
   buildFilterGraph,
+  followCropPosition,
   ffmpegRenderArgs,
   loudnessGraph,
   mixLoudnessArgs,
@@ -477,5 +478,40 @@ describe('B-roll e schede nel render (6d)', () => {
     const cuts = [{ startMs: 1000, endMs: 3000 }];
     expect(editedWindow(cuts, { startMs: 4000, endMs: 6000 })).toEqual({ startS: 2, endS: 4 });
     expect(editedWindow(cuts, { startMs: 1200, endMs: 2800 })).toBeNull();
+  });
+});
+
+describe('inquadratura che segue il volto nel render (6e)', () => {
+  it('il ritaglio si sposta lungo il percorso, con lo zoom al centro', () => {
+    const crop = { x: 0, y: 0, width: 608, height: 1080 };
+    const follow = {
+      path: [
+        { ms: 0, offset: 0.5 },
+        { ms: 2000, offset: 0.5 },
+        { ms: 4000, offset: 0.9 },
+      ],
+      fallback: 0.5,
+      axis: 'x' as const,
+      travel: 1312,
+    };
+    const position = followCropPosition(follow, crop, crop, { startMs: 1000, endMs: 5000 });
+    expect(position.y).toBe('0');
+    // Fermo fino a 1 s dalla partenza della parte, poi sale fino a 0,9 × 1312 = 1180,8 px.
+    expect(position.x).toBe(
+      "'if(lt(t,1.000),656.0+(t-0.000)*0.000,if(lt(t,3.000),656.0+(t-1.000)*262.400,if(lt(t,4.000),1180.8+(t-3.000)*0.000,1180.8)))'",
+    );
+    const zoomed = zoomedCrop(crop, 1.18);
+    const withZoom = followCropPosition(follow, crop, zoomed, { startMs: 0, endMs: 1000 });
+    expect(withZoom.x).toContain(`${((608 - zoomed.width) / 2 + 656).toFixed(1)}`);
+    const graph = buildFilterGraph({
+      parts: [{ startMs: 1000, endMs: 5000, scale: 1 }],
+      crop,
+      width: 1080,
+      height: 1920,
+      hasAudio: false,
+      subtitles: null,
+      follow,
+    });
+    expect(graph).toContain("crop=w=608:h=1080:x='if(lt(t,1.000)");
   });
 });

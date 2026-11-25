@@ -19,6 +19,7 @@ import type { BrollStatus } from '../main/video/broll.js';
 import type { RenderLook } from '../main/video/render.js';
 import type {
   BrollMedia,
+  FaceTrack,
   StockItem,
   ToolsStatus,
   TranscriptLanguage,
@@ -50,6 +51,7 @@ const CHANNELS = {
   renderStatus: 'video:render-status',
   createShort: 'video:create-short',
   generateVideo: 'video:generate',
+  saveFaces: 'video:save-faces',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -166,6 +168,9 @@ const api = {
       ipcRenderer.invoke(CHANNELS.renderStatus, projectId),
     createShort: (input: CreateShortRequest): Promise<VideoProject> =>
       ipcRenderer.invoke(CHANNELS.createShort, input),
+    /** Volti trovati nel video (6e), salvati nel progetto. */
+    saveFaces: (projectId: string, faces: FaceTrack): Promise<VideoProject> =>
+      ipcRenderer.invoke(CHANNELS.saveFaces, { projectId, faces }),
     /** «Crea video dall'idea»: voce, slide e montaggio; annullabile con `cancel(jobId)`. */
     generate: (input: GenerateVideoRequest): Promise<VideoProject> =>
       ipcRenderer.invoke(CHANNELS.generateVideo, input),

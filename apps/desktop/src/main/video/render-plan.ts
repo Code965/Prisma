@@ -1,4 +1,10 @@
-import { AUDIO_LIMITS, type CropRect, type TimeRange } from '@prisma-app/shared';
+import {
+  AUDIO_LIMITS,
+  followSegment,
+  type CropRect,
+  type FollowPoint,
+  type TimeRange,
+} from '@prisma-app/shared';
 
 /**
  * Grafo dei filtri FFmpeg per il video finale: per ogni parte rimasta `trim`/`atrim` con i tempi
@@ -45,6 +51,8 @@ export function buildFilterGraph(options: {
   layers?: readonly VideoLayer[];
   /** Indice del primo ingresso dei livelli (dopo il sorgente e l'eventuale musica). */
   firstLayerInput?: number;
+  /** Il ritaglio segue il volto (6e): percorso della posizione e corsa in pixel sull'asse libero. */
+  follow?: CropFollow | null;
 }): string {
   const { parts: ranges, crop, width, height, hasAudio } = options;
   if (ranges.length === 0) {
@@ -56,9 +64,12 @@ export function buildFilterGraph(options: {
     // Ogni parte si ritaglia (con il suo zoom) e si porta alle dimensioni finali prima di
     // unirle: concat vuole parti tutte uguali.
     const box = zoomedCrop(crop, range.scale);
+    const position = options.follow
+      ? followCropPosition(options.follow, crop, box, range)
+      : { x: String(box.x), y: String(box.y) };
     parts.push(
       `[0:v]trim=start=${seconds(range.startMs)}:end=${seconds(range.endMs)},setpts=PTS-STARTPTS,` +
-        `crop=w=${box.width}:h=${box.height}:x=${box.x}:y=${box.y},` +
+        `crop=w=${box.width}:h=${box.height}:x=${position.x}:y=${position.y},` +
         `scale=${width}:${height}:flags=lanczos,setsar=1[v${i}]`,
     );
     inputs.push(`[v${i}]`);
@@ -89,6 +100,44 @@ export function buildFilterGraph(options: {
   const video = options.subtitles ? `subtitles=filename=${options.subtitles}` : 'null';
   parts.push(`[${current}]${video}[vout]`);
   return `${parts.join(';\n')}\n`;
+}
+
+/** Ritaglio che segue il volto: percorso (istanti del sorgente) e asse su cui si sposta. */
+export interface CropFollow {
+  path: readonly FollowPoint[];
+  /** Posizione quando il percorso non dice nulla (quella scelta a mano). */
+  fallback: number;
+  axis: 'x' | 'y';
+  /** Corsa del ritaglio intero in pixel: sorgente meno ritaglio sull'asse libero. */
+  travel: number;
+}
+
+/**
+ * Posizione del ritaglio di una parte come espressione di `t` (secondi dall'inizio della parte,
+ * dopo `setpts=PTS-STARTPTS`): interpolazione lineare tra i punti del percorso, più lo
+ * spostamento verso il centro dello zoom. Tra apici: le virgole restano dentro l'opzione.
+ */
+export function followCropPosition(
+  follow: CropFollow,
+  crop: CropRect,
+  box: CropRect,
+  range: TimeRange,
+): { x: string; y: string } {
+  const points = followSegment(follow.path, range.startMs, range.endMs, follow.fallback);
+  const shift = follow.axis === 'x' ? (crop.width - box.width) / 2 : (crop.height - box.height) / 2;
+  const at = (offset: number) => (shift + offset * follow.travel).toFixed(1);
+  let expr = at(points[points.length - 1]!.offset);
+  for (let i = points.length - 2; i >= 0; i--) {
+    const a = points[i]!;
+    const b = points[i + 1]!;
+    const t0 = (a.ms - range.startMs) / 1000;
+    const t1 = (b.ms - range.startMs) / 1000;
+    const slope = t1 > t0 ? ((b.offset - a.offset) * follow.travel) / (t1 - t0) : 0;
+    const segment = `${at(a.offset)}+(t-${t0.toFixed(3)})*${slope.toFixed(3)}`;
+    expr = `if(lt(t,${t1.toFixed(3)}),${segment},${expr})`;
+  }
+  const moving = `'${expr}'`;
+  return follow.axis === 'x' ? { x: moving, y: String(box.y) } : { x: String(box.x), y: moving };
 }
 
 const editedMs = (ranges: readonly TimeRange[]) =>

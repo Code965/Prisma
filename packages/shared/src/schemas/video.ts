@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { IdSchema, InstantSchema } from './common.js';
 import { TranscriptSchema } from './transcript.js';
 import { isLegacyAudio } from './video-audio.js';
+import { FaceTrackSchema } from './video-face.js';
 import { DEFAULT_VIDEO_EDIT, VIDEO_FORMATS, VideoEditSchema } from './video-edit.js';
 
 /**
@@ -100,6 +101,8 @@ export const VideoProjectSchema = z.object({
   render: VideoRenderSchema.nullable().default(null),
   short: VideoShortOriginSchema.nullable().default(null),
   generated: VideoGeneratedSchema.nullable().default(null),
+  /** Volti trovati nel sorgente (6e): base dell'inquadratura che segue il volto. */
+  faces: FaceTrackSchema.nullable().default(null),
   filmcraft: VideoFilmcraftSchema.nullable().default(null),
   createdAt: InstantSchema,
   updatedAt: InstantSchema,
@@ -193,7 +196,8 @@ function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['e
       ([key]) =>
         !(key === 'audio' && isLegacyAudio(edit.audio)) &&
         !(key === 'overlays' && edit.overlays.length === 0) &&
-        !(key === 'broll' && edit.broll.length === 0),
+        !(key === 'broll' && edit.broll.length === 0) &&
+        !(key === 'followFace' && !edit.followFace),
     ),
   );
 }
@@ -203,9 +207,14 @@ function withoutLegacyAudio(edit: VideoProject['edit']): Partial<VideoProject['e
  * stile e parole dei sottotitoli. Il main ne calcola lo sha256 per sapere se il file è superato.
  */
 export function videoRenderKey(
-  project: Pick<VideoProject, 'source' | 'edit' | 'transcript'>,
+  project: Pick<VideoProject, 'source' | 'edit' | 'transcript'> &
+    Partial<Pick<VideoProject, 'faces'>>,
 ): string {
   return JSON.stringify({
+    // Con l'inquadratura che segue il volto conta anche l'analisi da cui nasce il percorso.
+    ...(project.edit.followFace && project.faces
+      ? { faces: [project.faces.intervalMs, project.faces.samples.length, project.faces.createdAt] }
+      : {}),
     source: [project.source.path, project.source.sizeBytes, project.source.durationMs],
     edit: withoutLegacyAudio(project.edit),
     words: (project.transcript?.words ?? []).map((w) => [w.text, w.startMs, w.endMs]),

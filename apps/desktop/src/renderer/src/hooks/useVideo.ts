@@ -1,5 +1,6 @@
 import {
   enrichOverlays,
+  faceIntervalMs,
   type AutoEditPlan,
   type Broll,
   type BrollMedia,
@@ -14,7 +15,7 @@ import {
   type VideoTool,
 } from '@prisma-app/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { api } from '../services/api/endpoints';
 import { autoEditRequest } from '../services/auto-edit';
@@ -32,7 +33,9 @@ import {
   type CreateVideoSource,
 } from '../services/create-video';
 import { shortsRequest } from '../services/shorts';
-import { canUseVideo } from '../services/video';
+import { canUseVideo, mediaUrl } from '../services/video';
+import { buildFaceTrack } from '../services/face';
+import { FACE_MODEL, analyzeFaces } from '../services/face-detector';
 import { useBrand } from './brand';
 import { useBrandKit } from './useBrandKit';
 import { queryKeys } from './query-client';
@@ -305,6 +308,38 @@ export function useCreateVideo() {
       if (jobId) void bridge().video.cancel(jobId);
     },
   };
+}
+
+/**
+ * «Segui il volto» (6e): MediaPipe cerca il volto nel video (nel renderer, senza rete), poi la
+ * traccia si salva nel progetto. Annullabile, con l'avanzamento.
+ */
+export function useFaceAnalysis(project: VideoProject) {
+  const replace = useReplaceProject();
+  const [percent, setPercent] = useState<number | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const mutation = useMutation({
+    mutationFn: async (): Promise<VideoProject> => {
+      const abort = new AbortController();
+      controller.current = abort;
+      setPercent(0);
+      const durationMs = project.source.durationMs;
+      const samples = await analyzeFaces({
+        videoUrl: mediaUrl(project.id),
+        durationMs,
+        intervalMs: faceIntervalMs(durationMs),
+        onProgress: setPercent,
+        signal: abort.signal,
+      });
+      return bridge().video.saveFaces(project.id, buildFaceTrack(samples, durationMs, FACE_MODEL));
+    },
+    onSuccess: replace,
+    onSettled: () => {
+      controller.current = null;
+      setPercent(null);
+    },
+  });
+  return { ...mutation, percent, cancel: () => controller.current?.abort() };
 }
 
 /** Cartella del B-roll e i suoi file (6d). */

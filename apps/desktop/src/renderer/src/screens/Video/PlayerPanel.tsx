@@ -19,6 +19,8 @@ import { zoomedOverlay } from '../../services/auto-edit';
 import { mediaUrl } from '../../services/video';
 import { clockLabel, cropOverlay, draggedOffset, sourceTimeMs } from '../../services/video-editor';
 import { AudioPanel } from './AudioPanel';
+import { FollowFaceControl } from './FollowFaceControl';
+import { previewCropOffset, previewFollowPath } from '../../services/face';
 import { LayersPanel } from './LayersPanel';
 import { LayersPreview } from './LayersPreview';
 import styles from './VideoEditor.module.css';
@@ -51,7 +53,9 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
   const [playing, setPlaying] = useState(false);
   const [dragOffset, setDragOffset] = useState<number | null>(null);
   const { source } = project;
-  const offset = dragOffset ?? edit.cropOffset;
+  // Con «Segui il volto» la posizione del riquadro segue il percorso calcolato dai volti (6e).
+  const followPathPoints = useMemo(() => previewFollowPath(project, edit), [project, edit]);
+  const offset = dragOffset ?? previewCropOffset(followPathPoints, edit, sourceMs);
   const baseOverlay = cropOverlay(edit.format, source.width, source.height, offset);
   // Con uno zoom attivo il riquadro si restringe: è quello che finirà nel video (fase 6a).
   const zoom = zoomAt(edit.zooms, sourceMs);
@@ -138,7 +142,10 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
       target.removeEventListener('pointerup', end);
       target.removeEventListener('pointercancel', end);
       setDragOffset(null);
-      if (latest !== edit.cropOffset) onChange({ ...edit, cropOffset: latest });
+      // Spostare il riquadro a mano smette di seguire il volto.
+      if (latest !== edit.cropOffset || edit.followFace) {
+        onChange({ ...edit, cropOffset: latest, followFace: false });
+      }
     };
     target.addEventListener('pointermove', move);
     target.addEventListener('pointerup', end);
@@ -164,6 +171,7 @@ export function PlayerPanel({ project, edit, onChange, onTime, seekTo }: PlayerP
             </button>
           ))}
         </div>
+        <FollowFaceControl project={project} edit={edit} onChange={onChange} />
         <span className={styles.formatNote}>{VIDEO_FORMAT_INFO[edit.format].note}</span>
       </div>
 

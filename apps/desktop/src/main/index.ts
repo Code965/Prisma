@@ -9,6 +9,7 @@ import { registerUpdates } from './updates.js';
 import { startCore, type Core } from './core.js';
 import { setupBackground, startedHidden } from './background.js';
 import { captureImage, captureJpeg } from './export/carousel-export.js';
+import { handleAppAssets } from './app-assets.js';
 import { registerIpcHandlers, setCore, slideFontFaceCss } from './ipc.js';
 import { startupMode } from './settings.js';
 import { handleMediaProtocol, registerMediaScheme } from './video/media-protocol.js';
@@ -155,6 +156,7 @@ void app.whenReady().then(async () => {
     cacheDir: join(userDataDir, 'broll-pixabay'),
     ffprobe: () => video.requireTool('ffprobe').catch(() => null),
   });
+  handleAppAssets(join(import.meta.dirname, '../renderer/assets'));
   handleMediaProtocol(
     video.sourcePathOf,
     async (fileName) => {

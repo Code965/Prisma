@@ -4,6 +4,8 @@ import {
   VIDEO_FORMAT_INFO,
   buildCaptions,
   editedTimeMs,
+  followPath,
+  freeAxis,
   type BrandKit,
   type CarouselTemplate,
   cropRect,
@@ -30,6 +32,7 @@ import {
   mixLoudnessArgs,
   mixLoudnessGraph,
   voiceGainFromLoudnorm,
+  type CropFollow,
   type VideoLayer,
 } from './render-plan.js';
 import type { LocalStore } from './store.js';
@@ -62,6 +65,21 @@ export interface RenderDeps {
 export interface RenderLook {
   kit: BrandKit;
   template: CarouselTemplate;
+}
+
+/** Il ritaglio segue il volto se richiesto, analizzato e se il formato lascia un asse libero. */
+export function cropFollow(project: VideoProject): CropFollow | null {
+  const { edit, source, faces } = project;
+  if (!edit.followFace || !faces) return null;
+  const axis = freeAxis(edit.format, source.width, source.height);
+  if (!axis) return null;
+  const crop = cropRect(edit.format, source.width, source.height, 0);
+  return {
+    path: followPath(faces, edit.format, source.width, source.height, edit.cropOffset),
+    fallback: edit.cropOffset,
+    axis,
+    travel: axis === 'x' ? source.width - crop.width : source.height - crop.height,
+  };
 }
 
 /** Tempi sul video montato (secondi) di un intervallo del sorgente; null se è tutto tagliato. */
@@ -226,6 +244,7 @@ export function createRenderService(deps: RenderDeps) {
           audio: { ...edit.audio, voiceGainDb, mixGainDb },
           layers,
           firstLayerInput: edit.audio.music ? 2 : 1,
+          follow: cropFollow(project),
         }),
         'utf8',
       );

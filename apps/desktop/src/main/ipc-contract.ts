@@ -8,6 +8,7 @@ import {
   VideoEditSchema,
   VIDEO_TOOLS,
   VideoScriptSchema,
+  FaceTrackSchema,
   type ExportedFile,
   type ExportFormat,
 } from '@prisma-app/shared';
@@ -38,6 +39,7 @@ export const IPC = {
   renderStatus: 'video:render-status',
   createShort: 'video:create-short',
   generateVideo: 'video:generate',
+  saveFaces: 'video:save-faces',
   musicStatus: 'music:status',
   musicPick: 'music:pick',
   musicClear: 'music:clear',
@@ -218,6 +220,9 @@ export const RenderRequestSchema = z.union([
   }),
 ]);
 export type RenderRequest = z.input<typeof RenderRequestSchema>;
+
+/** Volti trovati nel video (6e). */
+export const SaveFacesSchema = z.object({ projectId: z.uuid(), faces: FaceTrackSchema });
 
 /** «Crea video dall'idea»: copione dell'AI, template e brand kit per le slide. */
 export const GenerateVideoRequestSchema = z.object({

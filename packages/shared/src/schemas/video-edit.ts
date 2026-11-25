@@ -86,6 +86,8 @@ export const VideoEditSchema = z.object({
   overlays: z.array(OverlaySchema).max(OVERLAY_LIMITS.max).default([]),
   /** Spezzoni o immagini che coprono il video mentre la voce continua (6d). */
   broll: z.array(BrollSchema).max(BROLL_LIMITS.max).default([]),
+  /** Il ritaglio segue il volto (6e) invece di restare a `cropOffset`; serve `project.faces`. */
+  followFace: z.boolean().default(false),
 });
 export type VideoEdit = z.infer<typeof VideoEditSchema>;
 
@@ -100,6 +102,7 @@ export const DEFAULT_VIDEO_EDIT: VideoEdit = {
   audio: DEFAULT_VIDEO_AUDIO,
   overlays: [],
   broll: [],
+  followFace: false,
 };
 
 // --- Tagli -----------------------------------------------------------------------------------

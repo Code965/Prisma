@@ -16,6 +16,7 @@ import {
   ApiRequestSchema,
   CreateShortRequestSchema,
   GenerateVideoRequestSchema,
+  SaveFacesSchema,
   RenderRequestSchema,
   FilmcraftOpenSchema,
   ExportCarouselRequestSchema,
@@ -203,6 +204,10 @@ export function registerIpcHandlers(
     const id = VideoProjectIdSchema.parse(input);
     transcription.cancel(id);
     video.removeProject(id);
+  });
+  ipcMain.handle(IPC.saveFaces, (_event, input: unknown) => {
+    const { projectId, faces } = SaveFacesSchema.parse(input);
+    return video.saveFaces(projectId, faces);
   });
   ipcMain.handle(IPC.generateVideo, (_event, input: unknown) =>
     ideaVideo.generate(GenerateVideoRequestSchema.parse(input)),

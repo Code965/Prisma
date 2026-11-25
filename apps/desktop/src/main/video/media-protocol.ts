@@ -1,5 +1,6 @@
 import { net, protocol } from 'electron';
 import { pathToFileURL } from 'node:url';
+import { APP_ASSET_SCHEME } from '../app-assets.js';
 import { brollKeyFromUrl } from './broll.js';
 import { musicFileFromUrl } from './music.js';
 
@@ -16,7 +17,19 @@ export function registerMediaScheme(): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: MEDIA_SCHEME,
-      privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true },
+      privileges: {
+        standard: true,
+        secure: true,
+        stream: true,
+        supportFetchAPI: true,
+        corsEnabled: true,
+      },
+    },
+    // File dell'app letti con fetch (WebAssembly e modello di MediaPipe, 6e).
+    {
+      scheme: APP_ASSET_SCHEME,
+      // La pagina è un file://: per il fetch verso un altro schema servono i permessi CORS.
+      privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true },
     },
   ]);
 }
@@ -53,6 +66,11 @@ export function handleMediaProtocol(
           : null;
     if (!path) return new Response('Non trovato', { status: 404 });
     // Si inoltrano gli header (Range compreso): il caricamento dei file gestisce gli intervalli.
-    return net.fetch(pathToFileURL(path).toString(), { headers: request.headers });
+    const response = await net.fetch(pathToFileURL(path).toString(), { headers: request.headers });
+    // CORS: l'analisi dei volti (6e) disegna i fotogrammi su un canvas e li legge. Il renderer
+    // resta senza fetch verso prisma-media (la CSP non lo ammette in connect-src).
+    const headers = new Headers(response.headers);
+    headers.set('access-control-allow-origin', '*');
+    return new Response(response.body, { status: response.status, headers });
   });
 }

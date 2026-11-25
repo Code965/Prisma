@@ -32,6 +32,7 @@ export * from './schemas/video-script.js';
 export * from './schemas/video-audio.js';
 export * from './schemas/video-overlays.js';
 export * from './schemas/video-enrich.js';
+export * from './schemas/video-face.js';
 export * from './schemas/metrics.js';
 export * from './schemas/analytics.js';
 export * from './schemas/insights.js';

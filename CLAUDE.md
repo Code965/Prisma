@@ -421,6 +421,44 @@ key issuance is currently paused»; si usa **Pixabay** (chiave gratuita con un a
   Rust» e B-roll `server-room-lights.mp4` trovato per nome, anteprima, export 1080×1920 in 18 s con scheda e B-roll nei
   fotogrammi. La parte di Pixabay è provata con un Pixabay finto: da provare con una chiave vera.
 
+### Inquadratura che segue il volto (6e)
+
+Scelte (proposte e confermate): MediaPipe sul computer (nessun servizio esterno), «camera morbida».
+
+- **Riconoscimento** (`services/face-detector.ts`): `@mediapipe/tasks-vision` 1.2.3 (Apache-2.0, devDependency inclusa nel
+  bundle) con il modello BlazeFace short range (`assets/models/blaze_face_short_range.tflite`, 230 KB, da
+  `storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/`, sha256 `b4578f35…`), sulla
+  CPU, modalità immagine. Il video scorre muto a velocità 8× in un `<video>` nascosto e a ogni fotogramma decodificato
+  (`requestVideoFrameCallback`), circa ogni 250 ms del sorgente (500 ms oltre i 3 minuti, `faceIntervalMs`), si disegna
+  a 320 px su un canvas e si cerca il volto: quello più grande con punteggio ≥ 0,5 (`bestFace`, centro e lato in
+  frazioni). Un errore ferma l'analisi con un messaggio; annullabile.
+- **File dell'app con fetch**: dalla build il renderer è un `file://`, dove `fetch` non funziona. WebAssembly e modello
+  (emessi da Vite con `?url`) passano dal protocollo `prisma-app://assets/<file>` (`src/main/app-assets.ts`: solo nomi
+  semplici `.wasm/.js/.tflite` della cartella `out/renderer/assets`, `application/wasm`, `corsEnabled` e
+  `access-control-allow-origin` perché la pagina ha origine «null»). CSP: `script-src 'self' 'wasm-unsafe-eval'`,
+  `connect-src … prisma-app:` (non `prisma-media:`: i video restano illeggibili con fetch). Anche `prisma-media` ora ha
+  `corsEnabled` e l'header CORS, e il `<video>` dell'analisi ha `crossOrigin`: senza, il canvas risulta «tainted» e
+  MediaPipe non ne legge i pixel. In `img-src` c'è anche `prisma-media:` (immagini del B-roll della 6d).
+- **Dati** (`packages/shared/src/schemas/video-face.ts`): `project.faces` (`FaceTrackSchema`: campioni con istante e
+  centro/lato o null, copertura, modello) salvato con l'IPC `video:save-faces`; `edit.followFace` (default false,
+  contato da `videoRenderKey` solo se acceso, insieme all'analisi).
+- **Camera morbida** (`followPath`, pura e testata): sull'asse libero del formato (`freeAxis`: x per 9:16 da 16:9, y per
+  16:9 da verticale, nessuno se coincidono) la camera sta ferma finché il volto resta nella zona centrale (12% del
+  ritaglio); quando ne esce accelera verso il volto con velocità massima 0,6 ritagli al secondo, rallenta in arrivo e
+  si ferma; senza volto resta dov'è. Il tempo vero tra i campioni conta (non sono regolari). Il percorso si semplifica
+  (Ramer–Douglas–Peucker, tolleranza 0,004) tenendo sempre partenze e arresti; `followOffsetAt` interpola.
+- **Render** (`followCropPosition` in `render-plan.ts`, `cropFollow` in `render.ts`): per ogni parte rimasta la
+  posizione del `crop` diventa un'espressione di `t` tra apici (lineare a tratti sui punti del percorso dentro la
+  parte, `followSegment`), più lo spostamento verso il centro dello zoom.
+- **Editor** (`FollowFaceControl.tsx`, logica in `services/face.ts`, hook `useFaceAnalysis`): «Segui il volto» accanto ai
+  formati (solo se il formato lascia un asse libero); la prima volta analizza («Cerco il volto… 45%», «Annulla») e si
+  accende solo se un volto c'è; poi accende/spegne. Il riquadro dell'anteprima segue il percorso; trascinarlo a mano
+  spegne «Segui il volto».
+- Provato con FFmpeg 9.1 (espressione nel grafo da file, ritaglio che si sposta) e nell'app vera su una cartella dei
+  dati a parte: WebAssembly e modello caricati da `prisma-app` con la CSP della build, 5 s di video analizzati in 1 s e
+  salvati, export 1080×1920 con il ritaglio che segue una traccia di prova. Una faccina emoji non viene riconosciuta
+  come volto (BlazeFace è fatto per volti veri): la precisione va provata su un video vero.
+
 ### «Crea video dall'idea» (6c)
 
 - **Copione** (`POST /video/script` con `ideaId` o `variantId`, `modules/ai/video-script.ts`,
@@ -1027,7 +1065,7 @@ subscribersLost`, `dimensions=day` (gli ultimi giorni arrivano in ritardo). Ness
 - [x] 4. API CRUD (brand, idee/tag, contenuti, variant + transizioni, pubblicazioni)
 - [x] 5. Cifratura AES-256-GCM e scheduler (test concorrenza, retry, idempotenza)
 - [x] 6. `LlmProvider` DeepSeek: generazione variant, chat di modifica con revisioni
-- [x] 7. LinkedIn: verifica docs, OAuth, `LinkedInAdapter` con test su mock (manca la prova con l'app LinkedIn reale)
+- [x] 7. LinkedIn: verifica docs, OAuth, `LinkedInAdapter` con test su mock; provato con l'app LinkedIn reale (collegamento e primo post, novembre 2026)
 - [x] 8. Desktop: shell Electron, token, Sidebar, PlatformIcon
 - [x] 9. Schermate, in quattro passi:
   - [x] 9a. Collegamento desktop ↔ server, Impostazioni minime, schermata Idee
@@ -1095,7 +1133,7 @@ PC con le proprie chiavi e app sviluppatore; licenza AGPL-3.0; repository pubbli
       parola
 - [x] 6b. Audio: pulizia, volume uniforme, musica da una cartella dell'utente con ducking
 - [x] 6d. B-roll (cartella dell'utente e Pixabay) e schede di testo in sovrimpressione
-- [ ] 6e. Inquadratura che segue il volto
+- [x] 6e. Inquadratura che segue il volto (MediaPipe sul computer, camera morbida)
 - [ ] 6f. Registrazione nell'app (webcam, schermo, microfono)
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram

@@ -9,13 +9,16 @@ import { rendererConfig } from './renderer.config.js';
  */
 const CSP = [
   "default-src 'self'",
-  "script-src 'self'",
+  // WebAssembly di MediaPipe per l'inquadratura che segue il volto (6e): niente eval di JavaScript.
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
+  // Immagini del B-roll (6d) dal protocollo prisma-media.
+  "img-src 'self' data: https: prisma-media:",
   "font-src 'self' data:",
   // Video dei progetti, serviti dal main con il protocollo prisma-media.
   "media-src 'self' prisma-media:",
-  "connect-src 'self' http://localhost:* http://127.0.0.1:* https:",
+  // prisma-app: solo i file dell'app (MediaPipe); prisma-media resta fuori: i video non si leggono.
+  "connect-src 'self' http://localhost:* http://127.0.0.1:* https: prisma-app:",
 ].join('; ');
 
 const cspMeta: Plugin = {
