@@ -11,3 +11,9 @@ function parseHex(hex: string): number[] {
   if (!match) throw new Error(`Colore non valido: ${hex}`);
   return match.slice(1).map((part) => parseInt(part, 16));
 }
+
+/** `#RRGGBB` con trasparenza, come `rgba(…)`. */
+export function hexAlpha(hex: string, alpha: number): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Math.round(alpha * 1000) / 1000})`;
+}

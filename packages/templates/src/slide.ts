@@ -3,13 +3,16 @@ import {
   SLIDE_FONTS,
   fontStack,
   isDefaultFonts,
+  resolveTemplate,
   slideListItems,
   type BrandFonts,
   type BrandKit,
   type Carousel,
   type Slide,
+  type TemplateStyle,
 } from '@prisma-app/shared';
-import { templatePalette, type Palette } from './palette.js';
+import { hexAlpha } from './colors.js';
+import { tonePalette, type Palette } from './palette.js';
 
 /** Formato delle slide: 4:5, quello consigliato per i caroselli di Instagram e LinkedIn. */
 export const SLIDE_SIZE = { width: 1080, height: 1350 } as const;
@@ -44,12 +47,13 @@ export function escapeHtml(text: string): string {
 export function renderSlideHtml(context: SlideContext): string {
   const { carousel, index, kit } = context;
   if (!carousel.slides[index]) throw new RangeError(`Slide ${index + 1} inesistente`);
-  const palette = templatePalette(carousel.template, kit.colors);
+  const style = slideStyle(context);
+  const palette = tonePalette(style.tone, kit.colors);
   // Una slide sola non scorre mai: niente barre anche se la finestra è più piccola.
   const singleCss = 'html,body{overflow:hidden}';
   return documentHtml(
     context.fontFaceCss,
-    slideCss(palette, kitFonts(kit)) + singleCss,
+    slideCss(palette, kitFonts(kit)) + styleCss(style, palette, kit) + singleCss,
     slideMarkup(context, index),
   );
 }
@@ -59,14 +63,15 @@ export function renderSlideHtml(context: SlideContext): string {
  * LinkedIn (stampato da Electron con `preferCSSPageSize`).
  */
 export function renderCarouselPdfHtml(context: Omit<SlideContext, 'index'>): string {
-  const palette = templatePalette(context.carousel.template, context.kit.colors);
+  const style = slideStyle(context);
+  const palette = tonePalette(style.tone, context.kit.colors);
   const pages = context.carousel.slides.map((_, index) =>
     slideMarkup({ ...context, index }, index),
   );
   const pageCss = `@page{size:${SLIDE_SIZE.width}px ${SLIDE_SIZE.height}px;margin:0}.slide{break-after:page}.slide:last-child{break-after:auto}`;
   return documentHtml(
     context.fontFaceCss,
-    slideCss(palette, kitFonts(context.kit)) + pageCss,
+    slideCss(palette, kitFonts(context.kit)) + styleCss(style, palette, context.kit) + pageCss,
     pages.join(''),
   );
 }
@@ -76,6 +81,7 @@ export function renderCarouselPdfHtml(context: Omit<SlideContext, 'index'>): str
  * corrispondono più al carosello. Server e app ne calcolano lo sha256 per confrontarli.
  */
 export function renderInputKey(carousel: Carousel, kit: BrandKit, initials: string): string {
+  const resolved = resolveTemplate(carousel.template, kit.templates);
   return JSON.stringify({
     carousel: {
       template: carousel.template,
@@ -92,6 +98,8 @@ export function renderInputKey(carousel: Carousel, kit: BrandKit, initials: stri
     handle: kit.handle,
     logo: kit.logo,
     initials: initials.slice(0, 3),
+    // Lo stile di un template del kit cambia l'aspetto anche a parità di id.
+    ...(resolved.custom ? { style: resolved.style } : {}),
     // Solo se cambiati: gli export fatti prima della scelta dei font restano aggiornati.
     ...(isDefaultFonts(kitFonts(kit)) ? {} : { fonts: kitFonts(kit) }),
   });
@@ -111,19 +119,117 @@ ${body}
 </html>`;
 }
 
+/** Stile del template del carosello (pronto o del kit). */
+function slideStyle(context: Pick<SlideContext, 'carousel' | 'kit'>): TemplateStyle {
+  return resolveTemplate(context.carousel.template, context.kit.templates).style;
+}
+
+/**
+ * Struttura della slide. Con logo e numerazione in basso è quella di sempre (le slide dei tre
+ * template della fase 2 restano identiche); gli stili della fase 7b spostano segno e numeri.
+ */
 function slideMarkup(context: SlideContext, index: number): string {
   const { carousel, kit } = context;
+  const style = slideStyle(context);
   const slide = carousel.slides[index]!;
+  const kicker = `<span class="kicker">${escapeHtml(kickerText(carousel, style))}</span>`;
+  const brand = `${brandMark(context)}${handle(kit)}`;
+  const count = `<span class="count">${index + 1} / ${carousel.slides.length}</span>`;
+  const percent = Math.round(((index + 1) / carousel.slides.length) * 100);
+  const progress = `<span class="progress"><span style="width:${percent}%"></span></span>`;
+  const topRight =
+    (style.logo === 'top' ? `<span class="brand">${brand}</span>` : '') +
+    (style.numbering === 'top' ? count : '');
+  const top = topRight ? `<header>${kicker}${topRight}</header>` : kicker;
+  const bottom =
+    (style.logo === 'bottom' ? brand : '') +
+    (style.numbering === 'bottom' ? count : style.numbering === 'progress' ? progress : '');
+  const deco = hasDecorationElement(style) ? '<div class="deco"></div>\n' : '';
   return `<main class="slide">
-<span class="kicker">${escapeHtml(kickerText(carousel))}</span>
+${deco}${top}
 <div class="content ${slide.kind}">${slideContent(slide)}</div>
-<footer>${brandMark(context)}${handle(kit)}<span class="count">${index + 1} / ${carousel.slides.length}</span></footer>
+<footer>${bottom}</footer>
 </main>`;
 }
 
-function kickerText(carousel: Carousel): string {
+function kickerText(carousel: Carousel, style: TemplateStyle): string {
   if (!carousel.kicker) return '';
-  return carousel.template === 'codice' ? `$ cat ${carousel.kicker}` : `// ${carousel.kicker}`;
+  return style.tone === 'codice' ? `$ cat ${carousel.kicker}` : `// ${carousel.kicker}`;
+}
+
+function hasDecorationElement(style: TemplateStyle): boolean {
+  return style.decoration !== 'none' && style.decoration !== 'rule';
+}
+
+/** Dimensioni dei titoli del template di base, moltiplicate da `titleScale`. */
+const TITLE_SIZES = { base: 75, cover: 100, code: 70, cta: 85 } as const;
+
+/** CSS aggiunto dallo stile: vuoto per quello di base (le slide restano identiche a prima). */
+function styleCss(style: TemplateStyle, p: Palette, kit: BrandKit): string {
+  const rules: string[] = [];
+  const bg = style.background;
+  if (bg.kind === 'gradient') {
+    rules.push(
+      `.slide{background:linear-gradient(${bg.angle}deg,${kit.colors[bg.from]},${kit.colors[bg.to]})}`,
+    );
+  } else if (bg.kind === 'image') {
+    const veil = hexAlpha(p.bg, bg.dim);
+    rules.push(
+      `.slide{background:linear-gradient(${veil},${veil}),url("${bg.image}") center/cover no-repeat ${p.bg}}`,
+    );
+  }
+  if (hasDecorationElement(style)) {
+    rules.push(
+      '.slide{position:relative}.slide>*{position:relative;z-index:1}.slide>.deco{position:absolute;z-index:0;pointer-events:none}',
+      decorationCss(style, p),
+    );
+  }
+  if (style.decoration === 'rule') {
+    rules.push(
+      `.title::before{content:"";display:block;width:120px;height:8px;margin:0 0 40px;border-radius:4px;background:${p.accent}}`,
+    );
+  }
+  if (style.logo === 'top' || style.numbering === 'top') {
+    rules.push(
+      'header{display:flex;align-items:center;gap:25px;min-height:70px}header .kicker{flex:1;min-height:0}.brand{display:flex;align-items:center;gap:25px}header .count{margin-left:0}',
+    );
+  }
+  if (style.logo !== 'bottom' && style.numbering !== 'bottom' && style.numbering !== 'progress') {
+    rules.push('footer{min-height:70px}');
+  }
+  if (style.numbering === 'progress') {
+    rules.push(
+      `.progress{margin-left:auto;width:220px;height:8px;border-radius:4px;background:${hexAlpha(p.fg, 0.18)};overflow:hidden}.progress span{display:block;height:100%;border-radius:4px;background:${p.accent}}`,
+    );
+  }
+  if (style.titleScale !== 1) {
+    const size = (px: number) => `${Math.round(px * style.titleScale)}px`;
+    rules.push(
+      `.title{font-size:${size(TITLE_SIZES.base)}}.cover .title{font-size:${size(TITLE_SIZES.cover)}}.code .title{font-size:${size(TITLE_SIZES.code)}}.cta .title{font-size:${size(TITLE_SIZES.cta)}}`,
+    );
+  }
+  if (style.uppercase) rules.push('.title{text-transform:uppercase;letter-spacing:-0.01em}');
+  if (style.align === 'center') {
+    rules.push(
+      '.content{align-items:center;text-align:center}.title::before{margin-left:auto;margin-right:auto}.items,.content pre{align-self:stretch;text-align:left}',
+    );
+  }
+  return rules.join('\n');
+}
+
+function decorationCss(style: TemplateStyle, p: Palette): string {
+  switch (style.decoration) {
+    case 'blob':
+      return `.deco{inset:0;background:radial-gradient(circle at 88% 10%,${hexAlpha(p.accent, 0.42)} 0,transparent 42%),radial-gradient(circle at 6% 96%,${hexAlpha(p.accent, 0.22)} 0,transparent 38%)}`;
+    case 'grid':
+      return `.deco{inset:0;background-image:linear-gradient(${hexAlpha(p.fg, 0.1)} 2px,transparent 2px),linear-gradient(90deg,${hexAlpha(p.fg, 0.1)} 2px,transparent 2px);background-size:90px 90px;background-position:-1px -1px}`;
+    case 'dots':
+      return `.deco{inset:0;background-image:radial-gradient(${hexAlpha(p.fg, 0.16)} 3px,transparent 3.5px);background-size:45px 45px}`;
+    case 'corner':
+      return `.deco{top:-220px;right:-220px;width:620px;height:620px;border-radius:50%;background:${hexAlpha(p.fg, 0.12)};box-shadow:0 0 0 90px ${hexAlpha(p.fg, 0.06)}}`;
+    default:
+      return '';
+  }
 }
 
 function slideContent(slide: Slide): string {

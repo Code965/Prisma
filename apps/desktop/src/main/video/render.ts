@@ -11,7 +11,7 @@ import {
   freeAxis,
   layoutBoxes,
   type BrandKit,
-  type CarouselTemplate,
+  type TemplateId,
   editedDurationMs,
   keptRanges,
   zoomedParts,
@@ -73,7 +73,7 @@ export interface RenderDeps {
 /** Brand kit e template con cui disegnare le schede; senza, quelli predefiniti. */
 export interface RenderLook {
   kit: BrandKit;
-  template: CarouselTemplate;
+  template: TemplateId;
 }
 
 /** Proporzioni del riquadro della webcam: quelle del formato o del suo posto nel layout (6f). */

@@ -6,12 +6,14 @@ import {
   PLATFORM_LABELS,
   TEXT_FONT_IDS,
   type BrandColorRole,
+  resolveTemplate,
   type BrandKit,
   type Carousel,
-  type CarouselTemplate,
+  type TemplateId,
   type SlideFontId,
   type VoiceExample,
 } from '@prisma-app/shared';
+import { tonePalette } from '@prisma-app/templates';
 
 /** Parte del kit modificata nel pannello «Brand kit» (le regole della voce si salvano subito). */
 export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'videoTemplate' | 'fonts'>;
@@ -99,7 +101,7 @@ export function logoFileError(file: { type: string; size: number }): string | nu
  * Carosello di prova della galleria (7a): copertina, elenco e codice, disegnati con il vero
  * renderer delle slide, così colori, font, logo e handle del kit si vedono come nell'export.
  */
-export function galleryCarousel(template: CarouselTemplate): Carousel {
+export function galleryCarousel(template: TemplateId): Carousel {
   return {
     template,
     kicker: 'prisma',
@@ -129,4 +131,17 @@ export function galleryCarousel(template: CarouselTemplate): Carousel {
 /** Il kit mostrato nella galleria: quello salvato con le modifiche ancora in bozza. */
 export function draftKit(kit: BrandKit, draft: KitDraft): BrandKit {
   return { ...kit, ...draft, handle: draft.handle.trim().replace(/^@+/, '') };
+}
+
+/** Campione di un template per i selettori: il suo fondo (anche sfumato) con i colori del kit. */
+export function templateSwatch(
+  id: TemplateId,
+  kit: Pick<BrandKit, 'colors' | 'templates'>,
+): string {
+  const { style } = resolveTemplate(id, kit.templates);
+  const bg = style.background;
+  if (bg.kind === 'gradient') {
+    return `linear-gradient(${bg.angle}deg, ${kit.colors[bg.from]}, ${kit.colors[bg.to]})`;
+  }
+  return tonePalette(style.tone, kit.colors).bg;
 }

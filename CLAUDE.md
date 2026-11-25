@@ -1234,8 +1234,24 @@ modifica».
 - Provato nel browser con il server su un database di prova (configurazione `server` in `.claude/launch.json`, che
   usa `%TEMP%\prisma-prova`): font scelti caricati nelle slide, salvataggio e ricaricamento, tema scuro; build con i
   32 file dei font accanto al main.
-- [ ] 7b. Modello del template personalizzato (sfondo, forme decorative, logo e numerazione, tipografia) e nuovi stili
+- [x] 7b. Modello del template personalizzato (sfondo, forme decorative, logo e numerazione, tipografia) e nuovi stili
       pronti costruiti con lo stesso modello
+- **Modello** (`packages/shared/src/schemas/template-style.ts`): `TemplateStyle` = `tone` (scuro, chiaro, codice,
+  accento: da quale combinazione del kit nascono testo, accento e codice, `tonePalette`), `background` (tinta del tono,
+  gradiente tra due ruoli del kit con angolo, foto ≤ 600 KB come data URL con velo `dim`), `decoration` (bagliore,
+  griglia, puntini, angolo, filetto sopra il titolo), `logo` e `numbering` (in basso, in alto, barra di avanzamento,
+  nessuno), `titleScale` 0,8–1,3, `uppercase`, `align`. Colori sempre per ruolo, così il template segue il kit.
+- **Template**: `CAROUSEL_TEMPLATES` ora ha 7 stili pronti (`BUILTIN_TEMPLATE_STYLES`: i 3 di prima più Gradiente,
+  Editoriale, Bold, Griglia); quelli dell'utente stanno in `kit.templates` (max 12, id `tpl-` + 8 caratteri,
+  `CustomTemplateSchema`) e i caroselli li indicano con `TemplateIdSchema`. `resolveTemplate` (un template del kit
+  eliminato torna a Tech scuro), `templateChoices` per i selettori. `brand-colors.ts` separa i colori dal kit (import
+  circolari).
+- **Renderer** (`slide.ts`): `styleCss` aggiunge CSS e `slideMarkup` cambia struttura solo se lo stile non è quello di
+  base, quindi i tre stili di prima danno HTML identico byte per byte (verificato su tutte le slide, PDF e schede
+  video). `renderInputKey` include lo stile dei template del kit. Le schede dei video prendono il tono del template.
+- **UI**: nell'editor carosello un menu «Stili pronti / I tuoi template» con il campione del fondo (`templateSwatch`),
+  nel brand kit i template dei video con il campione, in galleria tutti gli stili. Provato nel browser con il server
+  su un database di prova: anteprime dei 4 nuovi stili, carosello salvato con `bold`.
 - [ ] 7c. Editor del template con anteprima dal vivo, «Duplica e modifica», template predefinito per formato
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram

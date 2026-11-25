@@ -120,28 +120,22 @@
   padding: 0 6px 0 8px;
 }
 
-.templateButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+.templateSelect {
   height: 32px;
-  padding: 0 10px;
-  border-radius: 7px;
+  padding: 0 8px;
   border: 0;
-  background: transparent;
-  color: var(--muted);
+  border-radius: 7px;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.templateOn {
-  background: var(--panel);
-  color: var(--text);
-}
-
 .swatch {
+  flex: none;
+  margin-left: 2px;
   width: 14px;
   height: 14px;
   border-radius: 4px;

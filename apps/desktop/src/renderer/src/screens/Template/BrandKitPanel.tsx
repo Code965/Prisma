@@ -1,10 +1,4 @@
-import {
-  CAROUSEL_TEMPLATES,
-  CAROUSEL_TEMPLATE_LABELS,
-  SLIDE_FONTS,
-  fontStack,
-  type BrandKit,
-} from '@prisma-app/shared';
+import { templateChoices, SLIDE_FONTS, fontStack, type BrandKit } from '@prisma-app/shared';
 import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/Button/Button';
 import { slideFontFaceCss } from '../../components/SlideFrame/slide-fonts';
@@ -17,6 +11,7 @@ import {
   LOGO_TYPES,
   colorRows,
   fontSample,
+  templateSwatch,
   isDraftChanged,
   kitDraft,
   logoFileError,
@@ -199,15 +194,20 @@ export function BrandKitPanel({ kit, draft, onChange }: BrandKitPanelProps) {
       <div className={styles.group}>
         <span className={styles.groupLabel}>Template dei video</span>
         <div role="group" aria-label="Template dei video" className={styles.videoTemplates}>
-          {CAROUSEL_TEMPLATES.map((template) => (
+          {templateChoices(kit.templates).map((choice) => (
             <button
-              key={template}
+              key={choice.id}
               type="button"
-              aria-pressed={draft.videoTemplate === template}
-              className={`${styles.videoTemplate} ${draft.videoTemplate === template ? styles.videoTemplateOn : ''}`}
-              onClick={() => onChange({ ...draft, videoTemplate: template })}
+              aria-pressed={draft.videoTemplate === choice.id}
+              className={`${styles.videoTemplate} ${draft.videoTemplate === choice.id ? styles.videoTemplateOn : ''}`}
+              onClick={() => onChange({ ...draft, videoTemplate: choice.id })}
             >
-              {CAROUSEL_TEMPLATE_LABELS[template]}
+              <span
+                aria-hidden
+                className={styles.videoSwatch}
+                style={{ background: templateSwatch(choice.id, { ...kit, colors: draft.colors }) }}
+              />
+              {choice.label}
             </button>
           ))}
         </div>

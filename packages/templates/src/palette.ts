@@ -1,4 +1,10 @@
-import type { BrandColors, CarouselTemplate } from '@prisma-app/shared';
+import {
+  resolveTemplate,
+  type BrandColors,
+  type CustomTemplate,
+  type TemplateId,
+  type TemplateTone,
+} from '@prisma-app/shared';
 import { mixHex } from './colors.js';
 
 /** Colori di una slide, ricavati dal brand kit secondo il template (V3Carosello). */
@@ -19,9 +25,18 @@ const BLACK = '#000000';
  * Tech scuro (inchiostro, accento tenue), Minimal chiaro (carta, accento), Terminale
  * (inchiostro virato sull'accento, codice in evidenza).
  */
-export function templatePalette(template: CarouselTemplate, colors: BrandColors): Palette {
+export function templatePalette(
+  template: TemplateId,
+  colors: BrandColors,
+  templates?: readonly CustomTemplate[],
+): Palette {
+  return tonePalette(resolveTemplate(template, templates).style.tone, colors);
+}
+
+/** Colori di un tono (7b): gli stili pronti e i template del kit ne scelgono uno. */
+export function tonePalette(tone: TemplateTone, colors: BrandColors): Palette {
   const { ink, paper, accent, accentSoft, code } = colors;
-  switch (template) {
+  switch (tone) {
     case 'scuro':
       return {
         bg: ink,
@@ -55,5 +70,16 @@ export function templatePalette(template: CarouselTemplate, colors: BrandColors)
         codeFg: code,
       };
     }
+    case 'accento':
+      // Fondo pieno del colore accento, testo chiaro; numeri e accenti nell'inchiostro.
+      return {
+        bg: accent,
+        fg: mixHex(paper, accent, 0.96),
+        soft: mixHex(paper, accent, 0.84),
+        muted: mixHex(paper, accent, 0.66),
+        accent: ink,
+        codeBg: mixHex(ink, accent, 0.88),
+        codeFg: code,
+      };
   }
 }

@@ -16,6 +16,7 @@ export * from './schemas/brand-kit.js';
 export * from './schemas/fonts.js';
 export * from './schemas/idea.js';
 export * from './schemas/carousel.js';
+export * from './schemas/template-style.js';
 export * from './schemas/asset.js';
 export * from './schemas/transcript.js';
 export * from './schemas/video.js';

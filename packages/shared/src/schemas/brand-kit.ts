@@ -1,39 +1,18 @@
 import { BrandFontsSchema, DEFAULT_BRAND_FONTS } from './fonts.js';
 import { z } from 'zod';
 import { PlatformSchema } from '../domain/platforms.js';
-import { CAROUSEL_TEMPLATES } from './carousel.js';
+import { BrandColorsSchema } from './brand-colors.js';
+import { TemplateIdSchema } from './carousel.js';
+import { CustomTemplateSchema } from './template-style.js';
 import { IdSchema, InstantSchema } from './common.js';
 
 /**
  * Brand kit (V3Template): colori con un ruolo fisso, così i template dei caroselli sanno
  * quale usare per sfondo, testo, accento e codice; handle e logo per il piede delle slide;
- * regole della voce passate all'LLM. I font sono fissi (Inter e JetBrains Mono, inclusi nell'app).
+ * regole della voce passate all'LLM, font (7a) e template personalizzati (7b).
  */
 
-export const HexColorSchema = z
-  .string()
-  .regex(/^#[0-9a-fA-F]{6}$/, 'Colore esadecimale #RRGGBB')
-  .transform((hex) => hex.toUpperCase());
-
-export const BRAND_COLOR_ROLES = ['ink', 'paper', 'accent', 'accentSoft', 'code'] as const;
-export type BrandColorRole = (typeof BRAND_COLOR_ROLES)[number];
-
-export const BRAND_COLOR_LABELS: Record<BrandColorRole, { name: string; use: string }> = {
-  ink: { name: 'Inchiostro', use: 'testo e sfondi scuri' },
-  paper: { name: 'Carta', use: 'sfondi chiari' },
-  accent: { name: 'Accento', use: 'evidenze e numeri' },
-  accentSoft: { name: 'Accento tenue', use: 'sottotitoli su sfondo scuro' },
-  code: { name: 'Codice', use: 'snippet e terminale' },
-};
-
-export const BrandColorsSchema = z.object({
-  ink: HexColorSchema,
-  paper: HexColorSchema,
-  accent: HexColorSchema,
-  accentSoft: HexColorSchema,
-  code: HexColorSchema,
-});
-export type BrandColors = z.infer<typeof BrandColorsSchema>;
+export * from './brand-colors.js';
 
 /** Logo come data URL (≤ 256 KB): va nelle slide esportate senza dipendere da file esterni. */
 export const LOGO_MAX_BYTES = 256 * 1024;
@@ -61,9 +40,11 @@ export const BrandKitSchema = z.object({
    * Template dei video: slide di «Crea video», schede di testo e fondo attorno allo schermo
    * (il codice usa sempre «Terminale»). Assente nei kit salvati prima: «Tech scuro».
    */
-  videoTemplate: z.enum(CAROUSEL_TEMPLATES).default('scuro'),
+  videoTemplate: TemplateIdSchema.default('scuro'),
   /** Font di titoli, testo e codice (fase 7a). Assenti nei kit salvati prima: Inter e JetBrains Mono. */
   fonts: BrandFontsSchema.default(DEFAULT_BRAND_FONTS),
+  /** Template creati dall'utente (7b/7c); i caroselli li indicano con l'id `tpl-…`. */
+  templates: z.array(CustomTemplateSchema).max(12).default([]),
 });
 export type BrandKit = z.infer<typeof BrandKitSchema>;
 
@@ -81,6 +62,7 @@ export const DEFAULT_BRAND_KIT: BrandKit = {
   voiceRules: [],
   videoTemplate: 'scuro',
   fonts: DEFAULT_BRAND_FONTS,
+  templates: [],
 };
 
 export const VoiceExampleInputSchema = z.object({

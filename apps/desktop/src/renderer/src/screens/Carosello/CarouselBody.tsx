@@ -1,13 +1,12 @@
 import {
   CAROUSEL_LIMITS,
-  CAROUSEL_TEMPLATES,
-  CAROUSEL_TEMPLATE_LABELS,
+  templateChoices,
+  type TemplateId,
   PLATFORM_LABELS,
   type Carousel,
   type Content,
   type Variant,
 } from '@prisma-app/shared';
-import { templatePalette } from '@prisma-app/templates';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
@@ -29,6 +28,7 @@ import {
   removeSlide,
   type CarouselEdit,
 } from '../../services/carousel';
+import { templateSwatch } from '../../services/brand-kit';
 import { canExportHere } from '../../services/exports';
 import { isReadOnly } from '../../services/studio';
 import styles from './Carosello.module.css';
@@ -55,6 +55,7 @@ export function CarouselBody(props: CarouselBodyProps) {
   const [draft, setDraft] = useState<Carousel>(saved);
   const render = useSlideRenderer();
   const kit = useBrandKit().data;
+  const choices = templateChoices(kit?.templates);
   const save = useSaveVariant(content.id);
   const readOnly = isReadOnly(variant.status);
   const dirty = isCarouselChanged(draft, saved);
@@ -83,26 +84,43 @@ export function CarouselBody(props: CarouselBodyProps) {
       }
       actions={
         <div className={styles.headerActions}>
-          <div role="group" aria-label="Template" className={styles.templates}>
+          <label className={styles.templates}>
             <span className={styles.templatesLabel}>Template</span>
-            {CAROUSEL_TEMPLATES.map((template) => {
-              const on = template === draft.template;
-              const swatch = kit ? templatePalette(template, kit.colors).bg : undefined;
-              return (
-                <button
-                  key={template}
-                  type="button"
-                  aria-pressed={on}
-                  disabled={readOnly}
-                  className={`${styles.templateButton} ${on ? styles.templateOn : ''}`}
-                  onClick={() => setDraft({ ...draft, template })}
-                >
-                  <span aria-hidden className={styles.swatch} style={{ background: swatch }} />
-                  {CAROUSEL_TEMPLATE_LABELS[template]}
-                </button>
-              );
-            })}
-          </div>
+            <span
+              aria-hidden
+              className={styles.swatch}
+              style={{ background: kit ? templateSwatch(draft.template, kit) : undefined }}
+            />
+            <select
+              value={draft.template}
+              disabled={readOnly}
+              className={styles.templateSelect}
+              onChange={(event) =>
+                setDraft({ ...draft, template: event.target.value as TemplateId })
+              }
+            >
+              <optgroup label="Stili pronti">
+                {choices
+                  .filter((choice) => !choice.custom)
+                  .map((choice) => (
+                    <option key={choice.id} value={choice.id}>
+                      {choice.label}
+                    </option>
+                  ))}
+              </optgroup>
+              {choices.some((choice) => choice.custom) ? (
+                <optgroup label="I tuoi template">
+                  {choices
+                    .filter((choice) => choice.custom)
+                    .map((choice) => (
+                      <option key={choice.id} value={choice.id}>
+                        {choice.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ) : null}
+            </select>
+          </label>
           <ExportButtons
             exporter={exporter}
             platform={variant.platform}

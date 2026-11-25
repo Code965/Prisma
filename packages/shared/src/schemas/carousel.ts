@@ -17,14 +17,40 @@ export const SLIDE_KIND_LABELS: Record<SlideKind, string> = {
   cta: 'Chiusura',
 };
 
-export const CAROUSEL_TEMPLATES = ['scuro', 'chiaro', 'codice'] as const;
+/** Stili pronti (7b: i primi tre ci sono dalla fase 2, gli altri costruiti con lo stesso modello). */
+export const CAROUSEL_TEMPLATES = [
+  'scuro',
+  'chiaro',
+  'codice',
+  'gradiente',
+  'editoriale',
+  'bold',
+  'griglia',
+] as const;
 export type CarouselTemplate = (typeof CAROUSEL_TEMPLATES)[number];
 
 export const CAROUSEL_TEMPLATE_LABELS: Record<CarouselTemplate, string> = {
   scuro: 'Tech scuro',
   chiaro: 'Minimal chiaro',
   codice: 'Terminale',
+  gradiente: 'Gradiente',
+  editoriale: 'Editoriale',
+  bold: 'Bold',
+  griglia: 'Griglia',
 };
+
+/** Template creato dall'utente e salvato nel brand kit: `tpl-` e 8 caratteri. */
+export const CustomTemplateIdSchema = z
+  .string()
+  .regex(/^tpl-[a-z0-9]{8}$/, 'Id di template non valido') as z.ZodType<`tpl-${string}`>;
+
+/** Template di un carosello: uno stile pronto o uno del kit. */
+export const TemplateIdSchema = z.union([z.enum(CAROUSEL_TEMPLATES), CustomTemplateIdSchema]);
+export type TemplateId = z.infer<typeof TemplateIdSchema>;
+
+export function isBuiltinTemplate(id: string): id is CarouselTemplate {
+  return (CAROUSEL_TEMPLATES as readonly string[]).includes(id);
+}
 
 /**
  * Limiti dell'editor. Titolo consigliato ≤ 60 caratteri (contatore del mockup), massimo duro più
@@ -51,7 +77,7 @@ export const SlideSchema = z.object({
 export type Slide = z.infer<typeof SlideSchema>;
 
 export const CarouselSchema = z.object({
-  template: z.enum(CAROUSEL_TEMPLATES).default('scuro'),
+  template: TemplateIdSchema.default('scuro'),
   /** Etichetta in alto in ogni slide (es. "client-db"): "// client-db" o "$ cat client-db". */
   kicker: z.string().trim().max(CAROUSEL_LIMITS.kickerMax).default(''),
   slides: z.array(SlideSchema).min(CAROUSEL_LIMITS.minSlides).max(CAROUSEL_LIMITS.maxSlides),

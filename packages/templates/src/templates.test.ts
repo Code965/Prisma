@@ -1,4 +1,9 @@
-import { CarouselSchema, DEFAULT_BRAND_KIT, type Carousel } from '@prisma-app/shared';
+import {
+  BUILTIN_TEMPLATE_STYLES,
+  CarouselSchema,
+  DEFAULT_BRAND_KIT,
+  type Carousel,
+} from '@prisma-app/shared';
 import { describe, expect, it } from 'vitest';
 import { mixHex } from './colors.js';
 import { templatePalette } from './palette.js';
@@ -126,5 +131,59 @@ describe('font del kit', () => {
     expect(html).toContain("font-family:'Manrope',system-ui,sans-serif");
     expect(html).toContain("'Fira Code',ui-monospace");
     expect(html).not.toContain('JetBrains');
+  });
+});
+
+describe('stili della fase 7b', () => {
+  it('gradiente: fondo sfumato, bagliore e barra di avanzamento', () => {
+    const html = render(1, { template: 'gradiente' });
+    expect(html).toContain('linear-gradient(155deg,#101318,#4F46E5)');
+    expect(html).toContain('<div class="deco"></div>');
+    expect(html).toContain('<span class="progress"><span style="width:50%"></span></span>');
+    expect(html).not.toContain('class="count"');
+  });
+
+  it('editoriale: segno e numeri in alto, titoli centrati con filetto', () => {
+    const html = render(0, { template: 'editoriale' });
+    expect(html).toMatch(
+      /<header><span class="kicker">.*<span class="brand">.*<span class="count">1 \/ 4<\/span><\/header>/,
+    );
+    expect(html).toContain('<footer></footer>');
+    expect(html).toContain('.title::before');
+    expect(html).toContain('.content{align-items:center;text-align:center}');
+  });
+
+  it('bold: fondo accento e titoli maiuscoli più grandi', () => {
+    const html = render(0, { template: 'bold' });
+    expect(html).toContain('background:#4F46E5');
+    expect(html).toContain('text-transform:uppercase');
+    expect(html).toContain('.cover .title{font-size:115px}');
+  });
+
+  it('template del kit: stile usato nelle slide e nella chiave degli export', () => {
+    const style = {
+      ...BUILTIN_TEMPLATE_STYLES.griglia,
+      background: { kind: 'image' as const, image: 'data:image/jpeg;base64,AA==', dim: 0.5 },
+      logo: 'none' as const,
+    };
+    const kit = {
+      ...DEFAULT_BRAND_KIT,
+      templates: [{ id: 'tpl-abc12345' as const, name: 'Mio', style }],
+    };
+    const html = render(0, { template: 'tpl-abc12345' }, kit);
+    expect(html).toContain('url("data:image/jpeg;base64,AA==") center/cover');
+    expect(html).not.toContain('class="mark"');
+    const carousel = CarouselSchema.parse({
+      template: 'tpl-abc12345',
+      slides: [{ kind: 'cover', title: 'T' }],
+    });
+    const key = renderInputKey(carousel, kit, 'MR');
+    const changed = {
+      ...kit,
+      templates: [{ ...kit.templates[0]!, style: { ...style, uppercase: true } }],
+    };
+    expect(renderInputKey(carousel, changed, 'MR')).not.toBe(key);
+    // Un template del kit eliminato torna a Tech scuro.
+    expect(render(0, { template: 'tpl-zzz99999' })).toBe(render(0, { template: 'scuro' }));
   });
 });

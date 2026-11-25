@@ -1,4 +1,4 @@
-import { CAROUSEL_TEMPLATES, CAROUSEL_TEMPLATE_LABELS, type BrandKit } from '@prisma-app/shared';
+import { templateChoices, type BrandKit } from '@prisma-app/shared';
 import { renderSlideHtml } from '@prisma-app/templates';
 import { useMemo } from 'react';
 import { SlideFrame } from '../../components/SlideFrame/SlideFrame';
@@ -25,7 +25,7 @@ export function Gallery({ kit, draft }: { kit: BrandKit; draft: KitDraft }) {
         Galleria
       </h2>
       <div className={styles.gallery}>
-        {CAROUSEL_TEMPLATES.map((template) => {
+        {templateChoices(shown.templates).map(({ id: template, label, custom }) => {
           const carousel = galleryCarousel(template);
           return (
             <article key={template} className={styles.card}>
@@ -34,19 +34,21 @@ export function Gallery({ kit, draft }: { kit: BrandKit; draft: KitDraft }) {
                   <SlideFrame
                     key={slide.kind}
                     width={THUMB_WIDTH}
-                    title={`${CAROUSEL_TEMPLATE_LABELS[template]}, slide ${index + 1}`}
+                    title={`${label}, slide ${index + 1}`}
                     html={renderSlideHtml({ carousel, index, kit: shown, initials, fontFaceCss })}
                   />
                 ))}
               </div>
               <div className={styles.cardText}>
                 <span className={styles.cardName}>
-                  {CAROUSEL_TEMPLATE_LABELS[template]}
+                  {label}
                   {draft.videoTemplate === template ? (
                     <span className={styles.badge}>Video</span>
                   ) : null}
                 </span>
-                <span className={`${styles.cardSize} mono`}>Caroselli e post · 1080×1350</span>
+                <span className={`${styles.cardSize} mono`}>
+                  {custom ? 'Tuo template' : 'Stile pronto'} · caroselli e post · 1080×1350
+                </span>
               </div>
             </article>
           );

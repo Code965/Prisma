@@ -1,5 +1,5 @@
 export { mixHex } from './colors.js';
-export { templatePalette, type Palette } from './palette.js';
+export { templatePalette, tonePalette, type Palette } from './palette.js';
 export {
   SLIDE_SIZE,
   escapeHtml,

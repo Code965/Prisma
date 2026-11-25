@@ -1,6 +1,6 @@
 import {
   BrandKitSchema,
-  CAROUSEL_TEMPLATES,
+  TemplateIdSchema,
   CarouselSchema,
   EXPORT_FORMATS,
   IdSchema,
@@ -235,7 +235,7 @@ export const RenderRequestSchema = z.union([
   z.uuid().transform((projectId) => ({ projectId, look: undefined })),
   z.object({
     projectId: z.uuid(),
-    look: z.object({ kit: BrandKitSchema, template: z.enum(CAROUSEL_TEMPLATES) }).optional(),
+    look: z.object({ kit: BrandKitSchema, template: TemplateIdSchema }).optional(),
   }),
 ]);
 export type RenderRequest = z.input<typeof RenderRequestSchema>;
@@ -270,7 +270,7 @@ export const GenerateVideoRequestSchema = z.object({
   jobId: z.uuid(),
   script: VideoScriptSchema,
   source: z.object({ kind: z.enum(['idea', 'variant']), id: IdSchema }),
-  template: z.enum(CAROUSEL_TEMPLATES),
+  template: TemplateIdSchema,
   kit: BrandKitSchema,
   initials: z.string().max(3),
 });
@@ -281,7 +281,7 @@ export const FilmcraftOpenSchema = z.object({
   projectId: z.uuid(),
   rebuild: z.boolean().default(false),
   /** Brand kit e template delle schede di testo (come per l'export). */
-  look: z.object({ kit: BrandKitSchema, template: z.enum(CAROUSEL_TEMPLATES) }).optional(),
+  look: z.object({ kit: BrandKitSchema, template: TemplateIdSchema }).optional(),
 });
 export type FilmcraftOpen = z.input<typeof FilmcraftOpenSchema>;
 

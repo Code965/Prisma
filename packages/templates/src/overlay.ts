@@ -1,7 +1,7 @@
 import {
   slideListItems,
   type BrandKit,
-  type CarouselTemplate,
+  type TemplateId,
   type Overlay,
   SLIDE_FONTS,
   fontStack,
@@ -19,7 +19,7 @@ export interface OverlayCardContext {
   overlay: Overlay;
   kit: BrandKit;
   /** Template delle schede: «Terminale» per il codice, quello scelto per il resto. */
-  template: CarouselTemplate;
+  template: TemplateId;
   width: number;
   height: number;
   fontFaceCss?: string;
@@ -44,16 +44,17 @@ export function overlayPlacement(
 }
 
 /** Il codice usa sempre il template «Terminale»; titoli ed elenchi quello scelto. */
-export function overlayTemplate(
-  kind: Overlay['kind'],
-  template: CarouselTemplate,
-): CarouselTemplate {
+export function overlayTemplate(kind: Overlay['kind'], template: TemplateId): TemplateId {
   return kind === 'code' ? 'codice' : template;
 }
 
 export function renderOverlayCardHtml(context: OverlayCardContext): string {
   const { overlay, kit, width, height } = context;
-  const palette = templatePalette(overlayTemplate(overlay.kind, context.template), kit.colors);
+  const palette = templatePalette(
+    overlayTemplate(overlay.kind, context.template),
+    kit.colors,
+    kit.templates,
+  );
   const place = overlayPlacement(overlay.kind, width, height);
   // Misure in proporzione al lato corto: la stessa scheda va bene in 9:16, 1:1 e 16:9.
   const unit = Math.min(width, height) / 1080;

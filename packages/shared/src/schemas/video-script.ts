@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CAROUSEL_LIMITS, SlideSchema, type Carousel, type CarouselTemplate } from './carousel.js';
+import { CAROUSEL_LIMITS, SlideSchema, type Carousel, type TemplateId } from './carousel.js';
 import { IdSchema } from './common.js';
 import type { TranscriptWord } from './transcript.js';
 import { bareWord } from './video-auto-edit.js';
@@ -58,7 +58,7 @@ export function estimatedSeconds(scenes: readonly Pick<VideoScene, 'narration'>[
 }
 
 /** Le slide del copione come carosello, per disegnarle con `renderSlideHtml`. */
-export function scriptCarousel(script: VideoScript, template: CarouselTemplate): Carousel {
+export function scriptCarousel(script: VideoScript, template: TemplateId): Carousel {
   return { template, kicker: script.kicker, slides: script.scenes.map((scene) => scene.slide) };
 }
 
