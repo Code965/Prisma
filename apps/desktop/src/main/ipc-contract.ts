@@ -267,6 +267,8 @@ export type GenerateVideoRequest = z.infer<typeof GenerateVideoRequestSchema>;
 export const FilmcraftOpenSchema = z.object({
   projectId: z.uuid(),
   rebuild: z.boolean().default(false),
+  /** Brand kit e template delle schede di testo (come per l'export). */
+  look: z.object({ kit: BrandKitSchema, template: z.enum(CAROUSEL_TEMPLATES) }).optional(),
 });
 export type FilmcraftOpen = z.input<typeof FilmcraftOpenSchema>;
 

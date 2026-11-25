@@ -444,6 +444,7 @@ export function useFilmcraftStatus(project: VideoProject) {
 
 /** «Apri in FilmCraft», export con rientro e «Usa la versione rientrata». */
 export function useFilmcraft(projectId: string) {
+  const kit = useBrandKit().data;
   const [progress, setProgress] = useJobProgress(projectId);
   const replace = useReplaceProject();
   const client = useQueryClient();
@@ -453,7 +454,12 @@ export function useFilmcraft(projectId: string) {
     void client.invalidateQueries({ queryKey: ['video-render-status', projectId] });
   };
   const open = useMutation({
-    mutationFn: (rebuild: boolean) => bridge().filmcraft.open({ projectId, rebuild }),
+    mutationFn: (rebuild: boolean) =>
+      bridge().filmcraft.open({
+        projectId,
+        rebuild,
+        ...(kit ? { look: { kit, template: kit.videoTemplate } } : {}),
+      }),
     onSuccess: refresh,
   });
   const exportReturn = useMutation({

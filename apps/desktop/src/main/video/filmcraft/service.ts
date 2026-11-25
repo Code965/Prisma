@@ -15,10 +15,19 @@ import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { ProcessRunner } from '../process.js';
-import { fileSha256, sha256Hex } from '../render.js';
+import { fileSha256, sha256Hex, type RenderLook } from '../render.js';
 import type { LocalStore } from '../store.js';
+import type { VideoLayer } from '../render-plan.js';
 import { createControlClient, findJob, type ControlClient } from './control.js';
-import { buildOtio, buildSrt, setupCommands, videoClipIds } from './interchange.js';
+import {
+  buildOtio,
+  buildSrt,
+  placeCommands,
+  placedClipIds,
+  setupCommands,
+  videoClipIds,
+  type PlacedLayer,
+} from './interchange.js';
 
 /** FilmCraft aperto da Prisma: il canale di controllo vale finché l'app resta aperta. */
 export interface FilmcraftSession {
@@ -54,6 +63,12 @@ interface FilmcraftDeps {
   freePort?: () => Promise<number>;
   now?: () => Date;
   pollMs?: number;
+  /** Schede (PNG), B-roll e audio lavorato, preparati come per l'export di Prisma (6b, 6d). */
+  prepareExtras?: (
+    project: VideoProject,
+    look: RenderLook | undefined,
+    dir: string,
+  ) => Promise<{ layers: VideoLayer[]; audio: string | null }>;
 }
 
 function defaultLauncher(exe: string, args: string[], env: Record<string, string>) {
@@ -143,8 +158,58 @@ export function createFilmcraftService(deps: FilmcraftDeps) {
     return lines.join('\n');
   }
 
+  /**
+   * Schede, B-roll e audio di Prisma nel progetto FilmCraft: si importano i file, si mettono
+   * sulle tracce in più e gli spezzoni di B-roll riempiono il riquadro (`clip.fillFrame`).
+   */
+  async function addExtras(
+    project: VideoProject,
+    look: RenderLook | undefined,
+    cliPath: string,
+    fcproj: string,
+    dir: string,
+  ): Promise<void> {
+    if (!deps.prepareExtras) return;
+    const extras = await deps.prepareExtras(project, look, dir);
+    const files = [...extras.layers.map((l) => l.file), ...(extras.audio ? [extras.audio] : [])];
+    if (files.length === 0) return;
+    const imported = JSON.parse(
+      await cli(cliPath, ['--project', fcproj, '--save', 'import', ...files]),
+    ) as { items?: number[] };
+    const items = imported.items ?? [];
+    if (items.length !== files.length)
+      throw new Error('FilmCraft non ha importato schede e B-roll');
+    const layers: PlacedLayer[] = extras.layers.map((layer, i) => ({
+      item: items[i]!,
+      kind: layer.kind,
+      startS: layer.startS,
+      endS: layer.endS,
+    }));
+    const audioItem = extras.audio ? items[extras.layers.length]! : null;
+    const place = join(dir, 'livelli.jsonl');
+    const steps = placeCommands(layers, audioItem);
+    await writeFile(place, steps.map((step) => JSON.stringify(step)).join('\n'), 'utf8');
+    const placed = placedClipIds(await cli(cliPath, ['--project', fcproj, '--save', 'run', place]));
+    const brollClips = layers.flatMap((layer, i) =>
+      layer.kind === 'card' ? [] : (placed[i] ?? []),
+    );
+    if (brollClips.length > 0) {
+      const fill = join(dir, 'riempi.jsonl');
+      await writeFile(
+        fill,
+        JSON.stringify({ id: 'clip.fillFrame', params: { clips: brollClips } }),
+        'utf8',
+      );
+      await cli(cliPath, ['--project', fcproj, '--save', 'run', fill]);
+    }
+  }
+
   /** Crea (o ricrea) il `.fcproj` dalle modifiche attuali di Prisma. */
-  async function buildProject(project: VideoProject, cliPath: string): Promise<string> {
+  async function buildProject(
+    project: VideoProject,
+    cliPath: string,
+    look?: RenderLook,
+  ): Promise<string> {
     const dir = join(deps.workRoot, project.id);
     await mkdir(dir, { recursive: true });
     const otio = join(dir, 'sequenza.otio');
@@ -163,6 +228,7 @@ export function createFilmcraftService(deps: FilmcraftDeps) {
     const script = join(dir, 'passi.jsonl');
     await writeFile(script, steps.map((step) => JSON.stringify(step)).join('\n'), 'utf8');
     await cli(cliPath, ['--project', fcproj, '--save', 'run', script]);
+    await addExtras(project, look, cliPath, fcproj, dir);
     return fcproj;
   }
 
@@ -193,7 +259,7 @@ export function createFilmcraftService(deps: FilmcraftDeps) {
      * `rebuild` (le modifiche fatte in FilmCraft andrebbero perse); se l'app è già aperta da
      * Prisma non se ne avvia un'altra.
      */
-    async open(id: string, rebuild = false): Promise<VideoProject> {
+    async open(id: string, rebuild = false, look?: RenderLook): Promise<VideoProject> {
       let project = requireProject(id);
       if (sessionOf(id) && !rebuild) return project;
       const { exe, cli: cliPath } = await tools();
@@ -205,7 +271,7 @@ export function createFilmcraftService(deps: FilmcraftDeps) {
           sessionToClose.client.close();
           sessions.delete(id);
         }
-        const projectPath = await buildProject(project, cliPath);
+        const projectPath = await buildProject(project, cliPath, look);
         project = {
           ...project,
           filmcraft: {

@@ -10,6 +10,9 @@ import {
   buildOtio,
   buildSrt,
   msToFrames,
+  otioParts,
+  placeCommands,
+  placedClipIds,
   setupCommands,
   srtTime,
   videoClipIds,
@@ -352,5 +355,65 @@ describe('servizio FilmCraft', () => {
     );
     expect(exported.filmcraft?.returned?.sizeBytes).toBe(5);
     store.close();
+  });
+});
+
+describe('FilmCraft: zoom, volto, schede, B-roll e audio (6b, 6d, 6e)', () => {
+  const zoomed = project({
+    edit: {
+      ...project().edit,
+      cuts: [],
+      zooms: [{ startMs: 5000, endMs: 10_000, scale: 1.2 }],
+    },
+  });
+
+  it('una clip per ogni tratto di zoom, con il suo ingrandimento', () => {
+    const parts = otioParts(zoomed);
+    expect(parts.map((p) => [p.startMs, p.endMs, p.scale])).toEqual([
+      [0, 5000, 1],
+      [5000, 10_000, 1.2],
+      [10_000, 20_000, 1],
+    ]);
+    const steps = setupCommands(zoomed, [11, 12, 13], null);
+    const scales = steps
+      .filter((s) => s.id === 'effects.setParam' && s.params.param === 'scale')
+      .map((s) => s.params.value);
+    expect(scales[1]).toBeCloseTo((scales[0] as number) * 1.2, 0);
+  });
+
+  it('schede su V3, B-roll su V2, audio di Prisma su A2 e A1 spento', () => {
+    const steps = placeCommands(
+      [
+        { item: 5, kind: 'broll-video', startS: 2, endS: 5.5 },
+        { item: 6, kind: 'card', startS: 0.5, endS: 3 },
+      ],
+      7,
+    );
+    expect(steps).toEqual([
+      { id: 'sequence.addTracks', params: { video: 2, audio: 1 } },
+      {
+        id: 'timeline.place',
+        params: { item: 5, track: 'V2', seconds: 2, duration: { seconds: 3.5 }, audio: false },
+      },
+      {
+        id: 'timeline.place',
+        params: { item: 6, track: 'V3', seconds: 0.5, duration: { seconds: 2.5 }, audio: false },
+      },
+      { id: 'timeline.place', params: { item: 7, track: 'A2', seconds: 0, video: false } },
+      { id: 'timeline.setTrack', params: { track: 'A1', muted: true } },
+    ]);
+    expect(placeCommands([], null)).toEqual([]);
+  });
+
+  it('legge le clip create e si ferma sugli errori', () => {
+    const output = [
+      '{"id":"sequence.addTracks","line":1,"ok":true,"result":null}',
+      '{"id":"timeline.place","line":2,"ok":true,"result":{"clips":[21]}}',
+      '{"id":"timeline.place","line":3,"ok":true,"result":{"clips":[22,23]}}',
+    ].join('\n');
+    expect(placedClipIds(output)).toEqual([[21], [22, 23]]);
+    expect(() =>
+      placedClipIds('{"id":"timeline.place","line":1,"ok":false,"error":"traccia inesistente"}'),
+    ).toThrow(/traccia inesistente/);
   });
 });

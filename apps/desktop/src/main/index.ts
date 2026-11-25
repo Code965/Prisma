@@ -203,6 +203,8 @@ void app.whenReady().then(async () => {
     run: runProcess,
     probe: probeVideo,
     emit: emitProgress,
+    // Schede, B-roll e audio lavorato preparati come per l'export (6b, 6d).
+    prepareExtras: (project, look, dir) => render.prepareForFilmcraft(project, look, dir),
   });
   const ideaVideo = createIdeaVideoService({
     store,

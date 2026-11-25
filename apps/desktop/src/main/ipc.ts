@@ -259,8 +259,8 @@ export function registerIpcHandlers(
     filmcraft.status(VideoProjectIdSchema.parse(input)),
   );
   ipcMain.handle(IPC.filmcraftOpen, (_event, input: unknown) => {
-    const { projectId, rebuild } = FilmcraftOpenSchema.parse(input);
-    return filmcraft.open(projectId, rebuild);
+    const { projectId, rebuild, look } = FilmcraftOpenSchema.parse(input);
+    return filmcraft.open(projectId, rebuild, look);
   });
   ipcMain.handle(IPC.filmcraftExport, (_event, input: unknown) =>
     filmcraft.exportReturn(VideoProjectIdSchema.parse(input)),

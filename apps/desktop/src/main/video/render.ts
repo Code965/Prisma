@@ -35,6 +35,9 @@ import {
   mixLoudnessArgs,
   mixLoudnessGraph,
   voiceGainFromLoudnorm,
+  audioOnlyArgs,
+  audioOnlyGraph,
+  needsMix,
   type Composition,
   type CropFollow,
   type VideoLayer,
@@ -158,23 +161,150 @@ export function createRenderService(deps: RenderDeps) {
   const running = new Map<string, AbortController>();
   const now = deps.now ?? (() => new Date());
 
-  async function render(projectId: string, look?: RenderLook): Promise<VideoProject> {
-    const project = deps.store.getProject(projectId);
-    if (!project) throw new Error('Progetto video non trovato');
-    if (running.has(projectId)) throw new Error('Esportazione già in corso per questo video');
-    const ffmpeg = await deps.requireTool('ffmpeg');
+  /**
+   * Misure del volume prima del render (solo audio, veloci): guadagno della voce per il volume
+   * uniforme e il gate, e con la musica correzione del mix (le pause con la musica contano).
+   */
+  async function measureGains(
+    project: VideoProject,
+    kept: ReturnType<typeof keptRanges>,
+    ffmpeg: string,
+    workDir: string,
+    signal: AbortSignal,
+  ): Promise<{ voiceGainDb: number | null; mixGainDb: number | null }> {
+    const { source, edit } = project;
+    let voiceGainDb: number | null = null;
+    if ((edit.audio.normalize || edit.audio.clean) && source.hasAudio) {
+      await writeFile(join(workDir, 'misura.txt'), loudnessGraph(kept, edit.audio), 'utf8');
+      const lines: string[] = [];
+      const measured = await deps.run(ffmpeg, loudnessArgs(source.path, 'misura.txt'), {
+        cwd: workDir,
+        signal,
+        onLine: (line) => lines.push(line),
+      });
+      if (measured.code === 0) voiceGainDb = voiceGainFromLoudnorm(lines.join('\n'));
+    }
+    let mixGainDb: number | null = null;
+    if (edit.audio.normalize && edit.audio.music) {
+      await writeFile(
+        join(workDir, 'misura-mix.txt'),
+        mixLoudnessGraph(kept, source.hasAudio, { ...edit.audio, voiceGainDb }),
+        'utf8',
+      );
+      const lines: string[] = [];
+      const measured = await deps.run(
+        ffmpeg,
+        mixLoudnessArgs(source.path, edit.audio.music.path, 'misura-mix.txt'),
+        { cwd: workDir, signal, onLine: (line) => lines.push(line) },
+      );
+      if (measured.code === 0) mixGainDb = voiceGainFromLoudnorm(lines.join('\n'));
+    }
+    return { voiceGainDb, mixGainDb };
+  }
+
+  /**
+   * Livelli sopra il video montato: B-roll sotto, schede sopra (PNG trasparenti scritti in
+   * `dir`); si saltano quelli caduti in parti tagliate.
+   */
+  async function prepareLayers(
+    project: VideoProject,
+    look: RenderLook | undefined,
+    dir: string,
+  ): Promise<VideoLayer[]> {
+    const { edit } = project;
+    const info = VIDEO_FORMAT_INFO[edit.format];
+    const layers: VideoLayer[] = [];
+    for (const item of edit.broll) {
+      const window = editedWindow(edit.cuts, item);
+      if (window) {
+        layers.push({
+          kind: item.media.kind === 'video' ? 'broll-video' : 'broll-image',
+          file: item.media.path,
+          ...window,
+        });
+      }
+    }
+    if (edit.overlays.length > 0) {
+      if (!deps.captureCard) throw new Error('Schede di testo non disponibili');
+      const fontFaceCss = (await deps.fontFaceCss?.()) ?? '';
+      for (const [i, overlay] of edit.overlays.entries()) {
+        const window = editedWindow(edit.cuts, overlay);
+        if (!window) continue;
+        const html = renderOverlayCardHtml({
+          overlay,
+          kit: look?.kit ?? DEFAULT_BRAND_KIT,
+          template: look?.template ?? 'scuro',
+          width: info.width,
+          height: info.height,
+          fontFaceCss,
+        });
+        const file = `scheda-${i + 1}.png`;
+        await writeFile(join(dir, file), await deps.captureCard(html, info.width, info.height));
+        layers.push({ kind: 'card', file, ...window });
+      }
+    }
+    return layers;
+  }
+
+  /** Controlli prima di usare musica e B-roll (solo file delle loro cartelle). */
+  async function checkSources(project: VideoProject): Promise<void> {
     const music = project.edit.audio.music;
     if (music && !isTrackInFolder((await deps.musicDir?.()) ?? null, music.path)) {
       throw new Error('Il brano non è nella cartella della musica: sceglilo di nuovo nell’editor');
     }
-    const { source, edit } = project;
-    for (const item of edit.broll) {
+    for (const item of project.edit.broll) {
       if (!(await deps.brollAllowed?.(item.media.path))) {
         throw new Error(
           `Il B-roll «${item.media.fileName}» non è più disponibile: sceglilo di nuovo nell’editor`,
         );
       }
     }
+  }
+
+  /**
+   * Per FilmCraft: schede (PNG in `dir`, percorsi assoluti), B-roll e, se l'audio va lavorato,
+   * l'audio del video montato in WAV (voce ripulita, volume uniforme, musica).
+   */
+  async function prepareForFilmcraft(
+    project: VideoProject,
+    look: RenderLook | undefined,
+    dir: string,
+  ): Promise<{ layers: VideoLayer[]; audio: string | null }> {
+    await checkSources(project);
+    const layers = (await prepareLayers(project, look, dir)).map((layer) =>
+      layer.kind === 'card' ? { ...layer, file: join(dir, layer.file) } : layer,
+    );
+    const { source, edit } = project;
+    if (!needsMix(edit.audio, source.hasAudio)) return { layers, audio: null };
+    const ffmpeg = await deps.requireTool('ffmpeg');
+    const kept = keptRanges(edit.cuts, source.durationMs);
+    const signal = new AbortController().signal;
+    const gains = await measureGains(project, kept, ffmpeg, dir, signal);
+    await writeFile(
+      join(dir, 'audio.txt'),
+      audioOnlyGraph(kept, source.hasAudio, { ...edit.audio, ...gains }),
+      'utf8',
+    );
+    const output = join(dir, 'audio-prisma.wav');
+    const result = await deps.run(
+      ffmpeg,
+      audioOnlyArgs(source.path, edit.audio.music?.path ?? null, 'audio.txt', output),
+      { cwd: dir },
+    );
+    if (result.code !== 0) {
+      const last = result.stderrTail.trim().split('\n').filter(Boolean).pop() ?? 'errore';
+      throw new Error(`FFmpeg non ha preparato l’audio per FilmCraft: ${last.slice(0, 300)}`);
+    }
+    return { layers, audio: output };
+  }
+
+  async function render(projectId: string, look?: RenderLook): Promise<VideoProject> {
+    const project = deps.store.getProject(projectId);
+    if (!project) throw new Error('Progetto video non trovato');
+    if (running.has(projectId)) throw new Error('Esportazione già in corso per questo video');
+    const ffmpeg = await deps.requireTool('ffmpeg');
+    await checkSources(project);
+    const { source, edit } = project;
     const kept = keptRanges(edit.cuts, source.durationMs);
     const info = VIDEO_FORMAT_INFO[edit.format];
     const duration = editedDurationMs(edit.cuts, source.durationMs);
@@ -204,70 +334,15 @@ export function createRenderService(deps: RenderDeps) {
           'utf8',
         );
       }
-      // Prima si misura la voce (solo audio, veloce): guadagno fisso per il volume uniforme e
-      // livello di riferimento per il gate delle pause.
-      let voiceGainDb: number | null = null;
-      if ((edit.audio.normalize || edit.audio.clean) && source.hasAudio) {
-        deps.emit({ projectId, stage: 'render', percent: null });
-        await writeFile(join(workDir, 'misura.txt'), loudnessGraph(kept, edit.audio), 'utf8');
-        const lines: string[] = [];
-        const measured = await deps.run(ffmpeg, loudnessArgs(source.path, 'misura.txt'), {
-          cwd: workDir,
-          signal: controller.signal,
-          onLine: (line) => lines.push(line),
-        });
-        if (measured.code === 0) voiceGainDb = voiceGainFromLoudnorm(lines.join('\n'));
-      }
-      // Con la musica si misura anche il mix: le pause con la musica abbassano il volume medio.
-      let mixGainDb: number | null = null;
-      if (edit.audio.normalize && edit.audio.music) {
-        await writeFile(
-          join(workDir, 'misura-mix.txt'),
-          mixLoudnessGraph(kept, source.hasAudio, { ...edit.audio, voiceGainDb }),
-          'utf8',
-        );
-        const lines: string[] = [];
-        const measured = await deps.run(
-          ffmpeg,
-          mixLoudnessArgs(source.path, edit.audio.music.path, 'misura-mix.txt'),
-          { cwd: workDir, signal: controller.signal, onLine: (line) => lines.push(line) },
-        );
-        if (measured.code === 0) mixGainDb = voiceGainFromLoudnorm(lines.join('\n'));
-      }
-      // B-roll sotto, schede sopra; si saltano quelli caduti in parti tagliate.
-      const layers: VideoLayer[] = [];
-      for (const item of edit.broll) {
-        const window = editedWindow(edit.cuts, item);
-        if (window) {
-          layers.push({
-            kind: item.media.kind === 'video' ? 'broll-video' : 'broll-image',
-            file: item.media.path,
-            ...window,
-          });
-        }
-      }
-      if (edit.overlays.length > 0) {
-        if (!deps.captureCard) throw new Error('Schede di testo non disponibili');
-        const fontFaceCss = (await deps.fontFaceCss?.()) ?? '';
-        for (const [i, overlay] of edit.overlays.entries()) {
-          const window = editedWindow(edit.cuts, overlay);
-          if (!window) continue;
-          const html = renderOverlayCardHtml({
-            overlay,
-            kit: look?.kit ?? DEFAULT_BRAND_KIT,
-            template: look?.template ?? 'scuro',
-            width: info.width,
-            height: info.height,
-            fontFaceCss,
-          });
-          const file = `scheda-${i + 1}.png`;
-          await writeFile(
-            join(workDir, file),
-            await deps.captureCard(html, info.width, info.height),
-          );
-          layers.push({ kind: 'card', file, ...window });
-        }
-      }
+      deps.emit({ projectId, stage: 'render', percent: null });
+      const { voiceGainDb, mixGainDb } = await measureGains(
+        project,
+        kept,
+        ffmpeg,
+        workDir,
+        controller.signal,
+      );
+      const layers = await prepareLayers(project, look, workDir);
       await writeFile(
         join(workDir, 'filtri.txt'),
         buildFilterGraph({
@@ -356,6 +431,7 @@ export function createRenderService(deps: RenderDeps) {
 
   return {
     render,
+    prepareForFilmcraft,
     cancel: (projectId: string): void => running.get(projectId)?.abort(),
     isRunning: (projectId: string): boolean => running.has(projectId),
     /** Il file esportato corrisponde ancora alle modifiche attuali. */

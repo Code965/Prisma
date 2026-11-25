@@ -228,6 +228,17 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   - Provato con FilmCraft vero dalla CLI e dall'app Electron via DevTools (video sintetico con voce, trascrizione
     whisper, taglio, 9:16 con ritaglio al 30%): export di 14,2 s in 25 s con avanzamento, fotogramma con ritaglio e
     sottotitoli giusti; dall'app grafica l'export va a ~34 fps, dalla CLI headless a ~9,5. File di prova cancellati.
+- **FilmCraft: schede, B-roll e audio** (`addExtras` in `filmcraft/service.ts`, `placeCommands`/`placedClipIds` in
+  `interchange.ts`, `prepareForFilmcraft` nel servizio di render): dopo il progetto di base si preparano i file come per
+  l'export (schede PNG trasparenti con il brand kit passato dal renderer, B-roll, audio del video montato in WAV con
+  voce ripulita, volume uniforme e musica: `audioOnlyGraph`, stesse misure di `measureGains`), si importano con
+  `filmcraft-cli import` (restituisce gli id), `sequence.addTracks`, `timeline.place` (B-roll su V2, schede su V3,
+  audio su A2; l'istante va come `seconds` al primo livello, `{"time":{"seconds":…}}` viene ignorato),
+  `timeline.setTrack` A1 `muted` e `clip.fillFrame` sugli spezzoni. Una riga sbagliata in `run` ferma tutto e il
+  progetto non si salva. Ogni clip della sequenza ha lo zoom del suo tratto (`otioParts`) e, con «Segui il volto», la
+  posizione del percorso a metà clip (FilmCraft non anima il ritaglio). Provato con FilmCraft 0.20.1 dalla CLI headless:
+  scheda e B-roll ai tempi giusti, zoom 1,25×, audio a −13,9 LUFS con la musica abbassata. Il layout con lo schermo
+  (6f) resta di Prisma.
 - **Analytics** (`screens/Analytics/`, `services/analytics.ts`, `hooks/useAnalytics.ts`): come il mockup, con
   metrica (Copertura, Follower, Interazioni) e periodo; quattro riquadri con totale, variazione dell'ultimo
   intervallo sul precedente («+27% sett.», «giorno» a 30 giorni), barre proporzionate (l'ultima piena, quelle
@@ -340,7 +351,7 @@ una cartella dell'utente, B-roll, inquadratura che segue il volto, registrazione
 - **Render** (`render-plan.ts`, `ass.ts`): ogni parte si ritaglia con il suo zoom (`zoomedCrop`: riquadro del formato
   diviso per `scale`, centrato, misure pari) e si scala alle dimensioni finali prima di `concat`. Sottotitoli ASS:
   parole chiave `#38BDF8`, stile `Hook` (in alto al centro, riquadro scuro, `\fad(150,250)`) sul livello 1.
-  FilmCraft riceve solo tagli, formato e sottotitoli (non zoom, parole chiave e hook).
+  FilmCraft riceve anche gli zoom (una clip per tratto con il suo Motion `scale`), non parole chiave e hook.
 - Provato nell'app vera su una cartella dei dati a parte con un video sintetico (voce italiana di Windows con falsa
   partenza, «ehm», «cioè» e pause), whisper.cpp vero e un servizio AI finto compatibile OpenAI: 4 tagli, hook,
   parola chiave e 3 zoom salvati, export 1080×1920 da 24,4 a 14,5 s con hook e parola chiave visibili nei
@@ -369,7 +380,7 @@ Scelte (proposte e confermate): filtri integrati di FFmpeg (niente modelli da sc
   durata, `loudnorm` a −14, volume scelto, dissolvenze 1 s / 2 s, `sidechaincompress` comandato dalla voce (soglia
   0,02, rapporto 5: circa −13 dB mentre si parla), `amix` senza riscalare e limitatore. Con la musica una seconda
   misura del mix (`mixLoudnessGraph`) corregge il volume finale: le pause con la musica contano nella misura.
-  FilmCraft non riceve l'audio lavorato.
+  FilmCraft riceve l'audio lavorato (vedi «FilmCraft: schede, B-roll e audio»).
 - **Editor** (`screens/Video/AudioPanel.tsx`, logica in `services/audio.ts`): pannello «Audio» sotto gli stili dei
   sottotitoli con «Pulisci la voce», «Volume uniforme», il menu dei brani (o «Scegli la cartella della tua
   musica…»), volume e «Abbassa la musica mentre parli». L'anteprima fa sentire la musica al passo con il video
@@ -421,7 +432,7 @@ key issuance is currently paused»; si usa **Pixabay** (chiave gratuita con un a
   `trim`, riempimento del riquadro (scala e ritaglio al centro); immagine ingrandita 2× e `zoompan` lento fino a
   1,08; scheda con dissolvenza alfa di 0,25 s. Ogni livello spostato con `setpts` all'istante sul video montato
   (`editedWindow`, saltato se tagliato) e sovrapposto con `overlay` attivo solo in quell'intervallo; poi i
-  sottotitoli. FilmCraft non riceve schede né B-roll.
+  sottotitoli. Anche FilmCraft riceve schede e B-roll (sotto).
 - **Editor**: «Aggiungi B-roll e testi» accanto a «Monta con l'AI»; anteprima nel riquadro (`LayersPreview`: lo stesso
   HTML del render in un iframe scalato, spezzone al passo col player); pannello «Testi e B-roll» (titolo, punti e
   codice modificabili, «Togli», orario cliccabile, «+ Titolo/+ Codice/+ Elenco» all'istante del player, crediti

@@ -284,6 +284,55 @@ export function mixLoudnessGraph(
   return `${lines.join(';\n')}\n`;
 }
 
+/**
+ * Solo l'audio del video montato (voce lavorata e musica), per FilmCraft: le stesse parti e la
+ * stessa catena del render, fino ad `[aout]`.
+ */
+export function audioOnlyGraph(
+  parts: readonly TimeRange[],
+  hasAudio: boolean,
+  audio: MixOptions,
+): string {
+  const lines: string[] = [];
+  if (hasAudio) {
+    parts.forEach((range, i) =>
+      lines.push(
+        `[0:a]atrim=start=${seconds(range.startMs)}:end=${seconds(range.endMs)},asetpts=PTS-STARTPTS[a${i}]`,
+      ),
+    );
+    lines.push(`${parts.map((_, i) => `[a${i}]`).join('')}concat=n=${parts.length}:v=0:a=1[voce]`);
+  }
+  const mix = audioMix(audio, hasAudio, editedMs(parts));
+  // Senza nulla da lavorare la voce montata è già l'uscita.
+  if (mix.length === 0) lines.push('[voce]anull[aout]');
+  else lines.push(...mix);
+  return `${lines.join(';\n')}\n`;
+}
+
+export function audioOnlyArgs(
+  source: string,
+  music: string | null,
+  graphFile: string,
+  output: string,
+): string[] {
+  return [
+    '-y',
+    '-nostdin',
+    '-i',
+    source,
+    ...(music ? ['-stream_loop', '-1', '-i', music] : []),
+    '-/filter_complex',
+    graphFile,
+    '-map',
+    '[aout]',
+    '-c:a',
+    'pcm_s16le',
+    '-ar',
+    '48000',
+    output,
+  ];
+}
+
 export function mixLoudnessArgs(source: string, music: string, graphFile: string): string[] {
   return [
     '-y',
