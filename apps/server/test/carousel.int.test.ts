@@ -98,6 +98,30 @@ describe.skipIf(!databaseUrl)('carosello con l’LLM (MySQL, LLM finto)', () => 
     );
   });
 
+  it('le slide nuove prendono il template predefinito del brand kit', async () => {
+    const llm = new FakeLlm();
+    await withRollback(
+      async (ctx) => {
+        const content = await contentWithText(ctx);
+        const linkedin = content.variants.find((v) => v.platform === 'linkedin')!;
+        const kit = await ctx.call({ method: 'GET', url: `/brands/${content.brandId}/kit` });
+        await ctx.call({
+          method: 'PUT',
+          url: `/brands/${content.brandId}/kit`,
+          payload: { ...kit.json<object>(), carouselTemplate: 'bold' },
+        });
+        llm.responses.push({ kicker: 'client-db', slides: SLIDES });
+        const res = await ctx.call({
+          method: 'POST',
+          url: `/variants/${linkedin.id}/carousel/generate`,
+          payload: { expectedVersion: linkedin.version },
+        });
+        expect(res.json<Variant>().metadata.carousel?.template).toBe('bold');
+      },
+      { llm },
+    );
+  });
+
   it('modifica la slide scrivendo oppure propone titoli senza salvare', async () => {
     const llm = new FakeLlm();
     await withRollback(

@@ -155,6 +155,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       prompts,
       brands,
       voice: brandKit.voicePrompt,
+      defaultTemplate: async (brandId) => (await brandKit.getKit(brandId)).carouselTemplate,
     }),
     shortsAi: createShortsAiService({
       db,

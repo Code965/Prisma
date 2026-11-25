@@ -16,14 +16,13 @@ import {
 import { tonePalette } from '@prisma-app/templates';
 
 /** Parte del kit modificata nel pannello «Brand kit» (le regole della voce si salvano subito). */
-export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'videoTemplate' | 'fonts'>;
+export type KitDraft = Pick<BrandKit, 'colors' | 'handle' | 'logo' | 'fonts'>;
 
 export function kitDraft(kit: BrandKit): KitDraft {
   return {
     colors: { ...kit.colors },
     handle: kit.handle,
     logo: kit.logo,
-    videoTemplate: kit.videoTemplate,
     fonts: { ...kit.fonts },
   };
 }
@@ -32,7 +31,6 @@ export function isDraftChanged(draft: KitDraft, kit: BrandKit): boolean {
   return (
     draft.handle.trim().replace(/^@+/, '') !== kit.handle ||
     draft.logo !== kit.logo ||
-    draft.videoTemplate !== kit.videoTemplate ||
     FONT_ROLES.some((role) => draft.fonts[role] !== kit.fonts[role]) ||
     BRAND_COLOR_ROLES.some((role) => draft.colors[role].toUpperCase() !== kit.colors[role])
   );

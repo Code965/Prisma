@@ -7,6 +7,7 @@ import {
   type Platform,
   type Slide,
   type Variant,
+  type TemplateId,
 } from '@prisma-app/shared';
 
 /** Operazioni sulle slide dell'editor: funzioni pure che restituiscono carosello e slide selezionata. */
@@ -22,9 +23,9 @@ export function isCarouselPlatform(platform: Platform): boolean {
 const NEW_SLIDE: Slide = { kind: 'text', title: 'Nuova slide', body: '', code: '' };
 
 /** Carosello di partenza «da zero»: copertina col titolo del contenuto, una slide, chiusura. */
-export function starterCarousel(contentTitle: string): Carousel {
+export function starterCarousel(contentTitle: string, template: TemplateId = 'scuro'): Carousel {
   return {
-    template: 'scuro',
+    template,
     kicker: '',
     slides: [
       {

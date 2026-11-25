@@ -41,6 +41,8 @@ export const BrandKitSchema = z.object({
    * (il codice usa sempre «Terminale»). Assente nei kit salvati prima: «Tech scuro».
    */
   videoTemplate: TemplateIdSchema.default('scuro'),
+  /** Template con cui nascono i caroselli nuovi (7c): «Parti da zero» e generazione dell'AI. */
+  carouselTemplate: TemplateIdSchema.default('scuro'),
   /** Font di titoli, testo e codice (fase 7a). Assenti nei kit salvati prima: Inter e JetBrains Mono. */
   fonts: BrandFontsSchema.default(DEFAULT_BRAND_FONTS),
   /** Template creati dall'utente (7b/7c); i caroselli li indicano con l'id `tpl-…`. */
@@ -61,6 +63,7 @@ export const DEFAULT_BRAND_KIT: BrandKit = {
   logo: null,
   voiceRules: [],
   videoTemplate: 'scuro',
+  carouselTemplate: 'scuro',
   fonts: DEFAULT_BRAND_FONTS,
   templates: [],
 };

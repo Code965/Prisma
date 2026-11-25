@@ -398,34 +398,6 @@
   flex: 1 1 200px;
 }
 
-/* Template dei video (brand kit) */
-.videoTemplates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.videoTemplate {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--text2);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.videoTemplateOn {
-  border-color: var(--accent);
-  color: var(--text);
-  font-weight: 600;
-}
-
 /* Scelta dei font (7a) */
 .fontPick {
   display: flex;
@@ -499,9 +471,33 @@
   font-size: 11.5px;
 }
 
-.videoSwatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  border: 1px solid var(--line2);
+/* Galleria: intestazione e azioni (7c) */
+.galleryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+}
+
+.cardAction {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cardAction:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
 }

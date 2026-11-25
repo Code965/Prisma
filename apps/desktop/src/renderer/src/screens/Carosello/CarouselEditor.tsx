@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Page } from '../../components/Page/Page';
 import { Panel } from '../../components/Panel/Panel';
+import { useBrandKit } from '../../hooks/useBrandKit';
 import { useGenerateCarousel } from '../../hooks/useCarousel';
 import { useSaveVariant } from '../../hooks/useStudio';
 import { errorMessage } from '../../services/api/client';
@@ -43,6 +44,7 @@ export function CarouselEditor({ content, variant }: CarouselEditorProps) {
 }
 
 function EmptyEditor({ content, variant }: CarouselEditorProps) {
+  const kit = useBrandKit().data;
   const generate = useGenerateCarousel(content.id);
   const save = useSaveVariant(content.id);
   const readOnly = isReadOnly(variant.status);
@@ -89,7 +91,10 @@ function EmptyEditor({ content, variant }: CarouselEditorProps) {
                     variant,
                     draft: {
                       body: variant.body,
-                      metadata: { ...variant.metadata, carousel: starterCarousel(content.title) },
+                      metadata: {
+                        ...variant.metadata,
+                        carousel: starterCarousel(content.title, kit?.carouselTemplate),
+                      },
                     },
                   })
                 }

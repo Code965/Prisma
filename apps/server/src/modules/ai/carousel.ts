@@ -9,6 +9,7 @@ import {
   type EditCarouselResult,
   type GenerateCarouselRequest,
   type Variant,
+  type TemplateId,
 } from '@prisma-app/shared';
 import type { DbExecutor } from '../../db/executor.js';
 import {
@@ -36,6 +37,8 @@ interface CarouselAiDeps {
   now: () => Date;
   brands: BrandService;
   voice: (brandId: number) => Promise<string>;
+  /** Template predefinito dei caroselli del brand (7c); senza, Tech scuro. */
+  defaultTemplate?: (brandId: number) => Promise<TemplateId>;
 }
 
 type VariantRow = NonNullable<Awaited<ReturnType<typeof findVariantRow>>>;
@@ -123,7 +126,10 @@ export function createCarouselAiService(deps: CarouselAiDeps) {
       ],
     });
     const carousel: Carousel = {
-      template: ctx.row.metadata.carousel?.template ?? 'scuro',
+      template:
+        ctx.row.metadata.carousel?.template ??
+        (await deps.defaultTemplate?.(ctx.brand.id)) ??
+        'scuro',
       kicker: generated.kicker,
       slides: generated.slides,
     };

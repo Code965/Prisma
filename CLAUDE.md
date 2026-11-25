@@ -1252,7 +1252,22 @@ modifica».
 - **UI**: nell'editor carosello un menu «Stili pronti / I tuoi template» con il campione del fondo (`templateSwatch`),
   nel brand kit i template dei video con il campione, in galleria tutti gli stili. Provato nel browser con il server
   su un database di prova: anteprime dei 4 nuovi stili, carosello salvato con `bold`.
-- [ ] 7c. Editor del template con anteprima dal vivo, «Duplica e modifica», template predefinito per formato
+- [x] 7c. Editor del template con anteprima dal vivo, «Duplica e modifica», template predefinito per formato
+- **Editor** (`screens/Template/TemplateEditor.tsx`, logica in `services/template-editor.ts`): finestra sopra la pagina
+  con nome, colori di base, sfondo (tinta, sfumatura con due ruoli del kit e direzione, foto con velo), decorazione,
+  logo, numerazione, titoli (dimensione, maiuscole, allineamento); a destra copertina, elenco e codice ridisegnati a
+  ogni modifica (anteprima con l'id fittizio `tpl-anteprim`). La foto si riduce nel renderer a 1350 px in JPEG,
+  abbassando la qualità finché sta nei 600 KB (`prepareBackgroundImage`). Salvataggio subito nel kit
+  (`saveTemplate`), al massimo 12, nomi unici; «Elimina template» con conferma (`removeTemplate`: predefiniti
+  rimessi a Tech scuro, i caroselli che lo usavano si vedono in Tech scuro).
+- **Galleria**: «+ Nuovo template», e su ogni card «Duplica e modifica» (`duplicateDraft`, «Copia di …»),
+  «Modifica» sui propri, «Usa per i caroselli» e «Usa per i video» salvati subito, con i segni «Caroselli» e «Video».
+  La scelta del template dei video è passata dal pannello Brand kit alla galleria.
+- **Predefinito dei caroselli** (`kit.carouselTemplate`, default Tech scuro): «Parti da zero» (`starterCarousel`) e
+  la generazione dell'AI sul server (`defaultTemplate` nel servizio dei caroselli) lo usano per i caroselli nuovi.
+- Provato nel browser con il server su un database di prova: copia di Bold con sfumatura, puntini, barra e titoli
+  centrati salvata; predefinito dei caroselli usato da «Parti da zero»; foto di 4000×3000 ridotta a 200 KB; eliminazione
+  con ritorno a Tech scuro; tema scuro.
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 

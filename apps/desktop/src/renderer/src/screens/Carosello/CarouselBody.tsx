@@ -1,5 +1,6 @@
 import {
   CAROUSEL_LIMITS,
+  resolveTemplate,
   templateChoices,
   type TemplateId,
   PLATFORM_LABELS,
@@ -92,7 +93,7 @@ export function CarouselBody(props: CarouselBodyProps) {
               style={{ background: kit ? templateSwatch(draft.template, kit) : undefined }}
             />
             <select
-              value={draft.template}
+              value={resolveTemplate(draft.template, kit?.templates).id}
               disabled={readOnly}
               className={styles.templateSelect}
               onChange={(event) =>

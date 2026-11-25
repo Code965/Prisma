@@ -1,4 +1,4 @@
-import { templateChoices, SLIDE_FONTS, fontStack, type BrandKit } from '@prisma-app/shared';
+import { SLIDE_FONTS, fontStack, type BrandKit } from '@prisma-app/shared';
 import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/Button/Button';
 import { slideFontFaceCss } from '../../components/SlideFrame/slide-fonts';
@@ -11,7 +11,6 @@ import {
   LOGO_TYPES,
   colorRows,
   fontSample,
-  templateSwatch,
   isDraftChanged,
   kitDraft,
   logoFileError,
@@ -189,32 +188,6 @@ export function BrandKitPanel({ kit, draft, onChange }: BrandKitPanelProps) {
             onChange={(event) => onChange({ ...draft, handle: event.target.value })}
           />
         </div>
-      </div>
-
-      <div className={styles.group}>
-        <span className={styles.groupLabel}>Template dei video</span>
-        <div role="group" aria-label="Template dei video" className={styles.videoTemplates}>
-          {templateChoices(kit.templates).map((choice) => (
-            <button
-              key={choice.id}
-              type="button"
-              aria-pressed={draft.videoTemplate === choice.id}
-              className={`${styles.videoTemplate} ${draft.videoTemplate === choice.id ? styles.videoTemplateOn : ''}`}
-              onClick={() => onChange({ ...draft, videoTemplate: choice.id })}
-            >
-              <span
-                aria-hidden
-                className={styles.videoSwatch}
-                style={{ background: templateSwatch(choice.id, { ...kit, colors: draft.colors }) }}
-              />
-              {choice.label}
-            </button>
-          ))}
-        </div>
-        <span className={styles.hint}>
-          Slide di «Crea video», schede di testo e fondo attorno allo schermo registrato. Il codice
-          usa sempre «Terminale».
-        </span>
       </div>
 
       <div className={styles.saveRow}>
