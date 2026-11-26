@@ -1,4 +1,11 @@
-import { PLATFORMS, PLATFORM_LABELS, STATUS_DISPLAY } from '@prisma-app/shared';
+import {
+  PLATFORMS,
+  PLATFORM_CODES,
+  PLATFORM_LABELS,
+  STATUS_DISPLAY,
+  type Platform,
+} from '@prisma-app/shared';
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '../../components/icons/Icon';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
@@ -75,7 +82,24 @@ export function DashboardScreen() {
         >
           <div className={styles.week}>
             {strip.map((day) => (
-              <div key={day.day} className={styles.day} data-today={day.isToday || undefined}>
+              <div
+                key={day.day}
+                className={styles.day}
+                data-today={day.isToday || undefined}
+                data-past={day.isPast || undefined}
+                data-weekend={day.isWeekend || undefined}
+                style={dayStyle(day.platforms)}
+              >
+                {day.platforms.length > 0 ? (
+                  <span aria-hidden className={styles.stripes}>
+                    {day.platforms.map((platform) => (
+                      <span
+                        key={platform}
+                        style={{ background: `var(--${PLATFORM_CODES[platform]})` }}
+                      />
+                    ))}
+                  </span>
+                ) : null}
                 <span className={styles.dayLabel}>{day.label}</span>
                 {day.posts.map(({ publication, time }) => {
                   const status = STATUS_DISPLAY[publication.status];
@@ -97,6 +121,11 @@ export function DashboardScreen() {
                     </span>
                   );
                 })}
+                {day.posts.length === 0 && !day.isPast ? (
+                  <Link to="/calendario" className={styles.plan}>
+                    + Pianifica
+                  </Link>
+                ) : null}
               </div>
             ))}
           </div>
@@ -221,4 +250,11 @@ export function DashboardScreen() {
       </div>
     </main>
   );
+}
+
+/** Fondo del giorno: un velo del colore della prima piattaforma che esce quel giorno. */
+function dayStyle(platforms: readonly Platform[]): CSSProperties | undefined {
+  const first = platforms[0];
+  if (!first) return undefined;
+  return { '--dayTint': `var(--${PLATFORM_CODES[first]}Soft)` } as CSSProperties;
 }

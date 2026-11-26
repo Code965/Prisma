@@ -107,19 +107,48 @@
 }
 
 .day {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 8px;
   border-radius: 9px;
-  background: var(--panel2);
-  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--dayTint, var(--panel2)) 0%, var(--panel2) 75%);
+  border: 1px solid var(--line);
   min-height: 128px;
 }
 
+/* Sabato e domenica con un tono diverso: la settimana si legge al volo. */
+.day[data-weekend] {
+  background: linear-gradient(
+    180deg,
+    var(--dayTint, color-mix(in srgb, var(--accentSoft) 45%, var(--panel2))) 0%,
+    var(--panel2) 75%
+  );
+  border-style: dashed;
+}
+
 .day[data-today] {
-  background: var(--accentSoft);
-  border-color: var(--accent);
+  background: linear-gradient(160deg, var(--accentSoft) 0%, var(--panel) 85%);
+  border: 1px solid var(--accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.day[data-past] {
+  opacity: 0.6;
+}
+
+/* Una striscia per piattaforma che esce quel giorno. */
+.stripes {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  height: 3px;
+}
+
+.stripes span {
+  flex: 1;
 }
 
 .dayLabel {
@@ -129,7 +158,29 @@
 }
 
 .day[data-today] .dayLabel {
-  color: var(--text);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plan {
+  margin-top: auto;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.day:hover .plan,
+.plan:focus-visible {
+  opacity: 1;
+  background: var(--panel);
+  color: var(--accent);
 }
 
 .pill {

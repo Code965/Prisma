@@ -38,6 +38,11 @@ export interface WeekStripDay {
   day: DayKey;
   label: string;
   isToday: boolean;
+  /** Giorno già finito (prima di oggi): si mostra più spento. */
+  isPast: boolean;
+  isWeekend: boolean;
+  /** Piattaforme delle uscite del giorno, senza doppioni, nell'ordine dell'orario: danno il colore. */
+  platforms: Platform[];
   posts: PlacedPublication[];
 }
 
@@ -48,7 +53,8 @@ export function weekStrip(
   now: Date,
 ): WeekStripDay[] {
   const today = zonedParts(now).day;
-  return weekDays(weekStart).map((day) => {
+  return weekDays(weekStart).map((day, index) => {
+    const posts = placed.filter((p) => p.day === day);
     const name = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', weekday: 'short' })
       .format(new Date(`${day}T00:00:00Z`))
       .replace('.', '');
@@ -56,7 +62,11 @@ export function weekStrip(
       day,
       label: day === today ? 'oggi' : `${name} ${Number(day.slice(8))}`,
       isToday: day === today,
-      posts: placed.filter((p) => p.day === day),
+      isPast: day < today,
+      // La settimana parte da lunedì: sabato e domenica sono gli ultimi due.
+      isWeekend: index >= 5,
+      platforms: [...new Set(posts.map((p) => p.publication.platform))],
+      posts,
     };
   });
 }

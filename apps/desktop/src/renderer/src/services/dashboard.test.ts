@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { slotsSourceNote } from './calendar';
-import { weekMetricCards } from './dashboard';
+import { weekMetricCards, weekStrip } from './dashboard';
+import type { PlacedPublication } from './calendar';
 
 describe('ultimi 7 giorni', () => {
   it('follower o iscritti, variazione e copertura della settimana', () => {
@@ -63,5 +64,29 @@ describe('origine degli slot consigliati', () => {
     ).toBe(
       'Slot «consigliato» calcolati dai tuoi post per Instagram; predefiniti per le altre piattaforme.',
     );
+  });
+});
+
+describe('settimana in corso', () => {
+  it('segna oggi, i giorni passati, il weekend e le piattaforme che escono', () => {
+    const placed = (day: string, platform: string): PlacedPublication =>
+      ({ day, hour: 9, time: '09:00', publication: { platform } }) as unknown as PlacedPublication;
+    const strip = weekStrip(
+      '2026-11-23',
+      [
+        placed('2026-11-25', 'linkedin'),
+        placed('2026-11-25', 'instagram'),
+        placed('2026-11-25', 'linkedin'),
+      ],
+      new Date('2026-11-25T10:00:00Z'),
+    );
+    expect(strip.map((d) => d.isPast)).toEqual([true, true, false, false, false, false, false]);
+    expect(strip.map((d) => d.isWeekend)).toEqual([false, false, false, false, false, true, true]);
+    expect(strip[2]).toMatchObject({
+      label: 'oggi',
+      isToday: true,
+      platforms: ['linkedin', 'instagram'],
+    });
+    expect(strip[3]!.platforms).toEqual([]);
   });
 });

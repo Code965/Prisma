@@ -314,7 +314,10 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   `GET /publications/checks?brandId=` (stessi `validate()` dello scheduler, più account e scadenza del token; per le
   piattaforme senza adapter un avviso che il post resta in coda). «Pubblica ora» e «Annulla» chiedono conferma;
   «Sposta» porta al calendario. Il log mostra pubblicati (link «Apri post»), errori («Riprova») e annullati.
-- **Dashboard** (`screens/Dashboard/`): saluto con il nome del brand in base all'ora italiana, settimana in corso,
+- **Dashboard** (`screens/Dashboard/`): saluto con il nome del brand in base all'ora italiana, settimana in corso
+  colorata (`weekStrip`: oggi con sfumatura dell'accento, giorni con uscite velati dal colore della prima piattaforma
+  e una striscia per piattaforma in alto, weekend tratteggiato, giorni passati spenti, «+ Pianifica» al passaggio sui
+  giorni vuoti),
   prossime 5 uscite, account, idee nuove e «Ultimi 7 giorni» come nel mockup (`weekMetricCards`: follower o
   iscritti, variazione e copertura della settimana con cosa misura su quella piattaforma).
 - Il drag & drop HTML5 non si completa con il mouse simulato dagli strumenti di automazione: per verificarlo si
@@ -1129,6 +1132,9 @@ subscribersLost`, `dimensions=day` (gli ultimi giorni arrivano in ritardo). Ness
 - Electron: il binario si scarica con lo script di installazione, autorizzato in `pnpm.onlyBuiltDependencies`.
   Se manca `apps/desktop/node_modules/electron/dist`, lanciare `node node_modules/electron/install.js` da `apps/desktop`.
 - `.env`, `db-setup.local.sql` (del vecchio MySQL) e `data/` (database del server da solo) sono locali ed esclusi da git.
+- Se la cartella del progetto viene spostata o rinominata, i collegamenti di pnpm restano sul vecchio percorso: serve
+  `pnpm install --config.confirmModulesPurge=false` (poi `node node_modules/electron/install.js` in `apps/desktop`,
+  che prende Electron dalla cache `%LOCALAPPDATA%\electron\Cache` senza scaricarlo).
 
 ## Stato di avanzamento
 
@@ -1268,6 +1274,19 @@ modifica».
 - Provato nel browser con il server su un database di prova: copia di Bold con sfumatura, puntini, barra e titoli
   centrati salvata; predefinito dei caroselli usato da «Parti da zero»; foto di 4000×3000 ridotta a 200 KB; eliminazione
   con ritorno a Tech scuro; tema scuro.
+
+### Fase 8 — Trend, concorrenti e strategia
+
+Scelte (proposte e confermate il 27 novembre 2026): niente scraping (LinkedIn e TikTok non danno i post altrui: si
+aggiungono a mano), si parte da ciò che funziona senza storico. Ogni fonte va verificata sulla documentazione ufficiale.
+
+- [ ] 8a. Radar dei trend: Hacker News, GitHub, dev.to, Reddit e ricerca di YouTube sui tag del brand, raggruppati e
+      ordinati dall'AI, «Crea un'idea»
+- [ ] 8b. Concorrenti: YouTube automatico, Instagram se la Business Discovery è usabile, LinkedIn e TikTok a mano;
+      frequenza, formati, orari, interazioni e analisi dell'AI dei post migliori
+- [ ] 8c. «Ispirati»: dal post di un concorrente una bozza con la propria voce (meccanismo, non copia)
+- [ ] 8d. Analisi più profonda dei propri post: tasso di interazione, per argomento, formato, apertura, lunghezza
+- [ ] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 
