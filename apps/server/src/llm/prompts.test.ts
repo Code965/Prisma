@@ -98,6 +98,23 @@ describe('prompt', () => {
     expect(prompts.render('generate-competitors.user', { posts: 'P' })).toContain('P');
     expect(prompts.render('analyze-posts.system', { brandName: 'B' })).toMatch(/json/);
     expect(prompts.render('analyze-posts.user', { posts: 'P', groups: 'G' })).toContain('G');
+    expect(
+      prompts.render('generate-plan.system', { brandName: 'B', voice: 'V', tags: 'T' }),
+    ).toMatch(/json/);
+    expect(
+      prompts.render('generate-plan.user', {
+        month: '2026-12',
+        days: 'D',
+        platforms: 'P',
+        slots: 'S',
+        booked: 'B',
+        trends: 'T',
+        competitors: 'C',
+        ownPosts: 'O',
+      }),
+    ).toContain('O');
+    expect(prompts.render('review-plan.system', { brandName: 'B' })).toMatch(/json/);
+    expect(prompts.render('review-plan.user', { review: 'R' })).toContain('R');
     expect(prompts.render('inspire.system', { brandName: 'B', voice: 'V' })).toMatch(/json/);
     expect(
       prompts.render('inspire.user', { origin: 'O', original: 'T', numbers: 'N', topic: 'A' }),

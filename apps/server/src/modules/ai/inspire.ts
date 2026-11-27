@@ -38,7 +38,7 @@ export function copiedPhrase(text: string, source: string, size = COPY_WORDS): s
   return null;
 }
 
-const numbersIn = (text: string) =>
+export const numbersIn = (text: string) =>
   [...text.matchAll(/\d+(?:[.,]\d+)*/g)].map((m) => m[0].replace(/[.,]/g, ''));
 
 /** I numeri del testo che non vengono dai dati (esclusi quelli piccoli: «tre passi»). */

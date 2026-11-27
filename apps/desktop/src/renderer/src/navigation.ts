@@ -6,6 +6,7 @@ export type ScreenId =
   | 'studio'
   | 'registra'
   | 'calendario'
+  | 'piano'
   | 'coda'
   | 'carosello'
   | 'video'
@@ -36,6 +37,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: 'idee', label: 'Idee', path: '/idee', icon: 'idee' },
       { id: 'studio', label: 'Studio contenuto', path: '/studio', icon: 'studio' },
       { id: 'calendario', label: 'Calendario', path: '/calendario', icon: 'calendario' },
+      { id: 'piano', label: 'Piano editoriale', path: '/piano', icon: 'piano' },
       { id: 'coda', label: 'Coda di pubblicazione', path: '/coda', icon: 'coda' },
     ],
   },

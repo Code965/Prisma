@@ -4,6 +4,7 @@ import { Icon } from '../../components/icons/Icon';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
 import { errorMessage } from '../../services/api/client';
 import { ideaMeta, platformCountLabel } from '../../services/ideas';
+import { plannedDayLabel } from '../../services/plan';
 import styles from './Idee.module.css';
 
 interface IdeaCardProps {
@@ -68,6 +69,11 @@ export function IdeaCard({
               ) : (
                 <span title={idea.inspiration.title}>{idea.inspiration.label}</span>
               )}
+            </span>
+          )}
+          {idea.plannedDay && (
+            <span className={styles.metaText}>
+              · nel piano per {plannedDayLabel(idea.plannedDay)}
             </span>
           )}
           {idea.status === 'in_lavorazione' && (

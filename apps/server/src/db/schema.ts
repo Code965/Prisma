@@ -16,6 +16,10 @@ import {
   type TrendItem,
   type TrendSourceStatus,
   type CompetitorAnalysis,
+  type PlanFrequency,
+  type PlanItem,
+  type PlanPillar,
+  type PlanReviewComment,
   COMPETITOR_PLATFORMS,
   AI_PRESETS,
 } from '@prisma-app/shared';
@@ -151,6 +155,8 @@ export const ideas = sqliteTable(
     targetPlatforms: json('target_platforms').$type<Platform[]>().notNull(),
     /** Post d'origine di un'idea nata da «Ispirati» (fase 8c). */
     inspiration: json('inspiration').$type<IdeaInspiration>(),
+    /** Giorno proposto dal piano editoriale (fase 8e), `AAAA-MM-GG`. */
+    plannedDay: text('planned_day'),
     ...timestamps,
   },
   (t) => [index('ideas_brand_status').on(t.brandId, t.status)],
@@ -543,3 +549,25 @@ export const competitorAnalyses = sqliteTable('competitor_analyses', {
   analysis: json('analysis').$type<Omit<CompetitorAnalysis, 'createdAt' | 'model'>>().notNull(),
   createdAt: instant('created_at').notNull(),
 });
+
+// --- Piano editoriale (fase 8e) --------------------------------------------------------------
+
+/** Un piano per brand e mese (`AAAA-MM`): pilastri, frequenze e idee datate, in JSON. */
+export const editorialPlans = sqliteTable(
+  'editorial_plans',
+  {
+    id: id(),
+    brandId: ref('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    month: text('month').notNull(),
+    model: varchar('model', { length: 120 }).notNull(),
+    summary: text('summary').notNull(),
+    pillars: json('pillars').$type<PlanPillar[]>().notNull(),
+    frequencies: json('frequencies').$type<PlanFrequency[]>().notNull(),
+    items: json('items').$type<PlanItem[]>().notNull(),
+    reviewComment: json('review_comment').$type<PlanReviewComment>(),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex('editorial_plans_brand_month').on(t.brandId, t.month)],
+);

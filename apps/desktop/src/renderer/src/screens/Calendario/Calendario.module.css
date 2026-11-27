@@ -468,6 +468,16 @@
   padding-left: 4px;
 }
 
+/* Idee del piano editoriale (fase 8e): non sono uscite, solo un promemoria. */
+.monthIdeas {
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  padding: 1px 6px;
+  align-self: flex-start;
+}
+
 /* --- Colonna laterale --------------------------------------------------------------------- */
 
 .side {

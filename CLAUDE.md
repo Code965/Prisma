@@ -241,6 +241,8 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   (6f) resta di Prisma.
 - **Trend** (`screens/Trend/`, fase 8a): radar dei trend, vedi «Fase 8».
 - **Concorrenti** (`screens/Concorrenti/`, fase 8b): concorrenti, confronto e analisi dell'AI, vedi «Fase 8».
+- **Piano editoriale** (`screens/Piano/`, rotta `/piano`, voce sotto LAVORO, fase 8e): piano mensile dell'AI e revisione,
+  vedi «Fase 8».
 - **Ispirati** (`components/InspirePanel/`, fase 8c): pannello aperto dai post dei concorrenti, dai contenuti dei trend e
   da «Ispirati a un post» (testo incollato), vedi «Fase 8».
 - **Analytics** (`screens/Analytics/`, `services/analytics.ts`, `hooks/useAnalytics.ts`): come il mockup, con
@@ -1415,7 +1417,43 @@ part=snippet,statistics,contentDetails`. Costo 1 unità ciascuna: un aggiornamen
   prova (9 post LinkedIn/Instagram inseriti a mano, tasso sulle impressioni e sui follower), risposta dell'AI simulata
   nella pagina, temi chiaro e scuro; l'AI con il servizio finto nei test di integrazione. Da provare con dati veri e
   l'AI vera (qualità della classificazione delle aperture).
-- [ ] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione
+- [x] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione
+- **Dati** (`packages/shared/src/schemas/editorial-plan.ts`, migrazione `0005_editorial_plans`): `editorial_plans` (uno per
+  brand e mese `AAAA-MM`: riassunto, 3–5 pilastri con il tag, frequenze per piattaforma con formati e orari, idee
+  datate in JSON, commento della revisione) e `ideas.planned_day` (giorno proposto, `AAAA-MM-GG`, `plannedDay` nel DTO).
+- **Generazione** (`modules/plans/`, `generate-plan.{system,user}.md`): una chiamata LLM con voce, tag, giorni liberi
+  (dal giorno dopo oggi), slot consigliati, uscite già fissate nel mese e idee del piano già create, trend del radar
+  numerati [T…], post dei concorrenti citati dall'analisi (o i migliori) [C…] con l'analisi, gruppi della 8d e propri
+  post migliori [P…]. `generatedPlanSchema` (costruito sulla richiesta) controlla: una frequenza per piattaforma,
+  formati ammessi, orari solo tra gli slot consigliati, giorni liberi, niente idee su giorno+piattaforma occupati, al
+  massimo `perWeek` idee per settimana (lun–dom), riferimenti esistenti (`ref` null con fonte «pilastro»), tag del
+  brand e **nessun numero che non compaia nei dati** (`inventedNumbers` della 8c). L'ora dell'idea è lo slot scelto (o
+  consigliato) di quel giorno della settimana. Piattaforme: quelle scelte o, senza scelta, quelle con un account
+  collegato (altrimenti i quattro social). Mese in corso fino a 2 mesi avanti; i passati si leggono solo. Rigenerare
+  tiene le idee già create (occupano il loro giorno) e toglie il commento.
+- **«Metti nel calendario» / «Crea l'idea»** (`POST …/plans/:month/ideas`, `itemIds`, `withDay`): in una transazione
+  un'idea `suggerita` per voce (testo + «Formato · Pilastro» + spunto con link, tag del pilastro, piattaforma, giorno
+  se `withDay`); una voce con l'idea già creata riceve solo il giorno. Mai variant né pubblicazioni.
+- **Revisione** (`reviewPlan` in `review.ts`, pura e testata; da quando il mese inizia): per voce da creare / idea /
+  in lavorazione (variant dei contenuti nati dall'idea) / programmata / pubblicata (pubblicazione del contenuto
+  dell'idea sulla stessa piattaforma) e «in ritardo» se il giorno è passato senza uscita; per piattaforma idee nel
+  piano, obiettivo (`perWeek` × settimane del mese), pubblicate e programmate nel mese (dal piano o no) e mediana delle
+  interazioni note; uscite fuori dal piano. «Commento dell'AI» (`review-plan.*.md`, `POST …/review`): 2–3 frasi solo
+  con i numeri della revisione, salvate sul piano.
+- API: `GET/POST /brands/:brandId/plans/:month` (`POST` con `platforms` genera), `POST …/:month/ideas`,
+  `POST …/:month/review`.
+- **Desktop** (`screens/Piano/`, `services/plan.ts`, `hooks/usePlan.ts`): mese con le frecce, scelta delle piattaforme,
+  «Genera il piano»/«Rigenera» (con conferma), strategia, pilastri, frequenze, revisione (avanzamento del mese, numeri,
+  tabella per piattaforma, commento), idee per giorno con le uscite già fissate, stato, fonte con link, «Crea l'idea»,
+  «Metti nel calendario» e per tutte. Nel Calendario (vista mese) «N idee del piano» nel giorno proposto; nelle Idee
+  «nel piano per sab 28 nov».
+- Provato nel browser con il server su un database di prova e un'AI finta compatibile OpenAI: piani di dicembre
+  (LinkedIn e Instagram, 14 idee) e novembre (giorni liberi 28–30, uscite già fissate rispettate), idee messe nel
+  calendario, revisione con le mediane vere e commento, temi chiaro e scuro.
+
+Fase 8 completata. Da provare con dati veri: l'AI vera sul piano (quanto spesso le regole su giorni, settimane e
+numeri la fanno ritentare), la qualità delle idee con radar, concorrenti e metriche reali, e la revisione su un mese
+intero con le metriche raccolte.
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram
 

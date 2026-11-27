@@ -53,6 +53,7 @@ import { createTrendsService, type TrendsConfig } from './modules/trends/service
 import { youtubeTokenFor } from './modules/trends/youtube-token.js';
 import { createCompetitorsService, type CompetitorsConfig } from './modules/competitors/service.js';
 import { createInspireService } from './modules/ai/inspire.js';
+import { createPlanService } from './modules/plans/service.js';
 
 export interface ServiceOptions {
   now?: () => Date;
@@ -111,6 +112,17 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       : staticLlmSource(options.llm ?? null);
   const prompts = options.prompts ?? createPromptLibrary();
   const analytics = createAnalyticsService(db, brands, now);
+  const postAnalysis = createPostAnalysisService({ db, llm, prompts, brands, now });
+  const trends = createTrendsService({
+    db,
+    llm,
+    prompts,
+    brands,
+    tags,
+    now,
+    youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
+    config: options.trends ?? null,
+  });
   const competitors = createCompetitorsService({
     db,
     llm,
@@ -130,7 +142,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
     contents,
     variants: createVariantService(db, now),
     analytics,
-    postAnalysis: createPostAnalysisService({ db, llm, prompts, brands, now }),
+    postAnalysis,
     aiSettings,
     appCredentials: createAppCredentialsService({ db, config: options.appCredentials ?? null }),
     stock: createStockService({ db, config: options.stock ?? null }),
@@ -149,17 +161,22 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
         return { report, posts, slots: slots.platforms };
       },
     }),
-    trends: createTrendsService({
+    trends,
+    competitors,
+    plans: createPlanService({
       db,
       llm,
       prompts,
       brands,
       tags,
+      accounts,
+      analytics,
+      postAnalysis,
+      trends,
+      competitors,
+      voice: brandKit.voicePrompt,
       now,
-      youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
-      config: options.trends ?? null,
     }),
-    competitors,
     inspire: createInspireService({
       llm,
       prompts,

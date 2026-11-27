@@ -15,6 +15,7 @@ import { AnalyticsScreen } from './screens/Analytics/AnalyticsScreen';
 import { RecordScreen } from './screens/Registra/RecordScreen';
 import { VideoScreen } from './screens/Video/VideoScreen';
 import { TrendScreen } from './screens/Trend/TrendScreen';
+import { PianoScreen } from './screens/Piano/PianoScreen';
 import { CompetitorsScreen } from './screens/Concorrenti/CompetitorsScreen';
 import { TemplateScreen } from './screens/Template/TemplateScreen';
 import { ThemeProvider } from './theme/theme';
@@ -34,6 +35,7 @@ export function App() {
                 <Route path="studio" element={<StudioScreen />} />
                 <Route path="studio/:contentId" element={<StudioScreen />} />
                 <Route path="calendario" element={<CalendarioScreen />} />
+                <Route path="piano" element={<PianoScreen />} />
                 <Route path="coda" element={<CodaScreen />} />
                 <Route path="carosello" element={<CaroselloScreen />} />
                 <Route path="carosello/:contentId/:variantId" element={<CaroselloScreen />} />

@@ -18,6 +18,7 @@ import { appCredentialsRoutes } from './modules/app-credentials/routes.js';
 import { stockRoutes } from './modules/stock/routes.js';
 import { trendRoutes } from './modules/trends/routes.js';
 import { competitorRoutes } from './modules/competitors/routes.js';
+import { planRoutes } from './modules/plans/routes.js';
 import { OAUTH_CALLBACK_PATHS, oauthRoutes } from './modules/oauth/routes.js';
 import type { Services } from './services.js';
 
@@ -89,4 +90,5 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   stockRoutes(app, services.stock);
   trendRoutes(app, services.trends);
   competitorRoutes(app, services.competitors, services.inspire);
+  planRoutes(app, services.plans);
 }

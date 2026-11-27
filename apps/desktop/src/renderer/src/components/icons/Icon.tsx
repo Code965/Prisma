@@ -31,6 +31,15 @@ const ICONS = {
       <path d="M16 3v4" />
     </>
   ),
+  piano: (
+    <>
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 4V3h6v1" />
+      <path d="M9 10h6" />
+      <path d="M9 14h6" />
+      <path d="M9 18h3" />
+    </>
+  ),
   coda: (
     <>
       <path d="M22 2L11 13" />

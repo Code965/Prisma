@@ -22,6 +22,7 @@ function toIdea(row: IdeaRow, ideaTagList: Tag[]): Idea {
     status: row.status,
     targetPlatforms: row.targetPlatforms,
     inspiration: row.inspiration ?? null,
+    plannedDay: row.plannedDay ?? null,
     tags: ideaTagList,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
@@ -84,6 +85,7 @@ export async function insertIdea(
     source: IdeaSource;
     targetPlatforms: Platform[];
     inspiration?: IdeaInspiration | null;
+    plannedDay?: string | null;
   },
 ): Promise<number> {
   const [created] = await db.insert(ideas).values(values).returning({ id: ideas.id });
@@ -94,7 +96,12 @@ export async function insertIdea(
 export async function updateIdea(
   db: DbExecutor,
   id: number,
-  values: Partial<{ text: string; targetPlatforms: Platform[]; status: IdeaStatus }>,
+  values: Partial<{
+    text: string;
+    targetPlatforms: Platform[];
+    status: IdeaStatus;
+    plannedDay: string | null;
+  }>,
 ): Promise<void> {
   if (Object.keys(values).length === 0) return;
   await db.update(ideas).set(values).where(eq(ideas.id, id));

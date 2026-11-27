@@ -43,3 +43,4 @@ export * from './schemas/post-analysis.js';
 export * from './schemas/trends.js';
 export * from './schemas/competitors.js';
 export * from './schemas/inspiration.js';
+export * from './schemas/editorial-plan.js';

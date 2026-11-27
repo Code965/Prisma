@@ -33,6 +33,11 @@ export const IdeaUpdateSchema = z.object({
   tagIds: z.array(IdSchema).optional(),
   targetPlatforms: targetPlatforms.optional(),
   status: IdeaStatusSchema.optional(),
+  /** Giorno proposto dal piano editoriale; null lo toglie. */
+  plannedDay: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullish(),
 });
 export type IdeaUpdate = z.infer<typeof IdeaUpdateSchema>;
 
@@ -52,6 +57,8 @@ export const IdeaSchema = z
     tags: z.array(TagSchema),
     targetPlatforms: z.array(PlatformSchema),
     inspiration: IdeaInspirationSchema.nullable().default(null),
+    /** Giorno proposto dal piano editoriale (fase 8e), `AAAA-MM-GG`; null se nessuno. */
+    plannedDay: z.string().nullable().default(null),
   })
   .extend(TimestampsSchema.shape);
 export type Idea = z.infer<typeof IdeaSchema>;

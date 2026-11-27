@@ -1,4 +1,4 @@
-import { STATUS_DISPLAY } from '@prisma-app/shared';
+import { STATUS_DISPLAY, type Idea } from '@prisma-app/shared';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
 import { monthCells, type PlacedPublication } from '../../services/calendar';
 import { zonedParts, type DayKey } from '../../services/zoned-time';
@@ -9,12 +9,14 @@ const MONTH_HEAD = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
 interface MonthGridProps {
   anchor: DayKey;
   placed: PlacedPublication[];
+  /** Idee del piano editoriale con il loro giorno proposto. */
+  ideas: Map<DayKey, Idea[]>;
   now: Date;
   onOpenDay: (day: DayKey) => void;
 }
 
 /** Vista mese (V3Calendario): fino a tre uscite per giorno, clic per aprire la settimana. */
-export function MonthGrid({ anchor, placed, now, onOpenDay }: MonthGridProps) {
+export function MonthGrid({ anchor, placed, ideas, now, onOpenDay }: MonthGridProps) {
   const today = zonedParts(now).day;
   return (
     <div className={styles.month}>
@@ -58,6 +60,19 @@ export function MonthGrid({ anchor, placed, now, onOpenDay }: MonthGridProps) {
               );
             })}
             {cell.more > 0 && <span className={styles.monthMore}>+{cell.more} altri</span>}
+            {ideas.get(cell.day) && (
+              <span
+                className={styles.monthIdeas}
+                title={ideas
+                  .get(cell.day)!
+                  .map((idea) => idea.text.split('\n')[0])
+                  .join('\n')}
+              >
+                {ideas.get(cell.day)!.length === 1
+                  ? '1 idea del piano'
+                  : `${ideas.get(cell.day)!.length} idee del piano`}
+              </span>
+            )}
           </button>
         ))}
       </div>

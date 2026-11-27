@@ -19,5 +19,9 @@ export const MIGRATIONS: readonly { tag: string; sql: string }[] = [
   {
     "tag": "0004_idea_inspiration",
     "sql": "ALTER TABLE `ideas` ADD `inspiration` text;"
+  },
+  {
+    "tag": "0005_editorial_plans",
+    "sql": "CREATE TABLE `editorial_plans` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`brand_id` integer NOT NULL,\n\t`month` text NOT NULL,\n\t`model` text NOT NULL,\n\t`summary` text NOT NULL,\n\t`pillars` text NOT NULL,\n\t`frequencies` text NOT NULL,\n\t`items` text NOT NULL,\n\t`review_comment` text,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\tFOREIGN KEY (`brand_id`) REFERENCES `brands`(`id`) ON UPDATE no action ON DELETE cascade\n);\n--> statement-breakpoint\nCREATE UNIQUE INDEX `editorial_plans_brand_month` ON `editorial_plans` (`brand_id`,`month`);--> statement-breakpoint\nALTER TABLE `ideas` ADD `planned_day` text;"
   }
 ];

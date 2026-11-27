@@ -38,6 +38,9 @@ import {
   type CompetitorInput,
   type CompetitorPostInput,
   TrendsStateSchema,
+  PlanStateSchema,
+  type PlanIdeasInput,
+  type Platform,
   RecommendedSlotsSchema,
   WeekSummarySchema,
   PublicationMetricsSchema,
@@ -208,6 +211,14 @@ export const api = {
   trends: (brandId: number) => apiRequest('GET', `/brands/${brandId}/trends`, TrendsStateSchema),
   saveTrendKeywords: (brandId: number, keywords: string[]) =>
     apiRequest('PUT', `/brands/${brandId}/trends/keywords`, TrendKeywordsSchema, { keywords }),
+  plan: (brandId: number, month: string) =>
+    apiRequest('GET', `/brands/${brandId}/plans/${month}`, PlanStateSchema),
+  generatePlan: (brandId: number, month: string, platforms: Platform[]) =>
+    apiRequest('POST', `/brands/${brandId}/plans/${month}`, PlanStateSchema, { platforms }),
+  planIdeas: (brandId: number, month: string, input: PlanIdeasInput) =>
+    apiRequest('POST', `/brands/${brandId}/plans/${month}/ideas`, PlanStateSchema, input),
+  commentPlan: (brandId: number, month: string) =>
+    apiRequest('POST', `/brands/${brandId}/plans/${month}/review`, PlanStateSchema),
   refreshTrends: (brandId: number) =>
     apiRequest('POST', `/brands/${brandId}/trends`, TrendReportSchema),
   competitors: (brandId: number) =>

@@ -19,6 +19,8 @@ import {
   useSchedule,
 } from '../../hooks/useCalendar';
 import { useNow } from '../../hooks/useNow';
+import { useIdeas } from '../../hooks/useIdeas';
+import { plannedIdeasByDay } from '../../services/plan';
 import { errorMessage } from '../../services/api/client';
 import {
   LEGEND,
@@ -51,6 +53,7 @@ import { WeekGrid } from './WeekGrid';
 export function CalendarioScreen() {
   const now = useNow(30_000);
   const publications = usePublications();
+  const ideas = useIdeas();
   const contents = useContents();
   const schedule = useSchedule();
   const reschedule = useReschedule();
@@ -236,6 +239,7 @@ export function CalendarioScreen() {
               <MonthGrid
                 anchor={anchor}
                 placed={placed}
+                ideas={plannedIdeasByDay(ideas.data ?? [])}
                 now={now}
                 onOpenDay={(day) => {
                   setAnchor(day);
