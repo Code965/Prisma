@@ -239,6 +239,7 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   posizione del percorso a metà clip (FilmCraft non anima il ritaglio). Provato con FilmCraft 0.20.1 dalla CLI headless:
   scheda e B-roll ai tempi giusti, zoom 1,25×, audio a −13,9 LUFS con la musica abbassata. Il layout con lo schermo
   (6f) resta di Prisma.
+- **Trend** (`screens/Trend/`, fase 8a): radar dei trend, vedi «Fase 8».
 - **Analytics** (`screens/Analytics/`, `services/analytics.ts`, `hooks/useAnalytics.ts`): come il mockup, con
   metrica (Copertura, Follower, Interazioni) e periodo; quattro riquadri con totale, variazione dell'ultimo
   intervallo sul precedente («+27% sett.», «giorno» a 30 giorni), barre proporzionate (l'ultima piena, quelle
@@ -916,6 +917,7 @@ database in memoria, quindi i test non vedono mai dati veri né lo scheduler di 
 | Contenuti     | `GET/POST /brands/:brandId/contents` (`platforms` crea le bozze), `GET/PATCH/DELETE /contents/:id`                                                                                                                                                                    |
 | Variant       | `POST /contents/:contentId/variants`, `GET/PATCH/DELETE /variants/:id`, `POST /variants/:id/transitions` (`submit`/`approve`/`reject`), `GET /variants/:id/revisions`                                                                                                 |
 | Pubblicazioni | `GET /publications?brandId=&from=&to=&status=`, `GET /publications/checks?brandId=`, `POST /publications`, `GET/PATCH /publications/:id`, `POST /publications/:id/{publish-now,cancel,retry}`, `GET /publications/:id/attempts`                                       |
+| Trend         | `GET /brands/:brandId/trends`, `PUT /brands/:brandId/trends/keywords`, `POST /brands/:brandId/trends`                                                                                                                                                                 |
 | AI            | `POST /contents/generate` (`ideaId`, `platforms`), `POST /variants/:id/edit` (`instruction`, `expectedVersion`), `GET /contents/:id/chat`, `POST /variants/:id/revisions/:revisionId/restore`, `POST /variants/:id/carousel/{generate,edit}`, `POST /shorts/generate` |
 | OAuth         | `GET /oauth/{linkedin,instagram}/start?brandId=` → `{ url }` da aprire nel browser; `GET /oauth/{linkedin,instagram}/callback` (pubbliche, rispondono con una pagina HTML)                                                                                            |
 
@@ -1280,8 +1282,46 @@ modifica».
 Scelte (proposte e confermate il 27 novembre 2026): niente scraping (LinkedIn e TikTok non danno i post altrui: si
 aggiungono a mano), si parte da ciò che funziona senza storico. Ogni fonte va verificata sulla documentazione ufficiale.
 
-- [ ] 8a. Radar dei trend: Hacker News, GitHub, dev.to, Reddit e ricerca di YouTube sui tag del brand, raggruppati e
-      ordinati dall'AI, «Crea un'idea»
+- [x] 8a. Radar dei trend: Hacker News, GitHub, dev.to e ricerca di YouTube sulle parole del brand, raggruppati e
+      ordinati dall'AI, «Crea un'idea» (Reddit escluso)
+- **Scelte** (confermate il 27 novembre 2026): fonti HN, GitHub, dev.to e YouTube (solo con un account collegato, al
+  massimo 3 ricerche al giorno); una volta al giorno più «Aggiorna»; voce «Trend» sotto MISURA (rotta `/trend`).
+- **Fonti verificate** (documentazione ufficiale, 27 novembre 2026; `modules/trends/sources.ts`), nessuno scraping:
+  - **Hacker News**: Algolia `GET https://hn.algolia.com/api/v1/search` (rilevanza, poi punti) con `tags=story`,
+    `numericFilters=created_at_i>…,points>5`, `hitsPerPage`; nessuna chiave, 10.000 richieste all'ora per IP. Senza
+    `url` (Ask HN) si apre la discussione.
+  - **GitHub**: `GET /search/repositories?q=<parola> created:>AAAA-MM-GG&sort=stars&order=desc`, header `Accept:
+application/vnd.github+json`, `X-GitHub-Api-Version: 2026-03-10` e `User-Agent`; senza token 10 ricerche al minuto
+    (le parole si cercano in sequenza).
+  - **dev.to** (Forem API v1): `GET https://dev.to/api/articles?tag=<tag>&top=7`, `Accept:
+application/vnd.forem.api-v1+json`, senza chiave; nessun limite documentato. I tag sono solo lettere e numeri
+    minuscoli (`devtoTag`: «Node.js» → `nodejs`, «C#» non si cerca).
+  - **YouTube**: `search.list` (`type=video`, `order=viewCount`, `publishedAfter`) costa 1 unità ma ha un limite a parte
+    di 100 chiamate al giorno per progetto; poi `videos.list part=statistics` (1 unità) per visualizzazioni, like e
+    commenti veri. Con il token dell'account collegato (scope `youtube`); al massimo 3 ricerche nelle ultime 24 ore
+    (`youtubeBudget`, contate in `sources[].requests`). Non confermato dalla doc che OAuth valga per `search.list`
+    (gli esempi usano una chiave): da provare con l'account vero.
+  - **Reddit escluso**: dalla «Responsible Builder Policy» (novembre 2025) ogni nuovo token OAuth richiede
+    l'approvazione di Reddit, quindi ogni utente dovrebbe chiederla; le pagine ufficiali non sono leggibili da qui.
+- **Dati** (`packages/shared/src/schemas/trends.ts`, migrazione `0002_trends`): `trend_settings` (parole del radar per
+  brand, al massimo 5, senza doppioni) e `trend_reports` (parole, stato delle fonti, contenuti dei trend e trend, JSON;
+  si tengono gli ultimi 10 per brand). I segnali (`points`, `stars`, `reactions`, `views`, `likes`, `comments`) sono
+  quelli delle fonti; quelli assenti mancano, mai zero.
+- **Servizio** (`modules/trends/service.ts`): finestra di 7 giorni, 6 contenuti per fonte e parola, cache di un'ora per
+  ricerca, fonti in parallelo e parole in sequenza; un errore di una fonte finisce in `sources[].error` e non ferma le
+  altre. Al massimo 80 contenuti al modello (`selectItems`: a turno tra fonti e parole, senza doppioni). Una chiamata
+  LLM (`generate-trends.{system,user}.md`) risponde con 1–8 trend con i **numeri dei contenuti** (`generatedTrendsSchema`:
+  numeri esistenti, ogni contenuto in un solo trend, argomento preso dai tag del brand), valutazioni 1–5 di crescita,
+  interesse e adattamento al brand (giudizi dell'AI, il prompt vieta di citare numeri) e un'idea. Un aggiornamento alla
+  volta per brand; «Aggiorna» rifiutato (422) per 15 minuti dopo l'ultimo; il giro orario (`refreshDue`, con le
+  metriche) aggiorna i brand con parole e radar più vecchio di 20 ore, senza ritentare un errore prima di 20 ore.
+- API: `GET /brands/:brandId/trends` (parole, ultimo radar, `blocked`, `nextRefreshAt`), `PUT …/trends/keywords`,
+  `POST …/trends` (aggiorna). Nei test di integrazione `withRollback` passa un fetch che rifiuta la rete.
+- **Desktop** (`screens/Trend/`, `services/trends.ts`, `hooks/useTrends.ts`): parole del radar a etichette (con i tag
+  del brand proposti), una scheda per trend con valutazioni a puntini, contenuti con fonte, link all'originale e
+  segnali veri abbreviati («12,3k stelle»), idea e «Crea un'idea» (con il tag del trend); in fondo le fonti senza
+  risultati («Collega un account YouTube»). Provato nel browser con il server su un database di prova, HN, GitHub e
+  dev.to veri e un servizio AI finto: 12 contenuti in 4 trend, idea salvata col tag, tema scuro.
 - [ ] 8b. Concorrenti: YouTube automatico, Instagram se la Business Discovery è usabile, LinkedIn e TikTok a mano;
       frequenza, formati, orari, interazioni e analisi dell'AI dei post migliori
 - [ ] 8c. «Ispirati»: dal post di un concorrente una bozza con la propria voce (meccanismo, non copia)

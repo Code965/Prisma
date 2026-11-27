@@ -190,6 +190,16 @@ export async function createPrismaRuntime(baseEnv: Env, options: RuntimeOptions 
           );
       timers.push(setInterval(() => void refreshInsights(), env.ANALYTICS_POLL_MS));
       timers.push(setTimeout(() => void refreshInsights(), 60_000));
+      // Radar dei trend: una volta al giorno per brand, controllando a ogni giro orario.
+      const refreshTrends = () =>
+        services.trends
+          .refreshDue((brandId, error) =>
+            app.log.warn({ brandId, err: error }, 'Radar dei trend non aggiornato'),
+          )
+          .then((count) => count && app.log.info({ count }, 'Radar dei trend aggiornato'))
+          .catch((error: unknown) => app.log.error({ err: error }, 'Giro dei trend fallito'));
+      timers.push(setInterval(() => void refreshTrends(), env.ANALYTICS_POLL_MS));
+      timers.push(setTimeout(() => void refreshTrends(), 2 * 60_000));
     }
     for (const timer of timers) timer.unref();
   }

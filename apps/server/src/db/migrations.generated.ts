@@ -7,5 +7,9 @@ export const MIGRATIONS: readonly { tag: string; sql: string }[] = [
   {
     "tag": "0001_app_credentials",
     "sql": "CREATE TABLE `app_credentials` (\n\t`key` text PRIMARY KEY NOT NULL,\n\t`data_enc` blob NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL\n);\n"
+  },
+  {
+    "tag": "0002_trends",
+    "sql": "CREATE TABLE `trend_reports` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`brand_id` integer NOT NULL,\n\t`model` text NOT NULL,\n\t`keywords` text NOT NULL,\n\t`sources` text NOT NULL,\n\t`items` text NOT NULL,\n\t`trends` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\tFOREIGN KEY (`brand_id`) REFERENCES `brands`(`id`) ON UPDATE no action ON DELETE cascade\n);\n--> statement-breakpoint\nCREATE INDEX `trend_reports_brand_time` ON `trend_reports` (`brand_id`,`created_at`);--> statement-breakpoint\nCREATE TABLE `trend_settings` (\n\t`brand_id` integer PRIMARY KEY NOT NULL,\n\t`keywords` text NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL,\n\tFOREIGN KEY (`brand_id`) REFERENCES `brands`(`id`) ON UPDATE no action ON DELETE cascade\n);\n"
   }
 ];

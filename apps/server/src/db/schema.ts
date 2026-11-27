@@ -11,6 +11,9 @@ import {
   type VariantMetadata,
   METRIC_SOURCES,
   type InsightTip,
+  type Trend,
+  type TrendItem,
+  type TrendSourceStatus,
   AI_PRESETS,
 } from '@prisma-app/shared';
 import {
@@ -440,3 +443,32 @@ export const appCredentials = sqliteTable('app_credentials', {
   dataEnc: bytes('data_enc').notNull(),
   ...timestamps,
 });
+
+// --- Radar dei trend (fase 8a) ---------------------------------------------------------------
+
+/** Parole cercate dal radar per brand (una riga per brand). */
+export const trendSettings = sqliteTable('trend_settings', {
+  brandId: ref('brand_id')
+    .primaryKey()
+    .references(() => brands.id, { onDelete: 'cascade' }),
+  keywords: json('keywords').$type<string[]>().notNull(),
+  ...timestamps,
+});
+
+/** Un aggiornamento del radar: contenuti raccolti dalle fonti e trend raggruppati dall'AI. */
+export const trendReports = sqliteTable(
+  'trend_reports',
+  {
+    id: id(),
+    brandId: ref('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    model: varchar('model', { length: 120 }).notNull(),
+    keywords: json('keywords').$type<string[]>().notNull(),
+    sources: json('sources').$type<TrendSourceStatus[]>().notNull(),
+    items: json('items').$type<TrendItem[]>().notNull(),
+    trends: json('trends').$type<Trend[]>().notNull(),
+    createdAt: instant('created_at').notNull(),
+  },
+  (t) => [index('trend_reports_brand_time').on(t.brandId, t.createdAt)],
+);

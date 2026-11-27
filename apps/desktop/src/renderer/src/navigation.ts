@@ -11,6 +11,7 @@ export type ScreenId =
   | 'video'
   | 'template'
   | 'analytics'
+  | 'trend'
   | 'impostazioni';
 
 export interface NavItem {
@@ -50,6 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: 'MISURA',
     items: [
       { id: 'analytics', label: 'Analytics', path: '/analytics', icon: 'analytics' },
+      { id: 'trend', label: 'Trend', path: '/trend', icon: 'trend' },
       { id: 'impostazioni', label: 'Impostazioni', path: '/impostazioni', icon: 'impostazioni' },
     ],
   },

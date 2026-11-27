@@ -14,6 +14,7 @@ import { CaroselloScreen } from './screens/Carosello/CaroselloScreen';
 import { AnalyticsScreen } from './screens/Analytics/AnalyticsScreen';
 import { RecordScreen } from './screens/Registra/RecordScreen';
 import { VideoScreen } from './screens/Video/VideoScreen';
+import { TrendScreen } from './screens/Trend/TrendScreen';
 import { TemplateScreen } from './screens/Template/TemplateScreen';
 import { ThemeProvider } from './theme/theme';
 
@@ -40,6 +41,7 @@ export function App() {
                 <Route path="registra" element={<RecordScreen />} />
                 <Route path="template" element={<TemplateScreen />} />
                 <Route path="analytics" element={<AnalyticsScreen />} />
+                <Route path="trend" element={<TrendScreen />} />
                 <Route path="impostazioni" element={<ImpostazioniScreen />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

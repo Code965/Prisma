@@ -1,3 +1,4 @@
+import type { TrendsConfig } from '../../src/modules/trends/service.js';
 import type { AiSettingsConfig } from '../../src/modules/ai-settings/service.js';
 import type { AppCredentialsConfig } from '../../src/modules/app-credentials/service.js';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
@@ -84,6 +85,7 @@ export async function withRollback(
     aiSettings?: AiSettingsConfig;
     appCredentials?: AppCredentialsConfig;
     stock?: StockConfig;
+    trends?: TrendsConfig;
   } = {},
 ): Promise<void> {
   const now = options.now ?? NOW;
@@ -106,6 +108,12 @@ export async function withRollback(
           aiSettings: options.aiSettings ?? null,
           appCredentials: options.appCredentials ?? null,
           stock: options.stock ?? null,
+          // Mai la rete nei test: le fonti del radar rispondono solo se il test le finge.
+          trends: options.trends ?? {
+            fetch: (async () => {
+              throw new Error('Rete non ammessa nei test');
+            }) as typeof fetch,
+          },
         }),
       });
       try {

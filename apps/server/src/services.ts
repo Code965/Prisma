@@ -48,6 +48,8 @@ import {
   type AppCredentialsConfig,
 } from './modules/app-credentials/service.js';
 import { createVariantService } from './modules/variants/service.js';
+import { createTrendsService, type TrendsConfig } from './modules/trends/service.js';
+import { youtubeTokenFor } from './modules/trends/youtube-token.js';
 
 export interface ServiceOptions {
   now?: () => Date;
@@ -82,6 +84,8 @@ export interface ServiceOptions {
   tiktokOAuth?: TikTokOAuthConfig | null;
   /** Token di accesso per Annulla/Sposta dei video già caricati (YouTube). */
   accessToken?: AccessTokenResolver | null;
+  /** Radar dei trend: fetch e fonti sostituibili nei test. */
+  trends?: TrendsConfig | null;
 }
 
 /** Composizione dei servizi: il punto in cui si decide quale DB, orologio, LLM e OAuth usare. */
@@ -129,6 +133,16 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
         ]);
         return { report, posts, slots: slots.platforms };
       },
+    }),
+    trends: createTrendsService({
+      db,
+      llm,
+      prompts,
+      brands,
+      tags,
+      now,
+      youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
+      config: options.trends ?? null,
     }),
     publications: createPublicationService(
       db,

@@ -27,6 +27,8 @@ import {
   AnalyticsReportSchema,
   AnalyticsInsightsSchema,
   InsightsStateSchema,
+  TrendReportSchema,
+  TrendsStateSchema,
   RecommendedSlotsSchema,
   WeekSummarySchema,
   PublicationMetricsSchema,
@@ -66,6 +68,8 @@ import { apiCommand, apiRequest } from './client';
 export type OAuthPlatform = 'linkedin' | 'instagram' | 'youtube' | 'tiktok';
 
 /** Una funzione per rotta del server, con lo schema della risposta. */
+const TrendKeywordsSchema = z.object({ keywords: z.array(z.string()) });
+
 export const api = {
   me: () => apiRequest('GET', '/me', z.object({ authenticated: z.literal(true) })),
 
@@ -188,6 +192,11 @@ export const api = {
     apiRequest('GET', `/brands/${brandId}/analytics/insights`, InsightsStateSchema),
   generateInsights: (brandId: number) =>
     apiRequest('POST', `/brands/${brandId}/analytics/insights`, AnalyticsInsightsSchema),
+  trends: (brandId: number) => apiRequest('GET', `/brands/${brandId}/trends`, TrendsStateSchema),
+  saveTrendKeywords: (brandId: number, keywords: string[]) =>
+    apiRequest('PUT', `/brands/${brandId}/trends/keywords`, TrendKeywordsSchema, { keywords }),
+  refreshTrends: (brandId: number) =>
+    apiRequest('POST', `/brands/${brandId}/trends`, TrendReportSchema),
   saveManualMetrics: (publicationId: number, input: ManualMetricsInput) =>
     apiRequest('POST', `/publications/${publicationId}/metrics`, PublicationMetricsSchema, input),
   videoScript: (input: VideoScriptRequest) =>
