@@ -1,5 +1,6 @@
 import {
   AutoEditPlanSchema,
+  PostAnalysisSchema,
   EnrichPlanSchema,
   StorageCleanupSchema,
   StockSearchResultSchema,
@@ -200,6 +201,10 @@ export const api = {
     apiRequest('GET', `/brands/${brandId}/analytics/insights`, InsightsStateSchema),
   generateInsights: (brandId: number) =>
     apiRequest('POST', `/brands/${brandId}/analytics/insights`, AnalyticsInsightsSchema),
+  postAnalysis: (brandId: number) =>
+    apiRequest('GET', `/brands/${brandId}/analytics/posts`, PostAnalysisSchema),
+  analyzePosts: (brandId: number) =>
+    apiRequest('POST', `/brands/${brandId}/analytics/posts`, PostAnalysisSchema),
   trends: (brandId: number) => apiRequest('GET', `/brands/${brandId}/trends`, TrendsStateSchema),
   saveTrendKeywords: (brandId: number, keywords: string[]) =>
     apiRequest('PUT', `/brands/${brandId}/trends/keywords`, TrendKeywordsSchema, { keywords }),

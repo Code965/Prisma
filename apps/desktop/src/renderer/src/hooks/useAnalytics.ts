@@ -73,3 +73,19 @@ export function useGenerateInsights() {
     },
   });
 }
+
+/** «Cosa funziona nei tuoi post»: gruppi calcolati dal server (fase 8d). */
+export function usePostAnalysis() {
+  const { brand } = useBrand();
+  return useQuery({
+    queryKey: ['brands', brand?.id ?? 0, 'analytics', 'posts'],
+    queryFn: () => api.postAnalysis(brand!.id),
+    enabled: Boolean(brand),
+  });
+}
+
+/** «Analizza con l'AI»: aperture classificate e conclusioni; il server non salva nulla. */
+export function useAnalyzePosts() {
+  const { brand } = useBrand();
+  return useMutation({ mutationFn: () => api.analyzePosts(brand!.id) });
+}

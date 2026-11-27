@@ -14,6 +14,7 @@ import { platformCard, topRows } from '../../services/analytics';
 import { errorMessage } from '../../services/api/client';
 import { InsightsPanel } from './InsightsPanel';
 import { LinkedInMetricsPanel } from './LinkedInMetricsPanel';
+import { PostAnalysisPanel } from './PostAnalysisPanel';
 import styles from './Analytics.module.css';
 
 const PLATFORM_COLOR: Record<string, string> = {
@@ -165,6 +166,8 @@ export function AnalyticsScreen() {
           <LinkedInMetricsPanel rows={data?.manual ?? []} />
         </section>
       </div>
+
+      <PostAnalysisPanel />
     </Page>
   );
 }

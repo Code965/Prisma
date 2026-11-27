@@ -67,7 +67,7 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   contentRoutes(app, services.contents);
   variantRoutes(app, services.variants);
   publicationRoutes(app, services.publications);
-  analyticsRoutes(app, services.analytics, services.insights);
+  analyticsRoutes(app, services.analytics, services.insights, services.postAnalysis);
   aiRoutes(
     app,
     services.ai,

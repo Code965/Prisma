@@ -96,6 +96,8 @@ describe('prompt', () => {
     expect(prompts.render('generate-trends.user', { keywords: 'K', items: 'I' })).toContain('I');
     expect(prompts.render('generate-competitors.system', { brandName: 'B' })).toMatch(/json/);
     expect(prompts.render('generate-competitors.user', { posts: 'P' })).toContain('P');
+    expect(prompts.render('analyze-posts.system', { brandName: 'B' })).toMatch(/json/);
+    expect(prompts.render('analyze-posts.user', { posts: 'P', groups: 'G' })).toContain('G');
     expect(prompts.render('inspire.system', { brandName: 'B', voice: 'V' })).toMatch(/json/);
     expect(
       prompts.render('inspire.user', { origin: 'O', original: 'T', numbers: 'N', topic: 'A' }),

@@ -61,7 +61,7 @@ export function engagementBasis(
   return null;
 }
 
-function rateOf(
+export function rateOf(
   post: StatPost,
   basis: EngagementBasis | null,
   followers: number | null,

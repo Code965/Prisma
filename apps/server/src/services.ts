@@ -11,6 +11,7 @@ import {
 } from './modules/blog-connection/service.js';
 import { createInsightsService } from './modules/analytics/insights.js';
 import { publishedPostsForBrand } from './modules/analytics/repository.js';
+import { createPostAnalysisService } from './modules/analytics/post-analysis-service.js';
 import { createAnalyticsService } from './modules/analytics/service.js';
 import { createAssetService } from './modules/assets/service.js';
 import {
@@ -129,6 +130,7 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
     contents,
     variants: createVariantService(db, now),
     analytics,
+    postAnalysis: createPostAnalysisService({ db, llm, prompts, brands, now }),
     aiSettings,
     appCredentials: createAppCredentialsService({ db, config: options.appCredentials ?? null }),
     stock: createStockService({ db, config: options.stock ?? null }),

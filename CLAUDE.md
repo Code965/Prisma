@@ -1393,7 +1393,28 @@ part=snippet,statistics,contentDetails`. Costo 1 unità ciascuna: un aggiornamen
   concorrente → meccanismo con 328 like e tasso 4,7% contro la mediana 3,4% → bozza LinkedIn nello Studio; testo
   incollato con argomento scritto → idea salvata; temi chiaro e scuro. Da provare con l'AI vera che le regole sulla
   copia e sui numeri non facciano ritentare troppo spesso.
-- [ ] 8d. Analisi più profonda dei propri post: tasso di interazione, per argomento, formato, apertura, lunghezza
+- [x] 8d. Analisi più profonda dei propri post: tasso di interazione, per argomento, formato, apertura, lunghezza
+- **Analisi pura** (`modules/analytics/post-analysis.ts`, schemi in `packages/shared/src/schemas/post-analysis.ts`,
+  nessuna migrazione): post pubblicati degli ultimi 90 giorni per piattaforma (LinkedIn, Instagram, TikTok, YouTube),
+  con testo e titolo della variant e i tag dell'idea (`postDetails` nel repository). Interazioni, base e tasso sono
+  quelli della 8b (`stats.ts`: `engagementBasis`, `rateOf`, `median`; visualizzazioni o, se mancano, impressioni;
+  follower dell'ultimo giorno rilevato). Gruppi per argomento (un post con più tag sta in ognuno, «Senza argomento»),
+  formato, apertura, lunghezza (parole senza hashtag: < 50, 50–149, 150–299, ≥ 300), giorno e fascia oraria italiani
+  (notte, mattina, pomeriggio, sera): conteggio, mediana del tasso (o delle interazioni senza base), «pochi dati» sotto
+  2 post (in fondo). Apertura = prima frase (o il titolo per YouTube, ≤ 140 caratteri), tipo da regole semplici
+  (Domanda, Numero o elenco, Come fare / perché, Esperienza personale, Affermazione).
+- **AI facoltativa** (`post-analysis-service.ts`, `analyze-posts.{system,user}.md`): fino a 60 post misurati, numerati,
+  più il riepilogo dei gruppi; `postAnalysisSchema` vuole 2–6 tipi di apertura con ogni post in esattamente uno e 3–5
+  conclusioni con i numeri dei post; numeri nei testi solo se presenti nei dati. Le aperture dell'AI sostituiscono
+  quelle delle regole e i gruppi si ricalcolano. **Non si salva**: `GET /brands/:brandId/analytics/posts` (gruppi e
+  `aiBlocked`: AI non configurata o meno di 3 post misurati), `POST` stessa rotta = analisi con l'AI.
+- **Desktop** (`screens/Analytics/PostAnalysisPanel.tsx`, `services/post-analysis.ts`, `usePostAnalysis`/
+  `useAnalyzePosts`): sezione «Cosa funziona nei tuoi post» sotto Analytics, conclusioni dell'AI con i link ai post
+  citati, schede per piattaforma, un riquadro per dimensione con barre relative al gruppo migliore, clic su un gruppo
+  per vederne i post (link, data, formato, parole, apertura, tasso). Provato nel browser con il server su un database di
+  prova (9 post LinkedIn/Instagram inseriti a mano, tasso sulle impressioni e sui follower), risposta dell'AI simulata
+  nella pagina, temi chiaro e scuro; l'AI con il servizio finto nei test di integrazione. Da provare con dati veri e
+  l'AI vera (qualità della classificazione delle aperture).
 - [ ] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione
 
 ### Fase 2 — Template e caroselli, brand kit, storage R2, Instagram

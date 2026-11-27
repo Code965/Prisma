@@ -4,9 +4,11 @@ import { toIso, type DbExecutor } from '../../db/executor.js';
 import {
   accountMetricSnapshots,
   contents,
+  ideaTags,
   metricSnapshots,
   publications,
   socialAccounts,
+  tags,
   variants,
 } from '../../db/schema.js';
 import type { AccountDayMetrics, MetricSample } from '../../publishers/types.js';
@@ -238,4 +240,42 @@ export async function publishedPostsForBrand(db: DbExecutor, brandId: number, si
         } satisfies PublicationMetrics)
       : null,
   }));
+}
+
+/** Testo, titolo e tag dell'idea delle pubblicazioni indicate (analisi dei post, fase 8d). */
+export async function postDetails(db: DbExecutor, publicationIds: readonly number[]) {
+  if (publicationIds.length === 0) return new Map<number, PostDetails>();
+  const [texts, tagRows] = await Promise.all([
+    db
+      .select({ publicationId: publications.id, body: variants.body, metadata: variants.metadata })
+      .from(publications)
+      .innerJoin(variants, eq(variants.id, publications.variantId))
+      .where(inArray(publications.id, [...publicationIds])),
+    db
+      .select({ publicationId: publications.id, name: tags.name })
+      .from(publications)
+      .innerJoin(variants, eq(variants.id, publications.variantId))
+      .innerJoin(contents, eq(contents.id, variants.contentId))
+      .innerJoin(ideaTags, eq(ideaTags.ideaId, contents.ideaId))
+      .innerJoin(tags, eq(tags.id, ideaTags.tagId))
+      .where(inArray(publications.id, [...publicationIds])),
+  ]);
+  const result = new Map<number, PostDetails>();
+  for (const row of texts) {
+    result.set(row.publicationId, {
+      body: row.body,
+      heading: row.metadata.title?.trim() || null,
+      tags: tagRows
+        .filter((t) => t.publicationId === row.publicationId)
+        .map((t) => t.name)
+        .sort(),
+    });
+  }
+  return result;
+}
+
+export interface PostDetails {
+  body: string;
+  heading: string | null;
+  tags: string[];
 }
