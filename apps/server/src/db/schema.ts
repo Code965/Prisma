@@ -14,6 +14,8 @@ import {
   type Trend,
   type TrendItem,
   type TrendSourceStatus,
+  type CompetitorAnalysis,
+  COMPETITOR_PLATFORMS,
   AI_PRESETS,
 } from '@prisma-app/shared';
 import {
@@ -472,3 +474,69 @@ export const trendReports = sqliteTable(
   },
   (t) => [index('trend_reports_brand_time').on(t.brandId, t.createdAt)],
 );
+
+// --- Concorrenti (fase 8b) -------------------------------------------------------------------
+
+/** Profilo di un concorrente: YouTube si aggiorna dall'API, le altre piattaforme a mano. */
+export const competitors = sqliteTable(
+  'competitors',
+  {
+    id: id(),
+    brandId: ref('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 80 }).notNull(),
+    platform: choice('platform', COMPETITOR_PLATFORMS).notNull(),
+    handle: varchar('handle', { length: 120 }).notNull(),
+    url: varchar('url', { length: 500 }),
+    notes: text('notes'),
+    /** Id del canale YouTube. */
+    externalId: varchar('external_id', { length: 64 }),
+    /** Playlist dei caricamenti del canale YouTube. */
+    uploadsId: varchar('uploads_id', { length: 64 }),
+    followers: int('followers', { unsigned: true }),
+    lastFetchedAt: instant('last_fetched_at'),
+    lastError: text('last_error'),
+    ...timestamps,
+  },
+  (t) => [index('competitors_brand').on(t.brandId)],
+);
+
+/** Post di un concorrente con i numeri letti (API) o inseriti (manuale). */
+export const competitorPosts = sqliteTable(
+  'competitor_posts',
+  {
+    id: id(),
+    competitorId: ref('competitor_id')
+      .notNull()
+      .references(() => competitors.id, { onDelete: 'cascade' }),
+    externalId: varchar('external_id', { length: 64 }),
+    title: varchar('title', { length: 200 }),
+    text: text('text'),
+    url: varchar('url', { length: 500 }).notNull(),
+    publishedAt: instant('published_at').notNull(),
+    format: choice('format', VARIANT_FORMATS).notNull(),
+    durationSec: int('duration_sec', { unsigned: true }),
+    likes: int('likes', { unsigned: true }),
+    comments: int('comments', { unsigned: true }),
+    shares: int('shares', { unsigned: true }),
+    views: int('views', { unsigned: true }),
+    followers: int('followers', { unsigned: true }),
+    source: choice('source', METRIC_SOURCES).notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    index('competitor_posts_time').on(t.competitorId, t.publishedAt),
+    uniqueIndex('competitor_posts_external').on(t.competitorId, t.externalId),
+  ],
+);
+
+/** Ultima analisi dell'AI dei post migliori dei concorrenti (una riga per brand). */
+export const competitorAnalyses = sqliteTable('competitor_analyses', {
+  brandId: ref('brand_id')
+    .primaryKey()
+    .references(() => brands.id, { onDelete: 'cascade' }),
+  model: varchar('model', { length: 120 }).notNull(),
+  analysis: json('analysis').$type<Omit<CompetitorAnalysis, 'createdAt' | 'model'>>().notNull(),
+  createdAt: instant('created_at').notNull(),
+});

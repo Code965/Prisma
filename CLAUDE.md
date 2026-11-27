@@ -240,6 +240,7 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   scheda e B-roll ai tempi giusti, zoom 1,25×, audio a −13,9 LUFS con la musica abbassata. Il layout con lo schermo
   (6f) resta di Prisma.
 - **Trend** (`screens/Trend/`, fase 8a): radar dei trend, vedi «Fase 8».
+- **Concorrenti** (`screens/Concorrenti/`, fase 8b): concorrenti, confronto e analisi dell'AI, vedi «Fase 8».
 - **Analytics** (`screens/Analytics/`, `services/analytics.ts`, `hooks/useAnalytics.ts`): come il mockup, con
   metrica (Copertura, Follower, Interazioni) e periodo; quattro riquadri con totale, variazione dell'ultimo
   intervallo sul precedente («+27% sett.», «giorno» a 30 giorni), barre proporzionate (l'ultima piena, quelle
@@ -918,6 +919,7 @@ database in memoria, quindi i test non vedono mai dati veri né lo scheduler di 
 | Variant       | `POST /contents/:contentId/variants`, `GET/PATCH/DELETE /variants/:id`, `POST /variants/:id/transitions` (`submit`/`approve`/`reject`), `GET /variants/:id/revisions`                                                                                                 |
 | Pubblicazioni | `GET /publications?brandId=&from=&to=&status=`, `GET /publications/checks?brandId=`, `POST /publications`, `GET/PATCH /publications/:id`, `POST /publications/:id/{publish-now,cancel,retry}`, `GET /publications/:id/attempts`                                       |
 | Trend         | `GET /brands/:brandId/trends`, `PUT /brands/:brandId/trends/keywords`, `POST /brands/:brandId/trends`                                                                                                                                                                 |
+| Concorrenti   | `GET/POST /brands/:brandId/competitors`, `DELETE /competitors/:id`, `POST /competitors/:id/{refresh,posts}`, `DELETE /competitor-posts/:id`, `POST /brands/:brandId/competitors/analysis`                                                                             |
 | AI            | `POST /contents/generate` (`ideaId`, `platforms`), `POST /variants/:id/edit` (`instruction`, `expectedVersion`), `GET /contents/:id/chat`, `POST /variants/:id/revisions/:revisionId/restore`, `POST /variants/:id/carousel/{generate,edit}`, `POST /shorts/generate` |
 | OAuth         | `GET /oauth/{linkedin,instagram}/start?brandId=` → `{ url }` da aprire nel browser; `GET /oauth/{linkedin,instagram}/callback` (pubbliche, rispondono con una pagina HTML)                                                                                            |
 
@@ -1322,8 +1324,47 @@ application/vnd.forem.api-v1+json`, senza chiave; nessun limite documentato. I t
   segnali veri abbreviati («12,3k stelle»), idea e «Crea un'idea» (con il tag del trend); in fondo le fonti senza
   risultati («Collega un account YouTube»). Provato nel browser con il server su un database di prova, HN, GitHub e
   dev.to veri e un servizio AI finto: 12 contenuti in 4 trend, idea salvata col tag, tema scuro.
-- [ ] 8b. Concorrenti: YouTube automatico, Instagram se la Business Discovery è usabile, LinkedIn e TikTok a mano;
-      frequenza, formati, orari, interazioni e analisi dell'AI dei post migliori
+- [x] 8b. Concorrenti: YouTube automatico, Instagram, LinkedIn e TikTok a mano; frequenza, formati, orari, tasso di
+      interazione, confronto con le proprie metriche e analisi dell'AI dei post migliori
+- **Fonti verificate** (documentazione ufficiale, 27 novembre 2026):
+  - **YouTube Data API v3**: `channels.list` (`part=snippet,statistics,contentDetails`, filtro `forHandle` con o senza
+    «@» oppure `id`: uno solo per richiesta), `playlistItems.list` sulla playlist dei caricamenti
+    (`contentDetails.relatedPlaylists.uploads`, al massimo 50 per pagina), `videos.list
+part=snippet,statistics,contentDetails`. Costo 1 unità ciascuna: un aggiornamento = 3 unità su 10.000 al giorno.
+    Si usa il token dell'account YouTube collegato (scope `youtube`), come la 8a: la doc non dice in modo esplicito
+    che un token OAuth valga per i dati pubblici di altri canali (gli esempi usano `mine=true`): da provare con
+    l'account vero. `hiddenSubscriberCount` → follower null; gli iscritti sono arrotondati da YouTube. Gli Short si
+    stimano dalla durata (≤ 3 minuti, senza le misure del video).
+  - **Instagram Business Discovery**: la pagina di riferimento dice «Available for the Instagram API with Facebook
+    Login» (permessi `instagram_basic`, `instagram_manage_insights`, `pages_read_engagement`, Pagina Facebook
+    collegata). Prisma usa l'«Instagram API with Instagram Login»: il login non si cambia, Instagram si inserisce a
+    mano come LinkedIn e TikTok.
+  - **LinkedIn e TikTok**: nessuna API per i post di altri profili con i permessi in uso; niente scraping.
+- **Dati** (`packages/shared/src/schemas/competitors.ts`, migrazione `0003_competitors`): `competitors` (per brand, al
+  massimo 10, piattaforma + handle unici; id del canale, playlist dei caricamenti, follower, ultima lettura ed errore),
+  `competitor_posts` (titolo/testo, link, data, formato, durata, like, commenti, condivisioni, visualizzazioni,
+  follower quando noti, `source` api|manuale; unici su concorrente + id del video) e `competitor_analyses` (l'ultima
+  analisi per brand). I numeri che mancano restano null.
+- **Servizio** (`modules/competitors/`): aggiungere un canale YouTube lo cerca subito (inesistente → 422, nulla si
+  salva; senza account collegato si salva con l'avviso e si aggiungono post a mano), poi legge gli ultimi 50 video.
+  «Aggiorna» al massimo ogni 15 minuti; il giro orario (con metriche e trend) rilegge i canali con l'ultima lettura
+  più vecchia di 20 ore, senza ripetere un errore prima di 20 ore. Solo i post a mano si cancellano.
+- **Statistiche** (`stats.ts`, pure e testate, uguali per concorrenti e per il brand): ultimi 90 giorni; settimane dal
+  post più vecchio letto (50 video di un canale attivo coprono meno di 90 giorni); interazioni = like + commenti +
+  condivisioni noti; tasso = interazioni / visualizzazioni se ogni post le ha, altrimenti / follower (del post o del
+  profilo), altrimenti nessun tasso: le basi non si mescolano e l'interfaccia dice quale. Mediane per formato, fasce
+  giorno+ora italiane con almeno 2 post, 5 post migliori. «Tu»: i propri post pubblicati con l'ultima lettura
+  (visualizzazioni o, se mancano, impressioni) e i follower dell'ultimo giorno.
+- **Analisi dell'AI** (`analysis.ts`, `generate-competitors.{system,user}.md`): fino a 8 post migliori per concorrente,
+  a turno, al massimo 40, numerati con testo e numeri; risposta `competitorAnalysisSchema` (riepilogo, aperture e
+  argomenti con i numeri dei post, struttura, lunghezza, cosa ripetere e cosa evitare), numeri di post esistenti; il
+  prompt vieta numeri nei testi. Servono almeno 3 post con numeri.
+- **Desktop** (`screens/Concorrenti/`, `services/competitors.ts`, `hooks/useCompetitors.ts`, voce «Concorrenti» sotto
+  MISURA): aggiunta, tabella di confronto per piattaforma con «Tu», «Cosa funziona» con i link ai post citati, una
+  scheda per concorrente (frequenza, tasso, follower, formati, fasce, post migliori con link e numeri, post inseriti a
+  mano) e il modulo «Aggiungi un post» (data e ora italiane, numeri vuoti = non noti). Provato nel browser con il
+  server su un database di prova: concorrente LinkedIn con post a mano dal modulo, canale YouTube senza account
+  (avviso), tema scuro. Analisi dell'AI e lettura di YouTube provate con API finte nei test di integrazione.
 - [ ] 8c. «Ispirati»: dal post di un concorrente una bozza con la propria voce (meccanismo, non copia)
 - [ ] 8d. Analisi più profonda dei propri post: tasso di interazione, per argomento, formato, apertura, lunghezza
 - [ ] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione

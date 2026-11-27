@@ -17,6 +17,7 @@ import { aiSettingsRoutes } from './modules/ai-settings/routes.js';
 import { appCredentialsRoutes } from './modules/app-credentials/routes.js';
 import { stockRoutes } from './modules/stock/routes.js';
 import { trendRoutes } from './modules/trends/routes.js';
+import { competitorRoutes } from './modules/competitors/routes.js';
 import { OAUTH_CALLBACK_PATHS, oauthRoutes } from './modules/oauth/routes.js';
 import type { Services } from './services.js';
 
@@ -87,4 +88,5 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   appCredentialsRoutes(app, services.appCredentials);
   stockRoutes(app, services.stock);
   trendRoutes(app, services.trends);
+  competitorRoutes(app, services.competitors);
 }

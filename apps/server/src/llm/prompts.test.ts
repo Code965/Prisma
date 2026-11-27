@@ -94,6 +94,8 @@ describe('prompt', () => {
     expect(prompts.render('generate-insights.system', { brandName: 'B' })).toMatch(/json/);
     expect(prompts.render('generate-trends.system', { brandName: 'B', tags: 'T' })).toMatch(/json/);
     expect(prompts.render('generate-trends.user', { keywords: 'K', items: 'I' })).toContain('I');
+    expect(prompts.render('generate-competitors.system', { brandName: 'B' })).toMatch(/json/);
+    expect(prompts.render('generate-competitors.user', { posts: 'P' })).toContain('P');
     expect(
       prompts.render('generate-insights.user', {
         weekStart: '2026-11-23',

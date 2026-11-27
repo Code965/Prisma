@@ -1,0 +1,398 @@
+/* Concorrenti (fase 8b): stessi pannelli e misure del radar dei trend. */
+
+.panel,
+.card,
+.empty {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.panel,
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.subTitle {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-err);
+}
+
+.warning {
+  margin: 0;
+  font-size: 12px;
+  color: var(--s-review);
+}
+
+.empty,
+.notes {
+  margin: 0;
+  color: var(--text2);
+  font-size: 13px;
+}
+
+.empty p {
+  margin: 0;
+}
+
+.notes a,
+.handle {
+  color: var(--accent);
+}
+
+.addForm,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.row .field {
+  flex: 1 1 90px;
+}
+
+.postForm .field:not(.row .field) {
+  width: 100%;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.input,
+.textarea {
+  height: 32px;
+  min-width: 0;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.addForm .input {
+  width: 200px;
+}
+
+.textarea {
+  height: auto;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.compare {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compareHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.compareTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.ownRow {
+  background: var(--accentSoft);
+}
+
+.basis {
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.summary,
+.text {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.analysisGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.list {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.refs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.ref {
+  font-size: 12px;
+  color: var(--text2);
+  overflow-wrap: anywhere;
+}
+
+.ref:hover {
+  color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardName {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.handle {
+  font-size: 12px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+span.handle {
+  color: var(--muted);
+}
+
+.cardActions {
+  display: flex;
+  gap: 6px;
+}
+
+.small,
+.action {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action {
+  align-self: flex-start;
+  height: 32px;
+  font-size: 13px;
+}
+
+.small:hover,
+.action:hover {
+  background: var(--hover);
+}
+
+.small:disabled,
+.action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--panel2);
+  color: var(--text2);
+  font-size: 12px;
+}
+
+.items {
+  margin: 0;
+  padding: 10px 0 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  column-gap: 8px;
+  row-gap: 2px;
+  font-size: 13px;
+}
+
+.rate {
+  grid-row: span 2;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  padding-top: 1px;
+}
+
+.itemLink {
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.itemLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.signals {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.manual summary {
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.manualList {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.manualList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.remove {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: var(--hover);
+  color: var(--s-err);
+}
+
+.postForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--panel2);
+}

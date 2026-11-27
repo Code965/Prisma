@@ -200,6 +200,16 @@ export async function createPrismaRuntime(baseEnv: Env, options: RuntimeOptions 
           .catch((error: unknown) => app.log.error({ err: error }, 'Giro dei trend fallito'));
       timers.push(setInterval(() => void refreshTrends(), env.ANALYTICS_POLL_MS));
       timers.push(setTimeout(() => void refreshTrends(), 2 * 60_000));
+      // Canali YouTube dei concorrenti: una lettura al giorno (3 unità di quota ciascuno).
+      const refreshCompetitors = () =>
+        services.competitors
+          .refreshDue((competitorId, error) =>
+            app.log.warn({ competitorId, err: error }, 'Concorrente non aggiornato'),
+          )
+          .then((count) => count && app.log.info({ count }, 'Concorrenti aggiornati'))
+          .catch((error: unknown) => app.log.error({ err: error }, 'Giro dei concorrenti fallito'));
+      timers.push(setInterval(() => void refreshCompetitors(), env.ANALYTICS_POLL_MS));
+      timers.push(setTimeout(() => void refreshCompetitors(), 3 * 60_000));
     }
     for (const timer of timers) timer.unref();
   }

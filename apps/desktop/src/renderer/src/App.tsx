@@ -15,6 +15,7 @@ import { AnalyticsScreen } from './screens/Analytics/AnalyticsScreen';
 import { RecordScreen } from './screens/Registra/RecordScreen';
 import { VideoScreen } from './screens/Video/VideoScreen';
 import { TrendScreen } from './screens/Trend/TrendScreen';
+import { CompetitorsScreen } from './screens/Concorrenti/CompetitorsScreen';
 import { TemplateScreen } from './screens/Template/TemplateScreen';
 import { ThemeProvider } from './theme/theme';
 
@@ -42,6 +43,7 @@ export function App() {
                 <Route path="template" element={<TemplateScreen />} />
                 <Route path="analytics" element={<AnalyticsScreen />} />
                 <Route path="trend" element={<TrendScreen />} />
+                <Route path="concorrenti" element={<CompetitorsScreen />} />
                 <Route path="impostazioni" element={<ImpostazioniScreen />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

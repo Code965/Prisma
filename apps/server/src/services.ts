@@ -50,6 +50,7 @@ import {
 import { createVariantService } from './modules/variants/service.js';
 import { createTrendsService, type TrendsConfig } from './modules/trends/service.js';
 import { youtubeTokenFor } from './modules/trends/youtube-token.js';
+import { createCompetitorsService, type CompetitorsConfig } from './modules/competitors/service.js';
 
 export interface ServiceOptions {
   now?: () => Date;
@@ -86,6 +87,8 @@ export interface ServiceOptions {
   accessToken?: AccessTokenResolver | null;
   /** Radar dei trend: fetch e fonti sostituibili nei test. */
   trends?: TrendsConfig | null;
+  /** Concorrenti: fetch di YouTube sostituibile nei test. */
+  competitors?: CompetitorsConfig | null;
 }
 
 /** Composizione dei servizi: il punto in cui si decide quale DB, orologio, LLM e OAuth usare. */
@@ -143,6 +146,15 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       now,
       youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
       config: options.trends ?? null,
+    }),
+    competitors: createCompetitorsService({
+      db,
+      llm,
+      prompts,
+      brands,
+      now,
+      youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
+      config: options.competitors ?? null,
     }),
     publications: createPublicationService(
       db,

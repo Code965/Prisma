@@ -28,6 +28,12 @@ import {
   AnalyticsInsightsSchema,
   InsightsStateSchema,
   TrendReportSchema,
+  CompetitorSchema,
+  CompetitorPostSchema,
+  CompetitorsStateSchema,
+  CompetitorAnalysisSchema,
+  type CompetitorInput,
+  type CompetitorPostInput,
   TrendsStateSchema,
   RecommendedSlotsSchema,
   WeekSummarySchema,
@@ -197,6 +203,18 @@ export const api = {
     apiRequest('PUT', `/brands/${brandId}/trends/keywords`, TrendKeywordsSchema, { keywords }),
   refreshTrends: (brandId: number) =>
     apiRequest('POST', `/brands/${brandId}/trends`, TrendReportSchema),
+  competitors: (brandId: number) =>
+    apiRequest('GET', `/brands/${brandId}/competitors`, CompetitorsStateSchema),
+  createCompetitor: (brandId: number, input: CompetitorInput) =>
+    apiRequest('POST', `/brands/${brandId}/competitors`, CompetitorSchema, input),
+  deleteCompetitor: (id: number) => apiCommand('DELETE', `/competitors/${id}`),
+  refreshCompetitor: (id: number) =>
+    apiRequest('POST', `/competitors/${id}/refresh`, CompetitorSchema),
+  addCompetitorPost: (id: number, input: CompetitorPostInput) =>
+    apiRequest('POST', `/competitors/${id}/posts`, CompetitorPostSchema, input),
+  deleteCompetitorPost: (id: number) => apiCommand('DELETE', `/competitor-posts/${id}`),
+  analyzeCompetitors: (brandId: number) =>
+    apiRequest('POST', `/brands/${brandId}/competitors/analysis`, CompetitorAnalysisSchema),
   saveManualMetrics: (publicationId: number, input: ManualMetricsInput) =>
     apiRequest('POST', `/publications/${publicationId}/metrics`, PublicationMetricsSchema, input),
   videoScript: (input: VideoScriptRequest) =>

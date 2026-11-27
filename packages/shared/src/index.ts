@@ -40,3 +40,4 @@ export * from './schemas/metrics.js';
 export * from './schemas/analytics.js';
 export * from './schemas/insights.js';
 export * from './schemas/trends.js';
+export * from './schemas/competitors.js';
