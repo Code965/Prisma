@@ -88,5 +88,5 @@ function registerDomainRoutes(app: FastifyInstance, services: Services): void {
   appCredentialsRoutes(app, services.appCredentials);
   stockRoutes(app, services.stock);
   trendRoutes(app, services.trends);
-  competitorRoutes(app, services.competitors);
+  competitorRoutes(app, services.competitors, services.inspire);
 }

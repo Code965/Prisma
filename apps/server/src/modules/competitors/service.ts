@@ -277,7 +277,27 @@ export function createCompetitorsService(deps: CompetitorsDeps) {
     return (await list(found.brandId)).find((c) => c.id === id)!;
   }
 
+  /** Un post salvato con il suo concorrente e il tasso confrontato con la mediana del profilo. */
+  async function postWithStats(postId: number) {
+    const [post] = await db.select().from(competitorPosts).where(eq(competitorPosts.id, postId));
+    if (!post) throw new NotFoundError('Post del concorrente', postId);
+    const competitor = await single(post.competitorId);
+    const stat = statPost(post);
+    const basis = competitor.stats.basis;
+    const total = interactions(stat);
+    const base =
+      basis === 'visualizzazioni' ? stat.views : (stat.followers ?? competitor.stats.followers);
+    return {
+      competitor,
+      post: toPost(post),
+      basis,
+      rate: basis && total !== null && base ? total / base : null,
+      medianRate: competitor.stats.medianRate,
+    };
+  }
+
   return {
+    postWithStats,
     async state(brandId: number): Promise<CompetitorsState> {
       await brands.ensureExists(brandId);
       const [all, own, saved, llm] = await Promise.all([

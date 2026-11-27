@@ -3,11 +3,13 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Icon } from '../../components/icons/Icon';
+import { InspirePanel } from '../../components/InspirePanel/InspirePanel';
 import { Page } from '../../components/Page/Page';
 import { useCreateIdea, useTags } from '../../hooks/useIdeas';
 import { useNow } from '../../hooks/useNow';
 import { useRefreshTrends, useSaveTrendKeywords, useTrends } from '../../hooks/useTrends';
 import { errorMessage } from '../../services/api/client';
+import { trendTarget, type InspireTarget } from '../../services/inspire';
 import {
   addKeyword,
   cooldownMinutes,
@@ -200,9 +202,11 @@ function KeywordsPanel({
 function TrendCardView({ card }: { card: TrendCard }) {
   const createIdea = useCreateIdea();
   const [added, setAdded] = useState(false);
+  const [target, setTarget] = useState<InspireTarget | null>(null);
 
   return (
     <article className={styles.card}>
+      {target && <InspirePanel target={target} onClose={() => setTarget(null)} />}
       <header className={styles.cardHead}>
         <h3 className={styles.cardTitle}>{card.title}</h3>
         {card.tagName && <span className={styles.tag}>#{card.tagName}</span>}
@@ -229,6 +233,13 @@ function TrendCardView({ card }: { card: TrendCard }) {
               {item.title}
             </a>
             {item.signalText && <span className={`${styles.signals} mono`}>{item.signalText}</span>}
+            <button
+              type="button"
+              className={styles.inspire}
+              onClick={() => setTarget(trendTarget(item))}
+            >
+              Ispirati
+            </button>
           </li>
         ))}
       </ul>

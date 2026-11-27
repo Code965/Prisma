@@ -7,6 +7,7 @@ import {
   VARIANT_FORMATS,
   VARIANT_STATUSES,
   type BrandKit,
+  type IdeaInspiration,
   type Platform,
   type VariantMetadata,
   METRIC_SOURCES,
@@ -148,6 +149,8 @@ export const ideas = sqliteTable(
     source: choice('source', IDEA_SOURCES).notNull().default('scritta'),
     status: choice('status', IDEA_STATUSES).notNull().default('nuova'),
     targetPlatforms: json('target_platforms').$type<Platform[]>().notNull(),
+    /** Post d'origine di un'idea nata da «Ispirati» (fase 8c). */
+    inspiration: json('inspiration').$type<IdeaInspiration>(),
     ...timestamps,
   },
   (t) => [index('ideas_brand_status').on(t.brandId, t.status)],

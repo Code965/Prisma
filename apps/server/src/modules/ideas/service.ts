@@ -27,6 +27,7 @@ export function createIdeaService(db: DbExecutor, brands: BrandService, tags: Ta
           text: input.text,
           source: input.source,
           targetPlatforms: input.targetPlatforms,
+          inspiration: input.inspiration ?? null,
         });
         await repo.replaceIdeaTags(tx, ideaId, input.tagIds);
         return ideaId;

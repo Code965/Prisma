@@ -11,6 +11,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
 import { Icon } from '../../components/icons/Icon';
+import { InspirePanel } from '../../components/InspirePanel/InspirePanel';
 import { Page } from '../../components/Page/Page';
 import { PlatformIcon } from '../../components/PlatformIcon/PlatformIcon';
 import {
@@ -37,6 +38,7 @@ import {
   type PostForm,
 } from '../../services/competitors';
 import { relativeDay } from '../../services/dates';
+import { competitorTarget, pastedTarget, type InspireTarget } from '../../services/inspire';
 import { compactNumber } from '../../services/trends';
 import { addDays, zonedParts } from '../../services/zoned-time';
 import styles from './Competitors.module.css';
@@ -48,23 +50,40 @@ export function CompetitorsScreen() {
   const data = state.data;
   const groups = comparisonGroups(data);
   const competitors = data?.competitors ?? [];
+  const [target, setTarget] = useState<InspireTarget | null>(null);
+  const [pasting, setPasting] = useState(false);
 
   return (
     <Page
       title="Concorrenti"
       subtitle="YouTube si legge da solo ogni giorno; LinkedIn, Instagram e TikTok si inseriscono a mano"
       actions={
-        data && !data.analysisBlocked ? (
-          <Button
-            icon={<Icon name="sparkle" size={16} />}
-            disabled={analyze.isPending}
-            onClick={() => analyze.mutate()}
-          >
-            {analyze.isPending ? 'Analizzo i post migliori…' : 'Analizza con l’AI'}
+        <>
+          <Button variant="secondary" onClick={() => setPasting(!pasting)}>
+            Ispirati a un post
           </Button>
-        ) : null
+          {data && !data.analysisBlocked ? (
+            <Button
+              icon={<Icon name="sparkle" size={16} />}
+              disabled={analyze.isPending}
+              onClick={() => analyze.mutate()}
+            >
+              {analyze.isPending ? 'Analizzo i post migliori…' : 'Analizza con l’AI'}
+            </Button>
+          ) : null}
+        </>
       }
     >
+      {target && <InspirePanel target={target} onClose={() => setTarget(null)} />}
+      {pasting && (
+        <PastePanel
+          onCancel={() => setPasting(false)}
+          onReady={(pasted) => {
+            setPasting(false);
+            setTarget(pasted);
+          }}
+        />
+      )}
       {competitors.length < COMPETITOR_MAX && <AddCompetitorPanel />}
 
       {(analyze.error ?? state.error) ? (
@@ -156,11 +175,77 @@ export function CompetitorsScreen() {
       {competitors.length > 0 && (
         <section aria-label="Concorrenti" className={styles.grid}>
           {competitors.map((c) => (
-            <CompetitorCard key={c.id} competitor={c} />
+            <CompetitorCard key={c.id} competitor={c} onInspire={setTarget} />
           ))}
         </section>
       )}
     </Page>
+  );
+}
+
+/** Un post o un link incollato a mano, da cui ispirarsi. */
+function PastePanel({
+  onCancel,
+  onReady,
+}: {
+  onCancel: () => void;
+  onReady: (target: InspireTarget) => void;
+}) {
+  const [text, setText] = useState('');
+  const [url, setUrl] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const result = pastedTarget(text, url);
+    if ('error' in result) setError(result.error);
+    else onReady(result);
+  }
+
+  return (
+    <section className={styles.panel} aria-labelledby="h-incolla">
+      <h2 id="h-incolla" className={styles.sectionTitle}>
+        Ispirati a un post
+      </h2>
+      <form className={styles.pasteForm} onSubmit={submit}>
+        <label className={styles.field}>
+          <span className={styles.label}>Testo del post (o titolo)</span>
+          <textarea
+            className={styles.textarea}
+            rows={5}
+            maxLength={3000}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Link (facoltativo)</span>
+          <input
+            className={styles.input}
+            value={url}
+            maxLength={500}
+            placeholder="https://…"
+            onChange={(e) => setUrl(e.target.value)}
+          />
+        </label>
+        <div className={styles.formActions}>
+          <Button type="submit" disabled={!text.trim()}>
+            Continua
+          </Button>
+          <Button variant="secondary" onClick={onCancel}>
+            Annulla
+          </Button>
+        </div>
+      </form>
+      <p className={styles.meta}>
+        Prisma non legge le pagine dei link: incolla il testo. L’AI ne ricava solo la forma.
+      </p>
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -339,7 +424,13 @@ function postNumbers(post: CompetitorPost): string {
     .join(' · ');
 }
 
-function CompetitorCard({ competitor: c }: { competitor: Competitor }) {
+function CompetitorCard({
+  competitor: c,
+  onInspire,
+}: {
+  competitor: Competitor;
+  onInspire: (target: InspireTarget) => void;
+}) {
   const remove = useDeleteCompetitor();
   const refresh = useRefreshCompetitor();
   const removePost = useDeleteCompetitorPost();
@@ -433,6 +524,15 @@ function CompetitorCard({ competitor: c }: { competitor: Competitor }) {
                   {top.format} · {relativeDay(top.publishedAt, now)}
                   {post ? ` · ${postNumbers(post)}` : ''}
                 </span>
+                {post && (
+                  <button
+                    type="button"
+                    className={styles.inspire}
+                    onClick={() => onInspire(competitorTarget(post, c))}
+                  >
+                    Ispirati
+                  </button>
+                )}
               </li>
             );
           })}
@@ -447,6 +547,13 @@ function CompetitorCard({ competitor: c }: { competitor: Competitor }) {
                 <a href={p.url} target="_blank" rel="noreferrer" className={styles.itemLink}>
                   {p.title ?? p.text?.slice(0, 80)}
                 </a>
+                <button
+                  type="button"
+                  className={styles.inspire}
+                  onClick={() => onInspire(competitorTarget(p, c))}
+                >
+                  Ispirati
+                </button>
                 <button
                   type="button"
                   aria-label="Togli il post"

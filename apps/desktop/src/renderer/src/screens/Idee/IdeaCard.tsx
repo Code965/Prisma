@@ -52,6 +52,24 @@ export function IdeaCard({
             </span>
           ))}
           <span className={styles.metaText}>{ideaMeta(idea, now)}</span>
+          {idea.inspiration && (
+            <span className={styles.metaText}>
+              · ispirata da{' '}
+              {idea.inspiration.url ? (
+                <a
+                  href={idea.inspiration.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={idea.inspiration.title}
+                  className={styles.metaLink}
+                >
+                  {idea.inspiration.label}
+                </a>
+              ) : (
+                <span title={idea.inspiration.title}>{idea.inspiration.label}</span>
+              )}
+            </span>
+          )}
           {idea.status === 'in_lavorazione' && (
             <span className={styles.metaText}>· in lavorazione</span>
           )}

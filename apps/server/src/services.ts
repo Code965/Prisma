@@ -51,6 +51,7 @@ import { createVariantService } from './modules/variants/service.js';
 import { createTrendsService, type TrendsConfig } from './modules/trends/service.js';
 import { youtubeTokenFor } from './modules/trends/youtube-token.js';
 import { createCompetitorsService, type CompetitorsConfig } from './modules/competitors/service.js';
+import { createInspireService } from './modules/ai/inspire.js';
 
 export interface ServiceOptions {
   now?: () => Date;
@@ -109,6 +110,15 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       : staticLlmSource(options.llm ?? null);
   const prompts = options.prompts ?? createPromptLibrary();
   const analytics = createAnalyticsService(db, brands, now);
+  const competitors = createCompetitorsService({
+    db,
+    llm,
+    prompts,
+    brands,
+    now,
+    youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
+    config: options.competitors ?? null,
+  });
   return {
     brands,
     brandKit,
@@ -147,14 +157,14 @@ export function createServices(db: DbExecutor, options: ServiceOptions = {}) {
       youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
       config: options.trends ?? null,
     }),
-    competitors: createCompetitorsService({
-      db,
+    competitors,
+    inspire: createInspireService({
       llm,
       prompts,
       brands,
-      now,
-      youtubeToken: youtubeTokenFor(db, options.accessToken ?? null),
-      config: options.competitors ?? null,
+      tags,
+      competitors,
+      voice: brandKit.voicePrompt,
     }),
     publications: createPublicationService(
       db,

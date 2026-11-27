@@ -396,3 +396,36 @@ span.handle {
   border-radius: 10px;
   background: var(--panel2);
 }
+
+.pasteForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+}
+
+.inspire {
+  grid-column: 2;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inspire:hover {
+  text-decoration: underline;
+}
+
+.manualList li .itemLink {
+  flex: 1;
+}

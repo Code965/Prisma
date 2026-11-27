@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { IdSchema, TimestampsSchema } from './common.js';
 import { IdeaSourceSchema, IdeaStatusSchema } from '../domain/ideas.js';
 import { PlatformSchema } from '../domain/platforms.js';
+import { IdeaInspirationSchema } from './inspiration.js';
 
 export const TagSchema = z.object({
   id: IdSchema,
@@ -22,6 +23,8 @@ export const IdeaInputSchema = z.object({
   source: IdeaSourceSchema.default('scritta'),
   tagIds: z.array(IdSchema).default([]),
   targetPlatforms: targetPlatforms.default([]),
+  /** Post d'origine di un'idea nata da «Ispirati». */
+  inspiration: IdeaInspirationSchema.nullish(),
 });
 export type IdeaInput = z.infer<typeof IdeaInputSchema>;
 
@@ -48,6 +51,7 @@ export const IdeaSchema = z
     status: IdeaStatusSchema,
     tags: z.array(TagSchema),
     targetPlatforms: z.array(PlatformSchema),
+    inspiration: IdeaInspirationSchema.nullable().default(null),
   })
   .extend(TimestampsSchema.shape);
 export type Idea = z.infer<typeof IdeaSchema>;

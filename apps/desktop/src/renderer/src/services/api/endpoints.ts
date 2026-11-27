@@ -32,6 +32,8 @@ import {
   CompetitorPostSchema,
   CompetitorsStateSchema,
   CompetitorAnalysisSchema,
+  InspirationSchema,
+  type InspireRequest,
   type CompetitorInput,
   type CompetitorPostInput,
   TrendsStateSchema,
@@ -215,6 +217,8 @@ export const api = {
   deleteCompetitorPost: (id: number) => apiCommand('DELETE', `/competitor-posts/${id}`),
   analyzeCompetitors: (brandId: number) =>
     apiRequest('POST', `/brands/${brandId}/competitors/analysis`, CompetitorAnalysisSchema),
+  inspire: (brandId: number, request: InspireRequest) =>
+    apiRequest('POST', `/brands/${brandId}/inspire`, InspirationSchema, request),
   saveManualMetrics: (publicationId: number, input: ManualMetricsInput) =>
     apiRequest('POST', `/publications/${publicationId}/metrics`, PublicationMetricsSchema, input),
   videoScript: (input: VideoScriptRequest) =>

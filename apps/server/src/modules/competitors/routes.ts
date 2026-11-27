@@ -1,8 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { InspireRequestSchema } from '@prisma-app/shared';
+import type { InspireService } from '../ai/inspire.js';
 import type { CompetitorsService } from './service.js';
 
-export function competitorRoutes(app: FastifyInstance, competitors: CompetitorsService): void {
+export function competitorRoutes(
+  app: FastifyInstance,
+  competitors: CompetitorsService,
+  inspire: InspireService,
+): void {
   const idOf = (params: unknown, key: string) =>
     z.object({ [key]: z.coerce.number().int().positive() }).parse(params)[key]!;
 
@@ -36,5 +42,10 @@ export function competitorRoutes(app: FastifyInstance, competitors: CompetitorsS
   // Analisi dell'AI dei post migliori dei concorrenti.
   app.post('/brands/:brandId/competitors/analysis', async (request, reply) =>
     reply.code(201).send(await competitors.analyze(idOf(request.params, 'brandId'))),
+  );
+
+  // «Ispirati»: meccanismo del post e proposta di idea, senza salvare nulla.
+  app.post('/brands/:brandId/inspire', (request) =>
+    inspire.inspire(idOf(request.params, 'brandId'), InspireRequestSchema.parse(request.body)),
   );
 }

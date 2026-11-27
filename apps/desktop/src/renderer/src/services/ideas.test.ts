@@ -22,6 +22,7 @@ function idea(overrides: Partial<Idea>): Idea {
     status: 'nuova',
     tags: [],
     targetPlatforms: [],
+    inspiration: null,
     createdAt: '2026-11-21T09:00:00.000Z',
     updatedAt: '2026-11-21T09:00:00.000Z',
     ...overrides,

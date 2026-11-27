@@ -241,6 +241,8 @@ returned`. «Usa la versione rientrata» lo mette in `project.render` con `origi
   (6f) resta di Prisma.
 - **Trend** (`screens/Trend/`, fase 8a): radar dei trend, vedi «Fase 8».
 - **Concorrenti** (`screens/Concorrenti/`, fase 8b): concorrenti, confronto e analisi dell'AI, vedi «Fase 8».
+- **Ispirati** (`components/InspirePanel/`, fase 8c): pannello aperto dai post dei concorrenti, dai contenuti dei trend e
+  da «Ispirati a un post» (testo incollato), vedi «Fase 8».
 - **Analytics** (`screens/Analytics/`, `services/analytics.ts`, `hooks/useAnalytics.ts`): come il mockup, con
   metrica (Copertura, Follower, Interazioni) e periodo; quattro riquadri con totale, variazione dell'ultimo
   intervallo sul precedente («+27% sett.», «giorno» a 30 giorni), barre proporzionate (l'ultima piena, quelle
@@ -1365,7 +1367,32 @@ part=snippet,statistics,contentDetails`. Costo 1 unità ciascuna: un aggiornamen
   mano) e il modulo «Aggiungi un post» (data e ora italiane, numeri vuoti = non noti). Provato nel browser con il
   server su un database di prova: concorrente LinkedIn con post a mano dal modulo, canale YouTube senza account
   (avviso), tema scuro. Analisi dell'AI e lettura di YouTube provate con API finte nei test di integrazione.
-- [ ] 8c. «Ispirati»: dal post di un concorrente una bozza con la propria voce (meccanismo, non copia)
+- [x] 8c. «Ispirati»: dal post di un concorrente una bozza con la propria voce (meccanismo, non copia)
+- **Server** (`modules/ai/inspire.ts`, `inspire.{system,user}.md`, schemi in `packages/shared/src/schemas/inspiration.ts`):
+  `POST /brands/:brandId/inspire` con `source` (`concorrente` + `postId` di un post salvato nella 8b, solo del brand;
+  oppure `testo` con testo, titolo, link, piattaforma ed etichetta: testi incollati e contenuti del radar) e
+  l'argomento (`tagId`, `topic` scritto, o nessuno: l'AI sceglie tra i tag del brand). Una chiamata LLM in due parti:
+  `mechanism` (tipo di apertura, 2–6 parti della struttura, perché ha funzionato) e `idea` (argomento, testo, apertura
+  con parole nuove); la voce del brand entra nel prompt. Lo schema (`inspirationSchema`) rimanda al modello le
+  proposte con **6 parole di fila uguali all'originale** (`copiedPhrase`, senza maiuscole, accenti e punteggiatura),
+  con **numeri che non vengono dai dati** (`inventedNumbers`: ammessi quelli dell'originale, dei numeri salvati e
+  quelli fino a 10) e con un argomento fuori da quelli ammessi. I numeri del post (`signals`: visualizzazioni, like,
+  commenti, condivisioni, tasso sulla base del profilo e mediana del profilo, da `postWithStats` dei concorrenti)
+  arrivano dai dati salvati. Il server non salva nulla.
+- **Provenienza**: `ideas.inspiration` (JSON, migrazione `0004_idea_inspiration`; `IdeaInspirationSchema`: tipo, id del
+  post, etichetta, piattaforma, titolo, link) si passa a `POST /brands/:id/ideas`. L'idea si salva come `suggerita`
+  con il tag dell'argomento e il testo `inspirationIdeaText` (idea, «Apertura:», «Struttura da seguire:»), così le
+  bozze di `POST /contents/generate` seguono la forma; restano in bozza come tutte.
+- **Desktop** (`components/InspirePanel/`, `services/inspire.ts`, `hooks/useInspire.ts`): «Ispirati» sui post migliori e
+  su quelli inseriti a mano dei concorrenti, su ogni contenuto dei trend e «Ispirati a un post» in Concorrenti (testo
+  e link facoltativo: Prisma non legge le pagine). Il pannello mostra il post d'origine, l'argomento (l'AI tra i tag,
+  un tag, o scritto), «Analizza il post» / «Rigenera», il meccanismo con i numeri salvati, il testo dell'idea
+  modificabile e le piattaforme (quella d'origine o LinkedIn); «Crea l'idea» o «Crea le bozze», che apre lo Studio.
+  Nelle Idee «ispirata da <profilo>» con il link all'originale.
+- Provato nel browser con il server su un database di prova e un'AI finta compatibile OpenAI: post LinkedIn di un
+  concorrente → meccanismo con 328 like e tasso 4,7% contro la mediana 3,4% → bozza LinkedIn nello Studio; testo
+  incollato con argomento scritto → idea salvata; temi chiaro e scuro. Da provare con l'AI vera che le regole sulla
+  copia e sui numeri non facciano ritentare troppo spesso.
 - [ ] 8d. Analisi più profonda dei propri post: tasso di interazione, per argomento, formato, apertura, lunghezza
 - [ ] 8e. Piano editoriale mensile dell'AI (pilastri, frequenza, formati, orari, idee nel calendario) e revisione
 

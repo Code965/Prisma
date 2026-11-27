@@ -292,3 +292,11 @@
   font-family: 'JetBrains Mono', monospace;
   color: var(--text);
 }
+
+.metaLink {
+  color: inherit;
+}
+
+.metaLink:hover {
+  color: var(--accent);
+}

@@ -1,5 +1,6 @@
 import type {
   Idea,
+  IdeaInspiration,
   IdeaListQuery,
   IdeaSource,
   IdeaStatus,
@@ -20,6 +21,7 @@ function toIdea(row: IdeaRow, ideaTagList: Tag[]): Idea {
     source: row.source,
     status: row.status,
     targetPlatforms: row.targetPlatforms,
+    inspiration: row.inspiration ?? null,
     tags: ideaTagList,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
@@ -76,7 +78,13 @@ export async function findIdea(db: DbExecutor, id: number): Promise<Idea | null>
 
 export async function insertIdea(
   db: DbExecutor,
-  values: { brandId: number; text: string; source: IdeaSource; targetPlatforms: Platform[] },
+  values: {
+    brandId: number;
+    text: string;
+    source: IdeaSource;
+    targetPlatforms: Platform[];
+    inspiration?: IdeaInspiration | null;
+  },
 ): Promise<number> {
   const [created] = await db.insert(ideas).values(values).returning({ id: ideas.id });
   if (!created) throw new Error('Inserimento idea fallito');

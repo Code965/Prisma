@@ -296,3 +296,20 @@
   font-size: 12px;
   color: var(--muted);
 }
+
+.inspire {
+  grid-column: 2;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inspire:hover {
+  text-decoration: underline;
+}
